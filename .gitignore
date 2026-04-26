@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.next-basilisk-qa/
+.qa/
+out/
+.vercel/
+
+*.log
+*.pid
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example

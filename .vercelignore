@@ -1,0 +1,12 @@
+.next
+node_modules
+out
+
+*.log
+*.pid
+preview-*.png
+projeto-alpha-serve.*.log
+website-dev*.log
+website-dev*.pid
+
+openclaw.html

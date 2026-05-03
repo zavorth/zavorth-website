@@ -96,11 +96,11 @@ export const releaseBundle = {
   ],
   releaseTrain: {
     title: 'Preview release train and stable policy',
-    baseline: 'v0.1 Public Preview',
-    patchLane: 'v0.1.x preview',
-    minorLane: 'v0.2.0 preview',
+    baseline: 'v1.0.0',
+    patchLane: 'v1.0.x',
+    minorLane: 'v1.1.0',
     policy:
-      'Preview release tem escopo estreito, smoke local e rollback claro. Stable so pode ser declarado depois de bundle real, tag, smoke de distribuicao e decisao explicita de release.',
+      'Release train v1.x mantem v1.0.0 como baseline estavel, v1.0.x para hotfix estreito e v1.1.0 para novo ciclo aprovado com smoke local e rollback claro.',
     cadence: [
       'release candidate sob demanda, sem processo sempre ligado',
       'tag e GitHub Releases so entram quando o canal stable for aprovado',

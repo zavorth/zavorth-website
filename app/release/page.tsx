@@ -96,7 +96,7 @@ export default function ReleasePage() {
                 <FileArchive size={18} />
               </div>
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">
-                {releaseBundle.version} / {releaseBundle.channel}
+                {releaseBundle.version} / v0.1 Preview / {releaseBundle.channel}
               </p>
               <h3 className="mt-2 text-[18px] font-semibold text-neutral-100">
                 {releaseBundle.bundle.fileName}

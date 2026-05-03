@@ -18,8 +18,8 @@ export const releaseBundle = {
   promise:
     'Um caminho publico para baixar, verificar, instalar em preview, rodar smoke local e desfazer o setup sem depender de cloud obrigatoria.',
   bundle: {
-    id: 'basilisk-v0.1-public-preview-bundle',
-    fileName: 'basilisk-v0.1-preview.zip',
+    id: 'zavorth-v0.1-public-preview-bundle',
+    fileName: 'zavorth-v0.1-preview.zip',
     status: 'preview release candidate',
     digest: 'sha256:faae33f9400fdaf6a75a359a883d887cd5079ceff9f0b1011bc63f9078f74f91',
     size: 'artifact fixture',
@@ -90,7 +90,7 @@ export const releaseBundle = {
     },
   ] satisfies ReleaseBundleStep[],
   changelog: [
-    'Basilisk v0.1 Public Preview publica a productizacao publica com bundle verificavel e digest sha256.',
+    'Zavorth v0.1 Public Preview publica a productizacao publica com bundle verificavel e digest sha256.',
     'Installer opera preview-first com aprovacao explicita.',
     'Rollback/cleanup ficam limitados ao escopo instalado.',
   ],

@@ -6,7 +6,7 @@ export default function DocsPage() {
   return (
     <ContentPageShell
       eyebrow="Documentacao"
-      title="Docs externas do Basilisk"
+      title="Docs externas do Zavorth"
       intro="Instalacao, primeiro uso, exemplos, seguranca local-first e troubleshooting em uma camada publica antes dos internals."
     >
       <section id="external-docs" className="space-y-4">
@@ -38,7 +38,7 @@ export default function DocsPage() {
       <section id="quickstart" className="space-y-4">
         <h2 className="text-subheading text-neutral-100">Quickstart</h2>
         <ol className="list-decimal space-y-3 pl-5 text-body text-neutral-400">
-          <li>Abra o pacote ou repositorio do Basilisk em um workspace local com Node.js 18 ou mais recente.</li>
+          <li>Abra o pacote ou repositorio do Zavorth em um workspace local com Node.js 18 ou mais recente.</li>
           <li>Rode <code className="font-mono text-neutral-200">npm install</code> para preparar dependencias.</li>
           <li>Rode <code className="font-mono text-neutral-200">npm run go</code> para iniciar a jornada local supervisionada.</li>
           <li>Use <code className="font-mono text-neutral-200">npm run chat</code> para trabalhar pelo terminal conversacional.</li>

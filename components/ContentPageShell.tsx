@@ -17,10 +17,10 @@ export function ContentPageShell({
   return (
     <main className="min-h-screen bg-surface">
       <div className="max-w-content mx-auto px-6 py-8">
-        <a href="/" className="inline-flex items-center gap-2.5" aria-label="Voltar para a home do Basilisk">
+        <a href="/" className="inline-flex items-center gap-2.5" aria-label="Voltar para a home do Zavorth">
           <BrandMark className="h-7 w-7" />
           <span className="text-[15px] font-semibold tracking-tight text-neutral-100">
-            Basilisk
+            Zavorth
           </span>
         </a>
       </div>

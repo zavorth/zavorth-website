@@ -82,7 +82,7 @@ export function FeaturesSection() {
             Execucao com <span className="signal-text">governanca real.</span>
           </h2>
           <p className="section-lead text-body-lg text-neutral-500 leading-relaxed">
-            Em vez de um bloco pesado, o Basilisk aplica pequenas camadas de controle
+            Em vez de um bloco pesado, o Zavorth aplica pequenas camadas de controle
             ao longo do fluxo.
           </p>
         </div>

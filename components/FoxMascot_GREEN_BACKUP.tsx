@@ -7,7 +7,7 @@ import { useGSAP } from '@gsap/react'
 gsap.registerPlugin(useGSAP)
 
 /*
-  FoxMascot — Basilisk Hero Character
+  FoxMascot — Zavorth Hero Character
 
   Motion philosophy: calm, intelligent, premium, slightly alive.
   Think quiet 3D idle loop, not cartoon bounce.
@@ -444,7 +444,7 @@ export default function FoxMascot({
       ref={rootRef}
       className={`inline-block ${className}`}
       style={{ width: size }}
-      aria-label="Mascote Basilisk"
+      aria-label="Mascote Zavorth"
     >
       {/* Glow layer (behind mascot) */}
       <div

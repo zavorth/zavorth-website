@@ -10,7 +10,7 @@ export default function TermsPage() {
     >
       <section className="space-y-4">
         <p className="text-body leading-relaxed text-neutral-500">
-          Basilisk esta em preview publico. Use o runtime em workspaces que voce
+          Zavorth esta em preview publico. Use o runtime em workspaces que voce
           controla, revise previews antes de aprovar mutacoes e mantenha secrets
           fora de exemplos, replays e feedback compartilhado. Termos completos
           acompanham o ciclo de distribuicao publica.

@@ -19,7 +19,7 @@ const entrySurfaces = [
 
 export function LocalStackMarquee() {
   return (
-    <div className="local-stack-marquee" aria-label="Superficies de entrada do Basilisk">
+    <div className="local-stack-marquee" aria-label="Superficies de entrada do Zavorth">
       <span className="local-stack-marquee__label">Superficies de entrada</span>
       <div className="local-stack-marquee__viewport" aria-hidden="true">
         <div className="local-stack-marquee__track">

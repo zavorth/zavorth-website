@@ -69,14 +69,14 @@ export function Navbar() {
             <button
               onClick={scrollToTop}
               className="group flex items-center gap-2.5"
-              aria-label="Basilisk - voltar ao topo"
+              aria-label="Zavorth - voltar ao topo"
             >
               <BrandMark
                 animated
                 className="h-7 w-7 transition-transform duration-500 ease-out-expo group-hover:scale-110"
               />
               <span className="text-[15px] font-semibold tracking-tight text-neutral-100">
-                Basilisk
+                Zavorth
               </span>
             </button>
 

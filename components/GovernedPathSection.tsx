@@ -88,7 +88,7 @@ export function GovernedPathSection() {
             <span className="signal-text">E a arquitetura.</span>
           </h2>
           <p className="section-lead text-body-lg text-neutral-500 leading-relaxed">
-            O ponto nao e apenas executar. Basilisk mantem politica, aprovacao,
+            O ponto nao e apenas executar. Zavorth mantem politica, aprovacao,
             execucao e evidencia dentro de uma cadeia continua.
           </p>
         </div>

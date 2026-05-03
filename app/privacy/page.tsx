@@ -10,7 +10,7 @@ export default function PrivacyPage() {
     >
       <section className="space-y-4">
         <p className="text-body leading-relaxed text-neutral-500">
-          Basilisk e apresentado aqui como um runtime local-first. Os materiais
+          Zavorth e apresentado aqui como um runtime local-first. Os materiais
           publicos devem explicar quais dados ficam locais, que trafego de provedor
           sai da maquina e como logs, rastros e aprovacoes sao tratados. Telemetria
           e feedback publico ficam desligados por padrao ate o usuario revisar e

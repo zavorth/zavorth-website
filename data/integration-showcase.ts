@@ -49,7 +49,7 @@ export const integrationShowcase = {
       capabilities: ['abrir PR', 'ler checks', 'preparar release notes'],
       requirement: 'Credencial real exige gh autenticado e repo autorizado.',
       fixture: 'Fixture usa diff, checks e PR sintentico para demonstrar fluxo.',
-      degradation: 'Sem auth, o Basilisk gera plano, patch e corpo de PR sem publicar.',
+      degradation: 'Sem auth, o Zavorth gera plano, patch e corpo de PR sem publicar.',
       trustPlane: ['preview de diff', 'permissao por repo', 'rollback descrito'],
       partnerSurface: 'Compatibilidade via API/CLI publica; sem endosso de vendor.',
     },

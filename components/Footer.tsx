@@ -41,10 +41,10 @@ export function Footer() {
       <div className="max-w-content mx-auto px-6 py-14 md:py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))] md:gap-12">
           <div>
-            <a href="/" className="mb-5 flex items-center gap-2.5" aria-label="Basilisk">
+            <a href="/" className="mb-5 flex items-center gap-2.5" aria-label="Zavorth">
               <BrandMark className="h-7 w-7" />
               <span className="text-[15px] font-semibold tracking-tight text-neutral-200">
-                Basilisk
+                Zavorth
               </span>
             </a>
             <p className="max-w-sm text-caption leading-relaxed text-neutral-500">
@@ -81,7 +81,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-6 md:flex-row">
           <p className="text-[11px] text-neutral-700">
-            &copy; {new Date().getFullYear()} Basilisk. Feito para execucao local governada.
+            &copy; {new Date().getFullYear()} Zavorth. Feito para execucao local governada.
           </p>
           <div className="flex items-center gap-6">
             <a href="/privacy" className="text-[11px] text-neutral-700 transition-colors hover:text-neutral-400">

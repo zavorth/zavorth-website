@@ -5,14 +5,14 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
-const qaDistDir = '.next-basilisk-qa';
+const qaDistDir = '.next-zavorth-qa';
 
 removeGeneratedBuildDir(qaDistDir);
 removeGeneratedBuildDir('out');
 
 const env = {
   ...process.env,
-  BASILISK_NEXT_DIST_DIR: qaDistDir,
+  ZAVORTH_NEXT_DIST_DIR: qaDistDir,
   NEXT_TELEMETRY_DISABLED: '1',
 };
 

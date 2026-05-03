@@ -52,7 +52,7 @@ function checkRequiredFiles() {
 function checkFixtureContract() {
   const fixture = readText('data/public-demo.ts');
   const required = [
-    'fixture/basilisk-demo-workspace',
+    'fixture/zavorth-demo-workspace',
     'approval',
     'artifact',
     'replay',
@@ -83,7 +83,7 @@ function checkDemoRouteCopy() {
     'Um fluxo completo',
     'Estados cobertos',
     'Chat comum',
-    'Basilisk',
+    'Zavorth',
     'Ver run guiado',
   ];
   const missing = required.filter((phrase) => !route.includes(phrase));

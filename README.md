@@ -1,8 +1,8 @@
-# Basilisk Website
+# Zavorth Website
 
-Official public website base for Basilisk Public Productization phases 46-52.
+Official public website base for Zavorth Public Productization phases 46-52.
 
-The site explains Basilisk as a local-first, governed agent runtime. It is the
+The site explains Zavorth as a local-first, governed agent runtime. It is the
 public entrypoint for the demo, quickstart, integration surface, security
 posture and changelog.
 

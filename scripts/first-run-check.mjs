@@ -52,7 +52,7 @@ function checkRequiredFiles() {
 function checkFixtureContract() {
   const fixture = readText('data/first-run.ts');
   const required = [
-    'fixture/basilisk-first-run-workspace',
+    'fixture/zavorth-first-run-workspace',
     'requirements',
     'preview',
     'install',

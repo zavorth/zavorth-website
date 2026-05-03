@@ -153,7 +153,7 @@ export function ConnectsSection() {
             Conecta com o que <span className="signal-text">ja existe.</span>
           </h2>
           <p className="section-lead text-body-lg text-neutral-500 leading-relaxed">
-            O Basilisk se integra ao ecosistema que voce ja usa, sem trocar de stack.
+            O Zavorth se integra ao ecosistema que voce ja usa, sem trocar de stack.
           </p>
         </div>
 

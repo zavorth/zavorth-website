@@ -10,7 +10,7 @@ export function TerminalCard() {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    const text = activeTab === 'install' ? 'npx basilisk@latest' : 'basilisk status'
+    const text = activeTab === 'install' ? 'npx zavorth@latest' : 'zavorth status'
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -74,11 +74,11 @@ export function TerminalCard() {
       <div className="relative p-[28px] font-mono text-[14px] leading-relaxed">
         {activeTab === 'install' && (
           <div className="space-y-4">
-            <p className="text-[13px] italic text-[#5c645f]"># Suba o runtime Basilisk localmente</p>
+            <p className="text-[13px] italic text-[#5c645f]"># Suba o runtime Zavorth localmente</p>
             <div className="flex items-center gap-3">
               <span className="font-bold text-[#10b981] select-none">&gt;</span>
               <code className="flex-1 text-[#e6f1ea]">
-                npx <span className="text-[#6ee7b7]">basilisk@latest</span>
+                npx <span className="text-[#6ee7b7]">zavorth@latest</span>
               </code>
               <button 
                 onClick={handleCopy}
@@ -93,7 +93,7 @@ export function TerminalCard() {
 
         {activeTab === 'status' && (
           <div className="space-y-2">
-            <p className="text-[#10b981]">ACTIVE Basilisk Runtime</p>
+            <p className="text-[#10b981]">ACTIVE Zavorth Runtime</p>
             <p className="text-[#8a948f]">Versao: 1.0.4-beta</p>
             <p className="text-[#8a948f]">Sessao: <span className="text-[#e6f1ea]">bsk_9f2a71...</span></p>
             <p className="text-[#8a948f]">Canais ativos: <span className="text-[#6ee7b7]">Terminal, WhatsApp, Telegram</span></p>

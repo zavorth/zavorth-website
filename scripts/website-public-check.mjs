@@ -38,13 +38,13 @@ if (requirePass && failed > 0) {
 function checkPackageName() {
   const pkg = readJson('package.json');
   const lock = readJson('package-lock.json');
-  const ok = pkg?.name === 'basilisk-website' && lock?.name === 'basilisk-website';
+  const ok = pkg?.name === 'zavorth-website' && lock?.name === 'zavorth-website';
   return check(
     'package-name',
     ok ? 'pass' : 'fail',
     ok
       ? 'package.json e package-lock.json identificam o site oficial.'
-      : 'package.json e package-lock.json precisam usar name=basilisk-website.',
+      : 'package.json e package-lock.json precisam usar name=zavorth-website.',
     'package.json',
     [`package=${pkg?.name || '<ausente>'}`, `lock=${lock?.name || '<ausente>'}`],
   );

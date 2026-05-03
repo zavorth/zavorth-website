@@ -22,7 +22,7 @@ const flow = [
   {
     label: 'Planeja',
     title: 'Plano curto e verificavel',
-    desc: 'O Basilisk separa contexto, risco, ferramentas e proximos passos.',
+    desc: 'O Zavorth separa contexto, risco, ferramentas e proximos passos.',
   },
   {
     label: 'Pede sinal',
@@ -79,7 +79,7 @@ export function DemoSection() {
             Um pedido vira <span className="signal-text">trabalho entregue.</span>
           </h2>
           <p className="section-lead text-body-lg text-neutral-500 leading-relaxed">
-            O Basilisk conecta conversa, contexto, ferramentas e aprovacao em um
+            O Zavorth conecta conversa, contexto, ferramentas e aprovacao em um
             unico loop local.
           </p>
         </div>
@@ -99,7 +99,7 @@ export function DemoSection() {
             </p>
           </div>
 
-          <div className="product-demo-flow" aria-label="Fluxo resumido do Basilisk">
+          <div className="product-demo-flow" aria-label="Fluxo resumido do Zavorth">
             {flow.map((step, index) => (
               <article key={step.label} className="product-demo-step" data-product-item>
                 <span className="product-demo-step__index">{String(index + 1).padStart(2, '0')}</span>

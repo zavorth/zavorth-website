@@ -53,7 +53,7 @@ function checkReleaseContract() {
   const required = [
     'Release bundle and installer distribution',
     'v0.1 Public Preview',
-    'basilisk-v0.1-preview.zip',
+    'zavorth-v0.1-preview.zip',
     'sha256:faae33f9400fdaf6a75a359a883d887cd5079ceff9f0b1011bc63f9078f74f91',
     'Installer preview',
     'Aprovacao explicita',
@@ -153,7 +153,7 @@ function checkExportedRoute() {
     );
   }
   const html = fs.readFileSync(exported, 'utf8');
-  const required = ['Release bundle and installer distribution', 'basilisk-v0.1-preview.zip', 'Installer preview'];
+  const required = ['Release bundle and installer distribution', 'zavorth-v0.1-preview.zip', 'Installer preview'];
   const missing = required.filter((phrase) => !html.includes(phrase));
   return check(
     'exported-release',

@@ -135,7 +135,7 @@ export function FlowSection() {
             From language to governed action
           </h2>
           <p className="text-body-lg text-neutral-500 max-w-2xl mx-auto leading-relaxed">
-            The point is not only execution. Basilisk shapes intent into an auditable
+            The point is not only execution. Zavorth shapes intent into an auditable
             path before it touches tools, operators, or local systems.
           </p>
         </div>

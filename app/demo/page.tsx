@@ -29,10 +29,10 @@ export default function PublicDemoPage() {
     <main className="min-h-screen bg-surface text-neutral-100">
       <header className="border-b border-white/[0.06] bg-surface/88">
         <div className="max-w-8xl mx-auto flex items-center justify-between px-6 py-5">
-          <a href="/" className="inline-flex items-center gap-2.5" aria-label="Voltar para a home do Basilisk">
+          <a href="/" className="inline-flex items-center gap-2.5" aria-label="Voltar para a home do Zavorth">
             <BrandMark className="h-7 w-7" />
             <span className="text-[15px] font-semibold tracking-tight text-neutral-100">
-              Basilisk
+              Zavorth
             </span>
           </a>
           <a

@@ -25,7 +25,7 @@ export const firstRunStory = {
   title: 'Primeiro uso local com preview',
   objective:
     'Sair do site para uma primeira sessao local segura: checar requisitos, mostrar plano, rodar modo fixture, verificar saude e explicar cleanup.',
-  workspace: 'fixture/basilisk-first-run-workspace',
+  workspace: 'fixture/zavorth-first-run-workspace',
   command: 'npm run go',
   followUpCommands: ['npm run doctor', 'npm run chat'],
   safety: [
@@ -43,7 +43,7 @@ export const firstRunStory = {
     {
       label: 'Workspace local',
       status: 'necessario',
-      detail: 'Um diretorio de trabalho onde o Basilisk pode criar apenas artefatos do first-run.',
+      detail: 'Um diretorio de trabalho onde o Zavorth pode criar apenas artefatos do first-run.',
     },
     {
       label: 'Rede externa',
@@ -71,7 +71,7 @@ export const firstRunStory = {
       label: 'Modo local seguro',
       title: 'Execucao sem credenciais',
       detail: 'O comando publico entra em modo local/fixture e evita dependencia externa no primeiro contato.',
-      evidence: 'fixture/basilisk-first-run-workspace',
+      evidence: 'fixture/zavorth-first-run-workspace',
     },
     {
       state: 'first-run',

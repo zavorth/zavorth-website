@@ -22,7 +22,7 @@ export const distributionPolicy = {
       id: 'local',
       name: 'Local',
       status: 'public',
-      audience: 'Pessoa rodando Basilisk na propria maquina.',
+      audience: 'Pessoa rodando Zavorth na propria maquina.',
       includes: [
         'Runtime local-first',
         'CLI, docs, demo e first-run',

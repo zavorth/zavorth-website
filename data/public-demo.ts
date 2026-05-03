@@ -19,8 +19,8 @@ export const publicDemoStory = {
   title: 'Build fix com aprovacao e replay',
   objective:
     'Corrigir uma falha de build em um workspace de exemplo, mostrar o plano, pedir aprovacao antes de mutar, gerar artifact e deixar replay auditavel.',
-  workspace: 'fixture/basilisk-demo-workspace',
-  command: 'basilisk run "corrija o build, rode testes e mostre o que mudou"',
+  workspace: 'fixture/zavorth-demo-workspace',
+  command: 'zavorth run "corrija o build, rode testes e mostre o que mudou"',
   safety: [
     'fixture local sem secrets',
     'sem rede externa obrigatoria',
@@ -39,7 +39,7 @@ export const publicDemoStory = {
       state: 'plan',
       label: 'Plano',
       title: 'DAG curta e verificavel',
-      detail: 'Basilisk separa leitura, patch, validacao e resumo em etapas pequenas.',
+      detail: 'Zavorth separa leitura, patch, validacao e resumo em etapas pequenas.',
       evidence: '4 etapas, 2 tools, budget local',
     },
     {
@@ -129,7 +129,7 @@ export const publicDemoStory = {
       text: 'Responde o que talvez esteja errado e deixa voce montar o resto.',
     },
     {
-      label: 'Basilisk',
+      label: 'Zavorth',
       text: 'Planeja, pede sinal, executa, prova, registra artifact e deixa replay.',
     },
   ],

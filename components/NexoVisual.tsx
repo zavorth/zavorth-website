@@ -55,7 +55,7 @@ export function NexoVisual() {
         <g className="nodes">
           {/* Core Node */}
           <circle cx="200" cy="200" r="40" className="fill-[#10b981]/20 stroke-[#10b981] stroke-2" filter="url(#glow)" />
-          <text x="200" y="205" textAnchor="middle" className="fill-white font-sans font-bold text-[10px]">BASILISK</text>
+          <text x="200" y="205" textAnchor="middle" className="fill-white font-sans font-bold text-[10px]">ZAVORTH</text>
 
           {/* Model Nodes */}
           {[

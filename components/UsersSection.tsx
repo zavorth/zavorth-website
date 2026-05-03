@@ -28,7 +28,7 @@ const audiences: Audience[] = [
   {
     label: 'Developers',
     title: 'Build on solid ground.',
-    desc: 'A typed tool manifest, a skill SDK, first-class MCP servers, and surface adapters. Extend Basilisk without fighting the runtime.',
+    desc: 'A typed tool manifest, a skill SDK, first-class MCP servers, and surface adapters. Extend Zavorth without fighting the runtime.',
     Icon: Code2,
   },
 ]

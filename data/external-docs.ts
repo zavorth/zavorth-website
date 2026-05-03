@@ -51,7 +51,7 @@ export const externalDocs = {
     {
       id: 'examples',
       title: 'Exemplos por caso de uso',
-      summary: 'Engenharia, release e artifacts/replay mostram o Basilisk como parceiro operacional auditavel.',
+      summary: 'Engenharia, release e artifacts/replay mostram o Zavorth como parceiro operacional auditavel.',
       links: ['/examples', '/docs#examples', '/demo', '/docs#feature-maturity'],
     },
     {

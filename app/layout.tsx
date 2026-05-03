@@ -15,9 +15,9 @@ const jbMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Basilisk - Runtime local-first para agentes',
+  title: 'Zavorth - Runtime local-first para agentes',
   description:
-    'Basilisk e um runtime local-first para transformar linguagem natural em execucao governada.',
+    'Zavorth e um runtime local-first para transformar linguagem natural em execucao governada.',
   keywords: [
     'agent runtime',
     'AI agent',
@@ -26,9 +26,9 @@ export const metadata: Metadata = {
     'governed execution',
     'MCP',
   ],
-  authors: [{ name: 'Basilisk' }],
+  authors: [{ name: 'Zavorth' }],
   openGraph: {
-    title: 'Basilisk - Runtime local-first para agentes',
+    title: 'Zavorth - Runtime local-first para agentes',
     description: 'Linguagem natural, execucao real e controle local.',
     type: 'website',
     locale: 'pt_BR',

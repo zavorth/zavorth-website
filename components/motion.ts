@@ -7,7 +7,7 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 let registered = false
 
 /*
-  Shared motion helpers for the Basilisk marketing site.
+  Shared motion helpers for the Zavorth marketing site.
 
   Rules:
   - core content must render visible by default;

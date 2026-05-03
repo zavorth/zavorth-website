@@ -110,7 +110,7 @@ export function ControlSection() {
             Built for control
           </h2>
           <p className="text-body-lg text-neutral-500 max-w-2xl mx-auto leading-relaxed">
-            Basilisk is strongest when it stays disciplined. Policy, approval,
+            Zavorth is strongest when it stays disciplined. Policy, approval,
             execution, and audit remain one continuous chain instead of a set of
             disconnected safety features.
           </p>

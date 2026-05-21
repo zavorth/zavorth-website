@@ -219,9 +219,9 @@ export function InstallSection() {
             style={{
               height: 'clamp(5rem, 18vw, 14rem)',
               maskImage:
-                'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.08))',
+                'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 100%)',
               WebkitMaskImage:
-                'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.08))',
+                'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 100%)',
             }}
           >
             <h2
@@ -229,11 +229,11 @@ export function InstallSection() {
               style={{
                 fontSize: 'clamp(5rem, 18vw, 14rem)',
                 backgroundImage:
-                  'linear-gradient(to bottom, #5a5a5a 0%, #2a2a2a 40%, transparent 100%)',
+                  'linear-gradient(to bottom, #ffffff 0%, #888888 60%, transparent 100%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
-                textShadow: 'none',
+                textShadow: '0px 0px 30px rgba(255, 255, 255, 0.05)',
               }}
             >
               ZAVORTH

@@ -218,7 +218,7 @@ export function InstallSection() {
             <h2
               className="pointer-events-none whitespace-nowrap text-center font-extrabold leading-[0.8] tracking-[-0.06em]"
               style={{
-                fontSize: 'clamp(6rem, 20vw, 16rem)',
+                fontSize: 'clamp(4.5rem, 15vw, 11rem)',
                 background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(130,130,130,1) 30%, rgba(30,30,30,0) 80%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',

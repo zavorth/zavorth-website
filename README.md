@@ -44,10 +44,11 @@ app/
   terms/page.tsx
 components/
   Hero.tsx
-  DemoSection.tsx
-  RuntimeSection.tsx
-  FeaturesSection.tsx
+  HowItWorksSection.tsx
+  CapabilitiesSection.tsx
+  TrustSection.tsx
   ConnectsSection.tsx
+  UseCasesSection.tsx
   CTASection.tsx
   Footer.tsx
 scripts/

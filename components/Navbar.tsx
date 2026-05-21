@@ -1,27 +1,31 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Menu, X } from 'lucide-react'
 import { BrandMark } from './BrandMark'
+import { NAV_LINKS } from '../lib/constants'
 
-const navLinks = [
-  { id: 'product', label: 'Produto' },
-  { id: 'runtime', label: 'Runtime' },
-  { id: 'governance', label: 'Capacidades' },
-  { id: 'connects', label: 'Conexoes' },
-  { id: 'get-started', label: 'Comecar' },
-]
-
+/**
+ * Navbar — Gemini-grade top bar
+ *
+ * Behavior:
+ * - At top: transparent, wide, blends with hero
+ * - On scroll: floats as a compact pill with glass blur
+ * - Logo: premium Convergence Spark icon + "Zavorth" wordmark
+ * - Right side: subtle status dot + glass CTA button
+ * - Mobile: full-screen overlay menu
+ */
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeId, setActiveId] = useState<string>('')
+  const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
+      setIsScrolled(window.scrollY > 40)
 
-      const sections = navLinks
+      const sections = NAV_LINKS
         .map((link) => document.getElementById(link.id))
         .filter(Boolean) as HTMLElement[]
 
@@ -44,203 +48,168 @@ export function Navbar() {
     }
   }, [isMobileMenuOpen])
 
-  const scrollToSection = (id: string) => {
+  const scrollToSection = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setIsMobileMenuOpen(false)
-  }
+  }, [])
 
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     setIsMobileMenuOpen(false)
-  }
+  }, [])
 
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-[background,border-color,backdrop-filter] duration-300 ease-out-quart ${
+        ref={navRef}
+        className={`navbar-root fixed left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isScrolled
-            ? 'bg-surface/78 border-b border-white/[0.04] shadow-[0_1px_20px_rgba(0,0,0,0.22)] backdrop-blur-xl'
-            : 'border-b border-transparent bg-transparent'
+            ? 'navbar-scrolled top-3 mx-auto max-w-[94%] sm:max-w-3xl lg:max-w-4xl'
+            : 'navbar-top top-0'
         }`}
         aria-label="Primary"
       >
-        <div className="max-w-content mx-auto px-6">
-          <div className="flex h-16 items-center justify-between">
-            <button
-              onClick={scrollToTop}
-              className="group flex items-center gap-2.5"
-              aria-label="Zavorth - voltar ao topo"
-            >
-              <BrandMark
-                animated
-                className="h-7 w-7 transition-transform duration-500 ease-out-expo group-hover:scale-110"
-              />
-              <span className="text-[15px] font-semibold tracking-tight text-neutral-100">
-                Zavorth
-              </span>
-            </button>
+        <div className={`navbar-inner transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isScrolled
+            ? 'rounded-full border border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)] px-3 sm:px-5'
+            : 'bg-transparent px-5 sm:px-6'
+        }`}>
+          <div className="mx-auto max-w-content">
+            <div className={`flex items-center justify-between transition-all duration-500 ${
+              isScrolled ? 'h-[3.25rem]' : 'h-[3.75rem]'
+            }`}>
 
-            <div className="hidden items-center gap-0.5 lg:flex">
-              {navLinks.map((link) => {
-                const active = activeId === link.id
+              {/* ─── Logo ─── */}
+              <button
+                onClick={scrollToTop}
+                className="group flex items-center gap-2 transition-all duration-300"
+                aria-label="Zavorth — voltar ao topo"
+              >
+                <div className="relative">
+                  {/* Ambient glow behind icon on hover */}
+                  <div className="absolute inset-0 rounded-full bg-amber/20 blur-lg opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
+                  <BrandMark className="relative h-7 w-7 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110" />
+                </div>
+                <span className="text-[15px] font-semibold tracking-[-0.02em] text-white/90 transition-colors duration-300 group-hover:text-white">
+                  Zavorth
+                </span>
+              </button>
 
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => scrollToSection(link.id)}
-                    className={`nav-link-underline nav-pill relative px-3.5 py-2 text-caption font-medium transition-colors duration-200 ${
-                      active ? 'nav-pill-active' : ''
-                    } ${
-                      active ? 'text-neutral-100' : 'text-neutral-500 hover:text-neutral-200'
-                    }`}
-                  >
-                    {link.label}
-                    <span
-                      className={`absolute left-3.5 right-3.5 -bottom-0.5 h-px bg-accent transition-all duration-300 ease-out-quart ${
-                        active ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
+              {/* ─── Desktop Navigation Links ─── */}
+              <div className="hidden items-center gap-1 lg:flex">
+                {NAV_LINKS.map((link) => {
+                  const active = activeId === link.id
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={() => scrollToSection(link.id)}
+                      className={`navbar-link relative px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all duration-300 ${
+                        active
+                          ? 'text-white bg-white/[0.08]'
+                          : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]'
                       }`}
-                      aria-hidden="true"
-                    />
-                  </button>
-                )
-              })}
-            </div>
+                    >
+                      {link.label}
+                    </button>
+                  )
+                })}
+              </div>
 
-            <div className="hidden items-center gap-2 lg:flex">
-              <a
-                href="/demo"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Demo
-              </a>
-              <a
-                href="/examples"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Exemplos
-              </a>
-              <a
-                href="/editions"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Edicoes
-              </a>
-              <a
-                href="/release"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Release
-              </a>
-              <a
-                href="/integrations"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Integracoes
-              </a>
-              <a
-                href="/feedback"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Feedback
-              </a>
-              <a
-                href="/docs"
-                className="px-3 py-2 text-caption text-neutral-400 transition-colors hover:text-neutral-200"
-              >
-                Docs
-              </a>
-              <a
-                href="/start"
-                className="btn-sheen rounded-lg border border-accent/12 bg-accent/10 px-5 py-2 text-caption text-accent transition-all duration-300 hover:border-accent/22 hover:bg-accent/18 hover:shadow-glow-sm"
-              >
-                Comecar
-              </a>
-            </div>
+              {/* ─── Desktop Right Side ─── */}
+              <div className="hidden items-center gap-3 lg:flex">
+                {/* Status indicator — minimal */}
+                <div className="flex items-center gap-2 opacity-70">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-40" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber" />
+                  </span>
+                  <span className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-white/40">
+                    pronto
+                  </span>
+                </div>
 
-            <button
-              className="p-2.5 text-neutral-400 transition-colors hover:text-neutral-200 lg:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+                {/* CTA Button — glass with amber accent */}
+                <a
+                  href="#install"
+                  onClick={(e) => { e.preventDefault(); scrollToSection('install') }}
+                  className="navbar-cta group relative overflow-hidden rounded-full px-5 py-2 text-[13px] font-semibold text-[#1a1207] transition-all duration-300"
+                >
+                  {/* Button background with gradient */}
+                  <div
+                    className="absolute inset-0 rounded-full transition-all duration-300 group-hover:shadow-[0_4px_20px_rgba(245,158,11,0.35)]"
+                    style={{
+                      background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%)',
+                    }}
+                    aria-hidden="true"
+                  />
+                  {/* Sheen overlay */}
+                  <div
+                    className="absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{
+                      background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%)',
+                    }}
+                    aria-hidden="true"
+                  />
+                  <span className="relative z-10">Começar agora</span>
+                </a>
+              </div>
+
+              {/* ─── Mobile Toggle ─── */}
+              <button
+                className="relative p-2 text-white/50 transition-colors hover:text-white/80 lg:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+                aria-expanded={isMobileMenuOpen}
+              >
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
+      {/* ─── Mobile Menu ─── */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 lg:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label="Mobile navigation"
+          aria-label="Navegação mobile"
         >
           <div
-            className="absolute inset-0 bg-surface/95 backdrop-blur-md"
+            className="absolute inset-0 bg-[#030303]/95 backdrop-blur-xl"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="relative mt-16 border-t border-border bg-surface px-6 py-8">
+          <div className="relative mt-[3.75rem] border-t border-white/[0.06] px-6 py-8">
             <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <button
-                  key={link.id}
-                  onClick={() => scrollToSection(link.id)}
-                  className="w-full rounded-lg px-3 py-3 text-left text-body text-neutral-400 transition-colors hover:bg-surface-raised hover:text-neutral-100"
-                >
-                  {link.label}
-                </button>
-              ))}
+              {NAV_LINKS.map((link) => {
+                const active = activeId === link.id
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => scrollToSection(link.id)}
+                    className={`w-full rounded-xl px-4 py-3.5 text-left text-[15px] font-medium transition-all duration-200 ${
+                      active
+                        ? 'bg-white/[0.06] text-white'
+                        : 'text-white/50 hover:bg-white/[0.03] hover:text-white/80'
+                    }`}
+                  >
+                    {link.label}
+                  </button>
+                )
+              })}
             </nav>
-            <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6">
+            <div className="mt-8 border-t border-white/[0.06] pt-6">
               <a
-                href="/start"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
+                href="#install"
+                onClick={(e) => { e.preventDefault(); scrollToSection('install'); setIsMobileMenuOpen(false) }}
+                className="block w-full rounded-xl py-3.5 text-center text-[15px] font-semibold text-[#1a1207] transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%)',
+                }}
               >
-                Comecar
-              </a>
-              <a
-                href="/demo"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
-              >
-                Ver demo
-              </a>
-              <a
-                href="/examples"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
-              >
-                Exemplos
-              </a>
-              <a
-                href="/editions"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
-              >
-                Edicoes
-              </a>
-              <a
-                href="/release"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
-              >
-                Release
-              </a>
-              <a
-                href="/integrations"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
-              >
-                Integracoes
-              </a>
-              <a
-                href="/feedback"
-                className="w-full rounded-xl border border-white/[0.08] px-4 py-3 text-center font-medium text-neutral-300 transition-colors hover:bg-surface-raised"
-              >
-                Feedback
-              </a>
-              <a
-                href="/docs#quickstart"
-                className="w-full rounded-xl bg-accent px-4 py-3 text-center font-medium text-surface transition-colors hover:bg-accent-light"
-              >
-                Quickstart
+                Começar agora
               </a>
             </div>
           </div>

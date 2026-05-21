@@ -1,143 +1,179 @@
-'use client'
-
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 
-let registered = false
-
-/*
-  Shared motion helpers for the Zavorth marketing site.
-
-  Rules:
-  - core content must render visible by default;
-  - GSAP enhances layout, it never gates readability;
-  - reduced motion should collapse to the final visual state cleanly.
-*/
+/* ─── GSAP Plugin Registration ─── */
+let pluginsRegistered = false
 
 export function ensureGsapPlugins() {
-  if (!registered) {
-    gsap.registerPlugin(ScrollTrigger, MotionPathPlugin)
-    registered = true
-  }
+  if (pluginsRegistered) return
+  gsap.registerPlugin(ScrollTrigger)
+  pluginsRegistered = true
 }
 
-export function prefersReducedMotion() {
-  return typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
-type RevealOptions = {
-  trigger?: Element | string
+/* ─── GSAP Scroll Reveal ─── */
+interface RevealOptions {
+  trigger: HTMLElement | string
   start?: string
   y?: number
   duration?: number
   stagger?: number
 }
 
-export function createReveal(
-  targets: gsap.TweenTarget,
-  {
-    trigger,
-    start = 'top 72%',
-    y = 18,
-    duration = 0.7,
-    stagger = 0.08,
-  }: RevealOptions = {}
-) {
-  if (prefersReducedMotion()) return null
-
-  return gsap.from(targets, {
-    y,
-    duration,
-    ease: 'expo.out',
-    stagger,
-    clearProps: 'transform',
-    scrollTrigger: trigger
-      ? {
-          trigger,
-          start,
-          once: true,
-        }
-      : undefined,
-  })
+export function createReveal(selector: string, opts: RevealOptions) {
+  gsap.fromTo(
+    selector,
+    { y: opts.y ?? 16, opacity: 0 },
+    {
+      y: 0,
+      opacity: 1,
+      duration: opts.duration ?? 0.75,
+      ease: 'expo.out',
+      stagger: opts.stagger ?? 0.06,
+      scrollTrigger: {
+        trigger: opts.trigger,
+        start: opts.start ?? 'top 78%',
+        once: true,
+      },
+    }
+  )
 }
 
-type LineDrawOptions = {
-  trigger?: Element | string
-  start?: string
-  end?: string
-  scrub?: number | boolean
-  duration?: number
-  ease?: string
+/* ─── Framer Motion Variants ─── */
+export const fadeInUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (delay: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      delay,
+      ease: [0.19, 1, 0.22, 1],
+    },
+  }),
 }
 
-export function setupLineDraw(path: SVGPathElement) {
-  const length = path.getTotalLength()
-  gsap.set(path, { strokeDasharray: length, strokeDashoffset: length })
-  return length
+export const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: (delay: number = 0) => ({
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      delay,
+      ease: 'easeOut',
+    },
+  }),
 }
 
-export function animateLineDraw(
-  path: SVGPathElement,
-  {
-    trigger,
-    start = 'top 78%',
-    end,
-    scrub,
-    duration = 1.2,
-    ease = 'power2.inOut',
-  }: LineDrawOptions = {}
-) {
-  if (prefersReducedMotion()) {
-    gsap.set(path, { strokeDashoffset: 0 })
-    return null
+export const staggerContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+export const scaleIn = {
+  hidden: { opacity: 0, scale: 0.92 },
+  visible: (delay: number = 0) => ({
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      delay,
+      ease: [0.19, 1, 0.22, 1],
+    },
+  }),
+}
+
+/* ─── Premium GSAP Dynamic Interactions ─── */
+
+/**
+ * Tracks the mouse coordinate on a card element and exposes it as CSS variables
+ * for a radial spotlight glow effect.
+ */
+export function initSpotlight(card: HTMLElement) {
+  const onMouseMove = (e: MouseEvent) => {
+    const rect = card.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    card.style.setProperty('--mouse-x', `${x}px`)
+    card.style.setProperty('--mouse-y', `${y}px`)
   }
-
-  return gsap.to(path, {
-    strokeDashoffset: 0,
-    duration,
-    ease,
-    scrollTrigger: trigger
-      ? {
-          trigger,
-          start,
-          end,
-          scrub,
-        }
-      : undefined,
-  })
+  card.addEventListener('mousemove', onMouseMove)
+  return () => card.removeEventListener('mousemove', onMouseMove)
 }
 
-export function attachMagneticGlow(
-  root: ParentNode,
-  selector = '.magnetic-glow'
-) {
-  if (
-    typeof window === 'undefined'
-    || prefersReducedMotion()
-    || !window.matchMedia('(pointer: fine)').matches
-  ) {
-    return () => {}
-  }
+/**
+ * Tilts a card element in 3D perspective space depending on mouse position.
+ */
+export function initTilt3D(card: HTMLElement, maxTilt = 6) {
+  const onMouseMove = (e: MouseEvent) => {
+    const rect = card.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const xc = rect.width / 2
+    const yc = rect.height / 2
+    const tiltX = ((y - yc) / yc) * maxTilt
+    const tiltY = -((x - xc) / xc) * maxTilt
 
-  const cards = Array.from(root.querySelectorAll<HTMLElement>(selector))
-
-  const onMove = (event: PointerEvent) => {
-    const target = event.currentTarget as HTMLElement | null
-    if (!target) return
-    const rect = target.getBoundingClientRect()
-    target.style.setProperty('--mouse-x', `${event.clientX - rect.left}px`)
-    target.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`)
-  }
-
-  cards.forEach((card) => {
-    card.addEventListener('pointermove', onMove)
-  })
-
-  return () => {
-    cards.forEach((card) => {
-      card.removeEventListener('pointermove', onMove)
+    gsap.to(card, {
+      rotateX: tiltX,
+      rotateY: tiltY,
+      transformPerspective: 1000,
+      ease: 'power2.out',
+      duration: 0.4,
     })
+  }
+
+  const onMouseLeave = () => {
+    gsap.to(card, {
+      rotateX: 0,
+      rotateY: 0,
+      ease: 'power3.out',
+      duration: 0.6,
+    })
+  }
+
+  card.addEventListener('mousemove', onMouseMove)
+  card.addEventListener('mouseleave', onMouseLeave)
+  return () => {
+    card.removeEventListener('mousemove', onMouseMove)
+    card.removeEventListener('mouseleave', onMouseLeave)
+  }
+}
+
+/**
+ * Creates a magnetic attraction effect, pulling the button towards the cursor.
+ */
+export function initMagnetic(btn: HTMLElement, force = 0.3) {
+  const onMouseMove = (e: MouseEvent) => {
+    const rect = btn.getBoundingClientRect()
+    const x = e.clientX - (rect.left + rect.width / 2)
+    const y = e.clientY - (rect.top + rect.height / 2)
+
+    gsap.to(btn, {
+      x: x * force,
+      y: y * force,
+      duration: 0.3,
+      ease: 'power2.out',
+    })
+  }
+
+  const onMouseLeave = () => {
+    gsap.to(btn, {
+      x: 0,
+      y: 0,
+      duration: 0.6,
+      ease: 'elastic.out(1.1, 0.4)',
+    })
+  }
+
+  btn.addEventListener('mousemove', onMouseMove)
+  btn.addEventListener('mouseleave', onMouseLeave)
+  return () => {
+    btn.removeEventListener('mousemove', onMouseMove)
+    btn.removeEventListener('mouseleave', onMouseLeave)
   }
 }

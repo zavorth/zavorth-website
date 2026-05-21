@@ -13,6 +13,7 @@ import {
   Send,
   Sparkles,
   Webhook,
+  Terminal,
 } from 'lucide-react'
 import gsap from 'gsap'
 import { createReveal, ensureGsapPlugins } from './motion'
@@ -70,9 +71,9 @@ const integrations = [
     name: 'MCP',
     tag: 'Protocol',
     Icon: Webhook,
-    color: '#34d399',
-    bg: 'rgba(52, 211, 153, 0.11)',
-    border: 'rgba(52, 211, 153, 0.22)',
+    color: '#f59e0b',
+    bg: 'rgba(245, 158, 11, 0.11)',
+    border: 'rgba(245, 158, 11, 0.22)',
   },
   {
     name: 'Ollama',
@@ -116,7 +117,7 @@ const integrations = [
   },
 ]
 
-export function ConnectsSection() {
+export function ConnectionsSection() {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -143,26 +144,30 @@ export function ConnectsSection() {
   }, [])
 
   return (
-    <section id="connects" ref={rootRef} className="relative section-rhythm">
-      <div className="section-divider max-w-content mx-auto mb-16 lg:mb-20" />
-
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="connections" ref={rootRef} className="relative section-rhythm">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div data-conn-header className="text-center mb-12 md:mb-14">
-          <p className="eyebrow mb-4 justify-center mx-auto">04 - Conexoes</p>
-          <h2 className="section-title-display text-heading sm:text-display-sm text-neutral-50 mb-5">
-            Conecta com o que <span className="signal-text">ja existe.</span>
+          <p className="eyebrow mb-4 justify-center mx-auto">Channel Mesh</p>
+          <h2 className="section-title-display text-heading sm:text-display-sm text-text-primary mb-5">
+            Conecta com o que{' '}
+            <span className="text-amber">já existe.</span>
           </h2>
-          <p className="section-lead text-body-lg text-neutral-500 leading-relaxed">
-            O Zavorth se integra ao ecosistema que voce ja usa, sem trocar de stack.
+          <p className="section-lead text-body-lg text-text-muted leading-relaxed max-w-2xl mx-auto">
+            O Zavorth se integra ao ecossistema que você já usa, sem trocar de stack.
+            Dashboard, CLI, Telegram, API — mesmo agente, qualquer superfície.
           </p>
         </div>
 
         <div
           data-conn-content
-          className="relative overflow-hidden rounded-[26px] border border-white/[0.06] bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.08),transparent_42%),rgba(255,255,255,0.018)] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_24px_80px_rgba(0,0,0,0.25)] sm:p-3"
+          className="relative overflow-hidden rounded-[26px] border border-white/[0.06] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_24px_80px_rgba(0,0,0,0.25)] sm:p-3"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.06), transparent 42%), rgba(255,255,255,0.018)',
+          }}
         >
           <div
-            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent"
+            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber/30 to-transparent"
             aria-hidden="true"
           />
 
@@ -216,15 +221,9 @@ export function ConnectsSection() {
         </div>
 
         <div data-conn-item className="mt-6 text-center">
-          <p className="text-[12px] text-neutral-600 font-mono uppercase tracking-[0.16em]">
-            + skills customizaveis - MCP servers - subagentes
+          <p className="text-[12px] text-text-faint font-mono uppercase tracking-[0.16em]">
+            + skills customizáveis · MCP servers · subagentes
           </p>
-          <a
-            href="/integrations"
-            className="mt-4 inline-flex rounded-lg border border-white/[0.08] px-4 py-2 text-[12px] font-medium text-neutral-400 transition-colors hover:text-neutral-100"
-          >
-            Ver integration showcase
-          </a>
         </div>
       </div>
     </section>

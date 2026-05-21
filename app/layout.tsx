@@ -1,37 +1,70 @@
 import type { Metadata } from 'next'
-import { Outfit, JetBrains_Mono } from 'next/font/google'
+import { JetBrains_Mono, Playfair_Display } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 
-const outfit = Outfit({ 
-  subsets: ['latin'], 
+const googleSans = localFont({
+  src: [
+    {
+      path: '../public/fonts/GoogleSans-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/GoogleSans-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/GoogleSans-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/GoogleSans-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-sans',
   display: 'swap',
 })
 
-const jbMono = JetBrains_Mono({ 
-  subsets: ['latin'], 
+const jbMono = JetBrains_Mono({
+  subsets: ['latin'],
   variable: '--font-mono',
   display: 'swap',
 })
 
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Zavorth - Runtime local-first para agentes',
+  title: 'Zavorth — IA em ação com você no controle',
   description:
-    'Zavorth e um runtime local-first para transformar linguagem natural em execucao governada.',
+    'Zavorth é um painel de controle para usar IA no mundo real: peça tarefas, veja o plano, aprove ações importantes e acompanhe tudo com clareza.',
   keywords: [
-    'agent runtime',
-    'AI agent',
-    'local-first',
-    'natural language',
-    'governed execution',
-    'MCP',
+    'Zavorth',
+    'IA',
+    'inteligência artificial',
+    'painel de controle',
+    'automação segura',
+    'agentes de IA',
+    'controle',
+    'aprovação',
   ],
   authors: [{ name: 'Zavorth' }],
   openGraph: {
-    title: 'Zavorth - Runtime local-first para agentes',
-    description: 'Linguagem natural, execucao real e controle local.',
-    type: 'website',
+    title: 'Zavorth — IA em ação com você no controle',
+    description:
+      'Zavorth é um painel de controle para usar IA no mundo real: peça tarefas, veja o plano, aprove ações importantes e acompanhe tudo com clareza.',
+    siteName: 'Zavorth',
     locale: 'pt_BR',
+    type: 'website',
+    images: ['/og-zavorth.png'],
   },
 }
 
@@ -41,7 +74,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${outfit.variable} ${jbMono.variable}`}>
+    <html lang="pt-BR" className={`${googleSans.variable} ${jbMono.variable} ${playfair.variable}`}>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>

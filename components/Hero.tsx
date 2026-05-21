@@ -1,67 +1,94 @@
 'use client'
 
-import React, { useLayoutEffect, useRef, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import React, { useLayoutEffect, useRef, useState, useCallback } from 'react'
 import gsap from 'gsap'
-import FoxMascot from './FoxMascot'
-import HeroNetworkBackground from './HeroNetworkBackground'
+import { BlackHoleCanvas } from './BlackHoleCanvas'
 import { LocalStackMarquee } from './LocalStackMarquee'
+
+/**
+ * Hero Section — Gemini I/O 2026 Style
+ *
+ * Behavior modeled after gemini.google/about:
+ * 1. Page loads with black screen
+ * 2. Title words animate in with scale + blur stagger (text is NOT selectable)
+ * 3. After title completes, the background animation fades in
+ * 4. User interacts ONLY with the canvas (click changes colors, drag orbits)
+ * 5. A single CTA button below the title
+ */
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
-  const [isMascotHot, setIsMascotHot] = useState(false)
+  const textLayerRef = useRef<HTMLHeadingElement>(null)
+  const canvasWrapRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  const marqueeRef = useRef<HTMLDivElement>(null)
+  const [animationReady, setAnimationReady] = useState(false)
 
   useLayoutEffect(() => {
-    if (!sectionRef.current) return
+    if (!sectionRef.current || !textLayerRef.current || !canvasWrapRef.current) return
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-hero-bg]',
-        { opacity: 0 },
-        { opacity: 1, duration: 2, ease: 'power2.out', stagger: 0.1 },
-      )
+      const words = textLayerRef.current!.querySelectorAll('.hero-word')
+      const canvasWrap = canvasWrapRef.current!
+      const cta = ctaRef.current
 
-      gsap.fromTo(
-        '[data-hero-mascot]',
-        { y: 34, opacity: 0, scale: 0.92 },
-        { y: 0, opacity: 1, scale: 1, duration: 1.05, ease: 'expo.out', delay: 0.25 },
-      )
+      // Start: everything hidden
+      gsap.set(words, { opacity: 0, scale: 0.85, filter: 'blur(12px)', y: 20 })
+      gsap.set(canvasWrap, { opacity: 0 })
+      if (cta) gsap.set(cta, { opacity: 0, y: 16 })
+      if (marqueeRef.current) gsap.set(marqueeRef.current, { opacity: 0 })
 
-      gsap.fromTo(
-        '[data-hero-eyebrow]',
-        { y: 14, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'expo.out', delay: 0.46 },
-      )
-
-      const headlineLines = sectionRef.current?.querySelectorAll('[data-hero-line]')
-      headlineLines?.forEach((line, i) => {
-        gsap.fromTo(
-          line,
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.9, ease: 'expo.out', delay: 0.64 + i * 0.12 },
-        )
+      // Timeline: text first, then canvas
+      const tl = gsap.timeline({
+        delay: 0.3,
+        onComplete: () => setAnimationReady(true),
       })
 
-      gsap.fromTo(
-        '[data-hero-copy]',
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'expo.out', delay: 1.02 },
-      )
+      // Phase 1: Words stagger in (like Gemini's overlayTextScaleLayer spans)
+      tl.to(words, {
+        opacity: 1,
+        scale: 1,
+        filter: 'blur(0px)',
+        y: 0,
+        duration: 0.9,
+        ease: 'expo.out',
+        stagger: 0.08,
+      })
 
-      gsap.fromTo(
-        '[data-hero-cta]',
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: 'expo.out', delay: 1.22 },
-      )
+      // Phase 2: Canvas background fades in (starts slightly before text finishes)
+      tl.to(canvasWrap, {
+        opacity: 1,
+        duration: 1.6,
+        ease: 'power2.inOut',
+      }, '-=0.4')
 
-      gsap.fromTo(
-        '[data-hero-marquee]',
-        { opacity: 0 },
-        { opacity: 1, duration: 0.55, ease: 'power2.out', delay: 1.58 },
-      )
+      // Phase 3: CTA button appears
+      if (cta) {
+        tl.to(cta, {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power3.out',
+        }, '-=0.8')
+      }
+
+      // Phase 4: Marquee fades in last
+      if (marqueeRef.current) {
+        tl.to(marqueeRef.current, {
+          opacity: 1,
+          duration: 0.55,
+          ease: 'power2.out',
+        }, '-=0.3')
+      }
     }, sectionRef)
 
     return () => ctx.revert()
+  }, [])
+
+  const scrollToSection = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const target = document.getElementById('how-it-works')
+    if (target) target.scrollIntoView({ behavior: 'smooth' })
   }, [])
 
   return (
@@ -70,154 +97,48 @@ export function Hero() {
       id="hero"
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
     >
+      {/* Canvas Animation Layer — receives ALL pointer events */}
       <div
-        data-hero-bg
-        className="pointer-events-none absolute inset-0 z-0"
+        ref={canvasWrapRef}
+        className="absolute inset-0 z-0"
         style={{ opacity: 0 }}
       >
-        <HeroNetworkBackground />
+        <BlackHoleCanvas />
       </div>
 
-      <div
-        data-hero-bg
-        className="pointer-events-none absolute inset-0"
-        style={{
-          opacity: 0,
-          background:
-            'radial-gradient(ellipse 72% 62% at 50% 40%, transparent 32%, rgba(1, 2, 2, 0.74) 100%)',
-        }}
-        aria-hidden="true"
-      />
+      {/* Text Content Layer — NO pointer events (user cannot select or interact) */}
+      <div className="relative z-10 pointer-events-none mx-auto flex w-full max-w-5xl flex-col items-center text-center select-none px-5">
+        {/* Title — each word in its own span for individual animation */}
+        <h1
+          ref={textLayerRef}
+          className="text-[36px] sm:text-[56px] lg:text-[72px] xl:text-[84px] font-black leading-[1.05] tracking-[-0.04em] text-white google-sans-display"
+        >
+          <span className="hero-word inline-block">Uma</span>{' '}
+          <span className="hero-word inline-block">IA</span>{' '}
+          <span className="hero-word inline-block">que</span>{' '}
+          <span className="hero-word inline-block">trabalha</span>
+          <br />
+          <span className="hero-word inline-block text-amber-gradient">com</span>{' '}
+          <span className="hero-word inline-block text-amber-gradient">você</span>{' '}
+          <span className="hero-word inline-block text-amber-gradient">—</span>{' '}
+          <span className="hero-word inline-block text-amber-gradient">não</span>{' '}
+          <span className="hero-word inline-block text-amber-gradient">por</span>{' '}
+          <span className="hero-word inline-block text-amber-gradient">trás.</span>
+        </h1>
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col items-center justify-center px-5 pb-8 pt-16 text-center sm:px-6 lg:pb-9">
-        <div className="flex w-full flex-col items-center">
-          <div
-            className="mb-4 flex items-center justify-center sm:mb-5"
-            data-hero-mascot
-            onPointerEnter={() => setIsMascotHot(true)}
-            onPointerLeave={() => setIsMascotHot(false)}
-            onFocus={() => setIsMascotHot(true)}
-            onBlur={() => setIsMascotHot(false)}
+        {/* CTA — also pointer-events-none on container, but enabled on the button itself */}
+        <div ref={ctaRef} className="mt-10 pointer-events-auto" style={{ opacity: 0 }}>
+          <a
+            href="#how-it-works"
+            onClick={scrollToSection}
+            className="inline-flex items-center gap-2 rounded-full bg-white/[0.08] border border-white/[0.1] backdrop-blur-md px-8 py-3.5 text-[14px] font-semibold text-white transition-all hover:bg-white/[0.14] hover:border-white/[0.2] hover:scale-[1.03] active:scale-[0.97]"
           >
-            <div className="relative">
-              <div
-                className="pointer-events-none absolute left-1/2 top-1/2 -z-10"
-                style={{
-                  width: '300px',
-                  height: '300px',
-                  transform: 'translate(-50%, -50%)',
-                  border: '1px solid rgba(255, 122, 0, 0.08)',
-                  borderRadius: '50%',
-                  animation: 'ringPulse 5s ease-in-out infinite',
-                }}
-                aria-hidden="true"
-              />
-              <div
-                className="pointer-events-none absolute left-1/2 top-1/2 -z-10"
-                style={{
-                  width: '230px',
-                  height: '230px',
-                  transform: 'translate(-50%, -50%)',
-                  background:
-                    'radial-gradient(circle, rgba(255, 122, 0, 0.08) 0%, transparent 70%)',
-                  filter: 'blur(40px)',
-                  animation: 'runtimePulse 4s ease-in-out infinite',
-                }}
-                aria-hidden="true"
-              />
-              <div
-                className="pointer-events-none absolute left-1/2 top-1/2 -z-10"
-                style={{
-                  width: '360px',
-                  height: '360px',
-                  transform: 'translate(-50%, -50%)',
-                  border: '1px solid rgba(255, 122, 0, 0.04)',
-                  borderRadius: '50%',
-                }}
-                aria-hidden="true"
-              />
-
-              <FoxMascot size={176} className="cursor-pointer" />
-            </div>
-          </div>
-
-          <div data-hero-eyebrow className="eyebrow mx-auto mb-4 inline-flex">
-            <span className="relative flex h-2 w-2">
-              <span
-                className="status-pulse absolute inline-flex h-full w-full rounded-full"
-                style={{ background: '#10b981' }}
-              />
-              <span
-                className="relative inline-flex h-2 w-2 rounded-full"
-                style={{ background: '#10b981' }}
-              />
-            </span>
-            <span
-              className="font-mono text-[10px] uppercase tracking-[0.25em]"
-              style={{ color: '#64647a' }}
-            >
-              Agent Runtime - v1
-            </span>
-          </div>
-
-          <h1
-            className={`hero-serif-title mx-auto max-w-[72rem] ${
-              isMascotHot ? 'hero-serif-title--awakened' : ''
-            }`}
-            aria-label="A IA local que seu computador merece."
-          >
-            <div data-hero-line>
-              <span>A IA local que seu </span>
-            </div>
-            <div data-hero-line>
-              <span>computador merece.</span>
-            </div>
-          </h1>
-
-          <div data-hero-copy className="mx-auto mt-5 max-w-[38rem]">
-            <p className="text-[0.95rem] leading-[1.7]" style={{ color: '#8a8aa0' }}>
-              Linguagem natural vira execucao real. Memoria, politicas, ferramentas
-              e evidencia no mesmo loop - de qualquer canal.
-            </p>
-          </div>
-
-          <div
-            data-hero-cta
-            className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-          >
-            <a
-              href="/start"
-              className="group btn-sheen inline-flex w-[252px] max-w-full items-center justify-center gap-3 rounded-2xl px-8 py-4 text-[15px] font-semibold transition-all duration-300 sm:w-auto"
-              style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #0ea572 100%)',
-                color: '#022c22',
-                boxShadow:
-                  '0 4px 32px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
-              }}
-            >
-              Comecar localmente
-              <ArrowRight
-                size={18}
-                strokeWidth={2.5}
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </a>
-            <a
-              href="/demo"
-              className="inline-flex w-[252px] max-w-full items-center justify-center gap-2 rounded-2xl px-8 py-4 text-[15px] font-medium transition-all duration-300 sm:w-auto"
-              style={{
-                background: 'rgba(12, 12, 18, 0.7)',
-                color: '#b0b0be',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              Ver demo
-            </a>
-          </div>
+            Descobrir mais
+          </a>
         </div>
 
-        <div data-hero-marquee className="mt-4 w-full">
+        {/* Marquee — infinite scroll of entry surfaces */}
+        <div ref={marqueeRef} className="mt-6 w-full pointer-events-auto" style={{ opacity: 0 }}>
           <LocalStackMarquee />
         </div>
       </div>

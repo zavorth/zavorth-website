@@ -1,8 +1,8 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useEffect } from 'react'
 import gsap from 'gsap'
-import { ensureGsapPlugins } from './motion'
+import { ensureGsapPlugins, initSpotlight, initTilt3D } from './motion'
 
 interface Skill {
   title: string
@@ -82,36 +82,60 @@ export function SkillsSection() {
     return () => ctx.revert()
   }, [])
 
+  useEffect(() => {
+    const cards = document.querySelectorAll('.skill-card')
+    const cleanups: (() => void)[] = []
+    
+    cards.forEach((card) => {
+      cleanups.push(initSpotlight(card as HTMLElement))
+      cleanups.push(initTilt3D(card as HTMLElement, 3))
+    })
+
+    return () => {
+      cleanups.forEach(cleanup => cleanup())
+    }
+  }, [])
+
   return (
-    <section id="skills" ref={rootRef} className="bg-[#050505] py-24 sm:py-32">
-      <div className="mx-auto max-w-3xl px-5 sm:px-6">
+    <section id="skills" ref={rootRef} className="bg-[#050505] py-24 sm:py-32 perspective-1000">
+      <div className="mx-auto max-w-4xl px-5 sm:px-6">
 
         {/* Header */}
         <div data-skill-reveal className="mb-16 text-center">
-          <p className="eyebrow mb-4">Habilidades</p>
-          <h2 className="text-[28px] sm:text-[36px] font-bold leading-tight tracking-tight text-text-primary">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-amber-500 mb-5">Habilidades</p>
+          <h2 className="text-[28px] sm:text-[36px] font-bold leading-tight tracking-tight text-white">
             O que o agente pode fazer por você.
           </h2>
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {SKILLS.map((skill) => (
             <div
               key={skill.title}
               data-skill-reveal
-              className="border-b border-white/[0.04] py-5"
+              className="skill-card group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 transition-colors hover:bg-white/[0.04] transform-style-3d"
             >
-              <p className="text-[15px] font-bold text-text-primary">
-                {skill.title}
-              </p>
-              <p className="mt-1 text-[14px] text-text-muted">
-                {skill.description}
-              </p>
-              <div className="mt-2.5 flex flex-wrap gap-2 font-mono text-[11px] text-text-faint">
-                {skill.tools.map((t) => (
-                  <span key={t}>{t}</span>
-                ))}
+              {/* Spotlight Glow */}
+              <div 
+                className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 rounded-2xl"
+                style={{
+                  background: 'radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), rgba(251, 191, 36, 0.1), transparent 40%)'
+                }}
+              />
+              
+              <div className="relative z-10">
+                <p className="text-[16px] font-bold text-white">
+                  {skill.title}
+                </p>
+                <p className="mt-2 text-[15px] leading-relaxed text-white/50">
+                  {skill.description}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 font-mono text-[11px] text-white/30">
+                  {skill.tools.map((t) => (
+                    <span key={t} className="rounded-md bg-white/[0.05] px-2 py-1">{t}</span>
+                  ))}
+                </div>
               </div>
             </div>
           ))}

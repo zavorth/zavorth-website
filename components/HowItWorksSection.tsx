@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { ensureGsapPlugins } from './motion'
+import { ensureGsapPlugins, initTilt3D } from './motion'
 
 const TERMINAL_LINES = [
   { prefix: '❯', text: 'zavorth "Organize meus arquivos por projeto e avise no Telegram"', prefixColor: 'text-[#5AB5CB]', textColor: 'text-white' },
@@ -21,6 +21,7 @@ const TERMINAL_LINES = [
 
 export function HowItWorksSection() {
   const sectionRef = useRef<HTMLElement>(null)
+  const terminalRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     if (!sectionRef.current) return
@@ -44,15 +45,23 @@ export function HowItWorksSection() {
         }
       )
     }, sectionRef)
+    
+    let cleanupTilt: (() => void) | undefined
+    if (terminalRef.current) {
+      cleanupTilt = initTilt3D(terminalRef.current, 4) // max tilt 4 degrees
+    }
 
-    return () => ctx.revert()
+    return () => {
+      ctx.revert()
+      if (cleanupTilt) cleanupTilt()
+    }
   }, [])
 
   return (
     <section
       id="how-it-works"
       ref={sectionRef}
-      className="bg-[#050505] py-24 sm:py-32"
+      className="bg-[#050505] py-24 sm:py-32 perspective-1000"
     >
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid gap-16 lg:grid-cols-2 lg:gap-20 items-start">
@@ -89,7 +98,10 @@ export function HowItWorksSection() {
 
           {/* Right — Terminal */}
           <div data-reveal>
-            <div className="rounded-lg border border-white/10 bg-[#141414] overflow-hidden">
+            <div 
+              ref={terminalRef} 
+              className="rounded-lg border border-white/10 bg-[#141414] overflow-hidden shadow-2xl transition-shadow duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_20px_rgba(255,255,255,0.05)] transform-style-3d"
+            >
               {/* Title bar */}
               <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
                 <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />

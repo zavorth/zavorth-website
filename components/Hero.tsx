@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useLayoutEffect, useRef, useState, useCallback } from 'react'
+import React, { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
 import gsap from 'gsap'
 import { BlackHoleCanvas } from './BlackHoleCanvas'
 import { LocalStackMarquee } from './LocalStackMarquee'
+import { initMagnetic } from './motion'
 
 /**
  * Hero Section — Gemini I/O 2026 Style
@@ -20,9 +21,17 @@ export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
   const textLayerRef = useRef<HTMLHeadingElement>(null)
   const canvasWrapRef = useRef<HTMLDivElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
+  const ctaWrapRef = useRef<HTMLDivElement>(null)
+  const ctaBtnRef = useRef<HTMLAnchorElement>(null)
   const marqueeRef = useRef<HTMLDivElement>(null)
   const [animationReady, setAnimationReady] = useState(false)
+
+  // Magnetic button effect
+  useEffect(() => {
+    if (!ctaBtnRef.current) return
+    const cleanup = initMagnetic(ctaBtnRef.current, 0.4)
+    return () => cleanup()
+  }, [])
 
   useLayoutEffect(() => {
     if (!sectionRef.current || !textLayerRef.current || !canvasWrapRef.current) return
@@ -30,12 +39,12 @@ export function Hero() {
     const ctx = gsap.context(() => {
       const words = textLayerRef.current!.querySelectorAll('.hero-word')
       const canvasWrap = canvasWrapRef.current!
-      const cta = ctaRef.current
+      const ctaWrap = ctaWrapRef.current
 
       // Start: everything hidden
       gsap.set(words, { opacity: 0, scale: 0.85, filter: 'blur(12px)', y: 20 })
       gsap.set(canvasWrap, { opacity: 0 })
-      if (cta) gsap.set(cta, { opacity: 0, y: 16 })
+      if (ctaWrap) gsap.set(ctaWrap, { opacity: 0, y: 16 })
       if (marqueeRef.current) gsap.set(marqueeRef.current, { opacity: 0 })
 
       // Timeline: text first, then canvas
@@ -63,8 +72,8 @@ export function Hero() {
       }, '-=0.4')
 
       // Phase 3: CTA button appears
-      if (cta) {
-        tl.to(cta, {
+      if (ctaWrap) {
+        tl.to(ctaWrap, {
           opacity: 1,
           y: 0,
           duration: 0.6,
@@ -127,8 +136,9 @@ export function Hero() {
         </h1>
 
         {/* CTA — also pointer-events-none on container, but enabled on the button itself */}
-        <div ref={ctaRef} className="mt-10 pointer-events-auto" style={{ opacity: 0 }}>
+        <div ref={ctaWrapRef} className="mt-10 pointer-events-auto" style={{ opacity: 0 }}>
           <a
+            ref={ctaBtnRef}
             href="#how-it-works"
             onClick={scrollToSection}
             className="inline-flex items-center gap-2 rounded-full bg-white/[0.08] border border-white/[0.1] backdrop-blur-md px-8 py-3.5 text-[14px] font-semibold text-white transition-all hover:bg-white/[0.14] hover:border-white/[0.2] hover:scale-[1.03] active:scale-[0.97]"

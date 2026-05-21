@@ -5,8 +5,8 @@ import { Copy, Check } from 'lucide-react'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
-/* ── Smoke / Fog Canvas ── */
-function SmokeCanvas() {
+/* ── Cinematic Terminal Rain Canvas ── */
+function MatrixRainCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -18,6 +18,12 @@ function SmokeCanvas() {
     let animId = 0
     let w = 0
     let h = 0
+    let columns = 0
+    const fontSize = 14
+    const drops: number[] = []
+    
+    // Characters to use (hex, binary, and some tech symbols)
+    const charset = '01ZAVORTH01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン0123456789'.split('')
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2)
@@ -27,66 +33,59 @@ function SmokeCanvas() {
       canvas.width = w * dpr
       canvas.height = h * dpr
       ctx.scale(dpr, dpr)
+      
+      columns = Math.floor(w / fontSize)
+      
+      // Initialize drops array if resizing makes it larger
+      while (drops.length < columns) {
+        drops.push(Math.random() * -100) // Start off-screen randomly
+      }
     }
 
     resize()
     window.addEventListener('resize', resize)
 
-    // Smoke particles
-    interface Particle {
-      x: number; y: number; r: number; vx: number; vy: number; alpha: number; decay: number
-    }
+    // Slower frame rate for cinematic feel
+    let lastTime = 0
+    const fps = 24
+    const interval = 1000 / fps
 
-    const particles: Particle[] = []
-    const PARTICLE_COUNT = 60
+    const draw = (currentTime: number) => {
+      animId = requestAnimationFrame(draw)
 
-    const spawnParticle = (): Particle => ({
-      x: w * 0.3 + Math.random() * w * 0.4,
-      y: h * 0.5 + (Math.random() - 0.5) * h * 0.3,
-      r: 40 + Math.random() * 80,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: -0.15 - Math.random() * 0.25,
-      alpha: 0.02 + Math.random() * 0.03,
-      decay: 0.0001 + Math.random() * 0.0002,
-    })
+      const deltaTime = currentTime - lastTime
+      if (deltaTime < interval) return
+      lastTime = currentTime - (deltaTime % interval)
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const p = spawnParticle()
-      // Scatter initial positions
-      p.y = Math.random() * h
-      p.x = Math.random() * w
-      particles.push(p)
-    }
+      // Translucent black background to create trail effect
+      ctx.fillStyle = 'rgba(5, 5, 5, 0.15)'
+      ctx.fillRect(0, 0, w, h)
 
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h)
+      ctx.font = `${fontSize}px monospace`
 
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i]
-        p.x += p.vx
-        p.y += p.vy
-        p.r += 0.08
-        p.alpha -= p.decay
-
-        if (p.alpha <= 0) {
-          particles[i] = spawnParticle()
-          continue
+      for (let i = 0; i < drops.length; i++) {
+        const text = charset[Math.floor(Math.random() * charset.length)]
+        
+        // 5% chance for an amber highlight, otherwise very subtle gray
+        if (Math.random() > 0.95) {
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.4)' // Amber
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.04)' // Faint white/gray
         }
 
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r)
-        grad.addColorStop(0, `rgba(180, 160, 140, ${p.alpha})`)
-        grad.addColorStop(0.4, `rgba(120, 100, 80, ${p.alpha * 0.5})`)
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
-        ctx.fillStyle = grad
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fill()
-      }
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize)
 
-      animId = requestAnimationFrame(draw)
+        // Reset drop to top randomly after it crosses the screen
+        if (drops[i] * fontSize > h && Math.random() > 0.975) {
+          drops[i] = 0
+        }
+
+        // Move drop down
+        drops[i]++
+      }
     }
 
-    draw()
+    animId = requestAnimationFrame(draw)
 
     return () => {
       cancelAnimationFrame(animId)
@@ -98,7 +97,7 @@ function SmokeCanvas() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 h-full w-full"
-      style={{ opacity: 0.6 }}
+      style={{ opacity: 0.8 }}
     />
   )
 }

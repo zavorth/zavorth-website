@@ -103,7 +103,7 @@ export function Navbar() {
                     <button
                       key={link.id}
                       onClick={() => scrollToSection(link.id)}
-                      className={`navbar-link relative px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all duration-300 ${
+                      className={`navbar-link relative whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all duration-300 ${
                         active
                           ? 'text-white bg-white/[0.08]'
                           : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]'

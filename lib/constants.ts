@@ -2,11 +2,8 @@
 
 export const NAV_LINKS = [
   { id: 'how-it-works', label: 'Como funciona' },
-  { id: 'control', label: 'Controle' },
-  { id: 'everyday', label: 'Casos de Uso' },
+  { id: 'security', label: 'Segurança' },
   { id: 'skills', label: 'Skills' },
-  { id: 'preview', label: 'Transparência' },
-  { id: 'connections', label: 'Conexões' },
   { id: 'install', label: 'Instalar' },
 ]
 

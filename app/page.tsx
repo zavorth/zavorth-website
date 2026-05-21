@@ -5,12 +5,11 @@ import { HowItWorksSection } from '../components/HowItWorksSection'
 import { SecuritySection } from '../components/SecuritySection'
 import { SkillsSection } from '../components/SkillsSection'
 import { InstallSection } from '../components/InstallSection'
-import { CTASection } from '../components/CTASection'
 import { Footer } from '../components/Footer'
 
 export default function Home() {
   return (
-    <main className="relative overflow-x-hidden">
+    <main className="min-h-screen bg-[#050505] text-white selection:bg-white/20">
       <Navbar />
       <Hero />
 
@@ -25,9 +24,6 @@ export default function Home() {
 
       <div className="section-divider" />
       <InstallSection />
-
-      <div className="section-divider" />
-      <CTASection />
 
       <Footer />
     </main>

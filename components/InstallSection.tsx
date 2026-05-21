@@ -5,8 +5,8 @@ import { Copy, Check } from 'lucide-react'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
-/* ── Cinematic Terminal Rain Canvas ── */
-function MatrixRainCanvas() {
+/* ── Neural Mesh Canvas ── */
+function NeuralMeshCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -18,12 +18,24 @@ function MatrixRainCanvas() {
     let animId = 0
     let w = 0
     let h = 0
-    let columns = 0
-    const fontSize = 14
-    const drops: number[] = []
-    
-    // Characters to use (hex, binary, and some tech symbols)
-    const charset = '01ZAVORTH01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン0123456789'.split('')
+
+    // Mouse interaction state
+    let mouseX = -1000
+    let mouseY = -1000
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      mouseX = e.clientX - rect.left
+      mouseY = e.clientY - rect.top
+    }
+
+    const handleMouseLeave = () => {
+      mouseX = -1000
+      mouseY = -1000
+    }
+
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mouseleave', handleMouseLeave)
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2)
@@ -33,63 +45,100 @@ function MatrixRainCanvas() {
       canvas.width = w * dpr
       canvas.height = h * dpr
       ctx.scale(dpr, dpr)
-      
-      columns = Math.floor(w / fontSize)
-      
-      // Initialize drops array if resizing makes it larger
-      while (drops.length < columns) {
-        drops.push(Math.random() * -100) // Start off-screen randomly
-      }
     }
 
     resize()
     window.addEventListener('resize', resize)
 
-    // Slower frame rate for cinematic feel
-    let lastTime = 0
-    const fps = 24
-    const interval = 1000 / fps
-
-    const draw = (currentTime: number) => {
-      animId = requestAnimationFrame(draw)
-
-      const deltaTime = currentTime - lastTime
-      if (deltaTime < interval) return
-      lastTime = currentTime - (deltaTime % interval)
-
-      // Translucent black background to create trail effect
-      ctx.fillStyle = 'rgba(5, 5, 5, 0.15)'
-      ctx.fillRect(0, 0, w, h)
-
-      ctx.font = `${fontSize}px monospace`
-
-      for (let i = 0; i < drops.length; i++) {
-        const text = charset[Math.floor(Math.random() * charset.length)]
-        
-        // 5% chance for an amber highlight, otherwise very subtle gray
-        if (Math.random() > 0.95) {
-          ctx.fillStyle = 'rgba(245, 158, 11, 0.4)' // Amber
-        } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.04)' // Faint white/gray
-        }
-
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize)
-
-        // Reset drop to top randomly after it crosses the screen
-        if (drops[i] * fontSize > h && Math.random() > 0.975) {
-          drops[i] = 0
-        }
-
-        // Move drop down
-        drops[i]++
-      }
+    // Particles setup
+    interface Particle {
+      x: number
+      y: number
+      vx: number
+      vy: number
+      radius: number
     }
 
-    animId = requestAnimationFrame(draw)
+    const particles: Particle[] = []
+    // Adjust particle count based on screen width for performance
+    const PARTICLE_COUNT = window.innerWidth > 768 ? 100 : 50
+    const CONNECTION_DISTANCE = 120
+    const MOUSE_DISTANCE = 180
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        radius: Math.random() * 1.5 + 0.5,
+      })
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h)
+
+      // Update and draw particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i]
+        p.x += p.vx
+        p.y += p.vy
+
+        // Bounce off edges smoothly
+        if (p.x < 0 || p.x > w) p.vx *= -1
+        if (p.y < 0 || p.y > h) p.vy *= -1
+
+        // Draw particle
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'
+        ctx.fill()
+
+        // Connect to mouse
+        const dxMouse = mouseX - p.x
+        const dyMouse = mouseY - p.y
+        const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse)
+
+        if (distMouse < MOUSE_DISTANCE) {
+          ctx.beginPath()
+          ctx.moveTo(p.x, p.y)
+          ctx.lineTo(mouseX, mouseY)
+          const opacity = 1 - distMouse / MOUSE_DISTANCE
+          // Amber color connection to mouse
+          ctx.strokeStyle = `rgba(245, 158, 11, ${opacity * 0.4})`
+          ctx.lineWidth = 1
+          ctx.stroke()
+        }
+
+        // Connect to other particles
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j]
+          const dx = p.x - p2.x
+          const dy = p.y - p2.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+
+          if (dist < CONNECTION_DISTANCE) {
+            ctx.beginPath()
+            ctx.moveTo(p.x, p.y)
+            ctx.lineTo(p2.x, p2.y)
+            const opacity = 1 - dist / CONNECTION_DISTANCE
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.15})`
+            ctx.lineWidth = 0.5
+            ctx.stroke()
+          }
+        }
+      }
+
+      animId = requestAnimationFrame(draw)
+    }
+
+    draw()
 
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener('resize', resize)
+      canvas.removeEventListener('mousemove', handleMouseMove)
+      canvas.removeEventListener('mouseleave', handleMouseLeave)
     }
   }, [])
 
@@ -175,9 +224,9 @@ export function InstallSection() {
         id="install"
         className="relative bg-[#050505] py-32 sm:py-44 overflow-hidden"
       >
-        {/* ── Cinematic Terminal Rain canvas background ── */}
+        {/* ── Neural Mesh canvas background ── */}
         <div className="absolute inset-0 z-0">
-          <MatrixRainCanvas />
+          <NeuralMeshCanvas />
         </div>
 
         {/* ── CRT scanline overlay ── */}

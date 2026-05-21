@@ -175,9 +175,9 @@ export function InstallSection() {
         id="install"
         className="relative bg-[#050505] py-32 sm:py-44 overflow-hidden"
       >
-        {/* ── Smoke canvas background ── */}
+        {/* ── Cinematic Terminal Rain canvas background ── */}
         <div className="absolute inset-0 z-0">
-          <SmokeCanvas />
+          <MatrixRainCanvas />
         </div>
 
         {/* ── CRT scanline overlay ── */}

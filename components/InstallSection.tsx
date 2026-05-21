@@ -213,27 +213,19 @@ export function InstallSection() {
 
         {/* ── Content ── */}
         <div className="relative z-20 mx-auto max-w-4xl px-6 text-center">
-          {/* Giant ZAVORTH watermark — Grok-style ghost text */}
-          <div
-            className="relative -mb-6 flex select-none items-center justify-center overflow-hidden sm:-mb-10"
-            style={{
-              height: 'clamp(5rem, 18vw, 14rem)',
-              maskImage:
-                'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 100%)',
-              WebkitMaskImage:
-                'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 100%)',
-            }}
-          >
+          {/* Giant ZAVORTH watermark — Grok-style animated ghost text */}
+          <div className="relative flex select-none items-center justify-center -mb-8 sm:-mb-14 pb-8">
             <h2
-              className="pointer-events-none whitespace-nowrap text-center font-extrabold leading-none tracking-[-0.07em]"
+              className="pointer-events-none whitespace-nowrap text-center font-extrabold leading-[0.8] tracking-[-0.06em]"
               style={{
-                fontSize: 'clamp(5rem, 18vw, 14rem)',
-                backgroundImage:
-                  'linear-gradient(to bottom, #ffffff 0%, #888888 60%, transparent 100%)',
+                fontSize: 'clamp(6rem, 20vw, 16rem)',
+                background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(130,130,130,1) 30%, rgba(30,30,30,0) 80%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
-                textShadow: '0px 0px 30px rgba(255, 255, 255, 0.05)',
+                WebkitTextFillColor: 'transparent',
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
               }}
             >
               ZAVORTH

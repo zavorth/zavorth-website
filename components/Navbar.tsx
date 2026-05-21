@@ -4,22 +4,38 @@ import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Menu, X } from 'lucide-react'
 import { BrandMark } from './BrandMark'
 import { NAV_LINKS } from '../lib/constants'
+import { initMagnetic } from './motion'
 
 /**
  * Navbar — Gemini-grade top bar
- *
- * Behavior:
- * - At top: transparent, wide, blends with hero
- * - On scroll: floats as a compact pill with glass blur
- * - Logo: premium Convergence Spark icon + "Zavorth" wordmark
- * - Right side: subtle status dot + glass CTA button
- * - Mobile: full-screen overlay menu
  */
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeId, setActiveId] = useState<string>('')
   const navRef = useRef<HTMLElement>(null)
+  
+  // Refs for magnetic effect
+  const ctaRef = useRef<HTMLAnchorElement>(null)
+
+  useEffect(() => {
+    // Setup magnetic effects on mount
+    let cleanupCTA: (() => void) | undefined
+    if (ctaRef.current) {
+      cleanupCTA = initMagnetic(ctaRef.current, 0.4)
+    }
+    
+    // Magnetic links
+    const linkCleanups: (() => void)[] = []
+    document.querySelectorAll('.navbar-link').forEach((el) => {
+      linkCleanups.push(initMagnetic(el as HTMLElement, 0.2))
+    })
+
+    return () => {
+      if (cleanupCTA) cleanupCTA()
+      linkCleanups.forEach(cleanup => cleanup())
+    }
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,10 +85,10 @@ export function Navbar() {
         }`}
         aria-label="Primary"
       >
-        <div className={`navbar-inner transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        <div className={`navbar-inner border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isScrolled
-            ? 'rounded-full border border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)] px-3 sm:px-5'
-            : 'bg-transparent px-5 sm:px-6'
+            ? 'rounded-full border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)] px-3 sm:px-5'
+            : 'rounded-none border-transparent bg-transparent px-5 sm:px-6'
         }`}>
           <div className="mx-auto max-w-content">
             <div className={`flex items-center justify-between transition-all duration-500 ${
@@ -103,7 +119,7 @@ export function Navbar() {
                     <button
                       key={link.id}
                       onClick={() => scrollToSection(link.id)}
-                      className={`navbar-link relative whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all duration-300 ${
+                      className={`navbar-link relative whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-colors duration-300 ${
                         active
                           ? 'text-white bg-white/[0.08]'
                           : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]'
@@ -130,6 +146,7 @@ export function Navbar() {
 
                 {/* CTA Button — glass with amber accent */}
                 <a
+                  ref={ctaRef}
                   href="#install"
                   onClick={(e) => { e.preventDefault(); scrollToSection('install') }}
                   className="navbar-cta group relative overflow-hidden rounded-full px-5 py-2 text-[13px] font-semibold text-[#1a1207] transition-all duration-300"

@@ -533,9 +533,11 @@ export function BlackHoleCanvas() {
           positions[idx3 + 2] = pz
 
           sizes[i] = v[i] * 1.4
-          rChan = 1.0
-          gChan = 0.95
-          bChan = 1.0
+          // Blend photon ring white core with the active secondary color b[1] to match the palette
+          let ringColor = b && b[1] ? b[1] : new THREE.Color(0.8, 0.95, 1.0)
+          rChan = 0.82 + ringColor.r * 0.18
+          gChan = 0.82 + ringColor.g * 0.18
+          bChan = 0.82 + ringColor.b * 0.18
         } else if (i < bgStartIdx) {
           let y_val = g[i]
           let initSpiralRadius = _[i]
@@ -565,15 +567,17 @@ export function BlackHoleCanvas() {
           positions[idx3 + 2] = pz
 
           let lifeRatio = Math.max(0, 1 - y_val / 140)
-          sizes[i] = (0.5 + lifeRatio * 1.5) * (0.8 + Math.random() * 0.5)
+          // Relativistic jet energy pulse wave traveling outward along the Y axis
+          let pulse = Math.sin(y_val * 0.12 - timeTracker * 10.0) * 0.35 + 0.65
+          sizes[i] = (0.5 + lifeRatio * 1.5) * (0.8 + Math.random() * 0.5) * (0.6 + pulse * 0.8)
 
           let jetBaseColor = b[3]
           let jetTipColor = b[0]
           tempColor.copy(jetBaseColor).lerp(jetTipColor, 1 - lifeRatio)
 
-          rChan = tempColor.r * lifeRatio * 0.9
-          gChan = tempColor.g * lifeRatio * 0.9
-          bChan = tempColor.b * lifeRatio * 0.9
+          rChan = tempColor.r * lifeRatio * 0.9 * pulse
+          gChan = tempColor.g * lifeRatio * 0.9 * pulse
+          bChan = tempColor.b * lifeRatio * 0.9 * pulse
         } else if (i < diskStartIdx) {
           let radius = g[i]
           let theta = h[i]
@@ -669,12 +673,14 @@ export function BlackHoleCanvas() {
           let distance = Math.sqrt(px * px + py * py + pz * pz)
           if (distance === 0) distance = 0.001
 
+          let waveGlowBoost = 0.0
           for (let k = 0; k < waves.length; k++) {
             let w = waves[k]
             let wDist = Math.abs(distance - w.radius)
             if (wDist < w.width) {
               let innerFactor = 1 - wDist / w.width
               scaleMult = Math.max(scaleMult, 1 + innerFactor * 1.3)
+              waveGlowBoost = Math.max(waveGlowBoost, innerFactor)
             }
           }
 
@@ -689,22 +695,47 @@ export function BlackHoleCanvas() {
             }
           }
 
-          sizes[i] = v[i] * (0.8 + (1.0 - Math.min(baseRadius / fl.accretionDiskRadius, 1)) * 1.5)
+          // Accretion disk spiral arm filaments & clumping factor
+          let filament = Math.sin(angleOffset * 5.0 + baseRadius * 0.08 - timeTracker * 4.5) * 0.22 + 0.78
+          
+          // Scale particle size based on spiral arm filament density to enhance structural layout
+          sizes[i] = v[i] * (0.8 + (1.0 - Math.min(baseRadius / fl.accretionDiskRadius, 1)) * 1.5) * (0.8 + (filament - 0.78) * 0.8)
 
           let orbitalVelocityZ = -sinA * cosIncl * (40 / baseRadSqrt)
           let doppler = orbitalVelocityZ * 0.16 * fl.dopplerIntensity
 
-          let colorBase = b[0]
-          let colorSec = b[1]
           let normDist = Math.min(
             (baseRadius - fl.eventHorizonRadius) / (fl.accretionDiskRadius - fl.eventHorizonRadius),
             1
           )
 
-          let cBlend = ml(0, 1, 1 - normDist)
-          rChan = colorBase.r + (colorSec.r - colorBase.r) * cBlend
-          gChan = colorBase.g + (colorSec.g - colorBase.g) * cBlend
-          bChan = colorBase.b + (colorSec.b - colorBase.b) * cBlend
+          // Multi-layer temperature profile: white-hot inner edge, transition to yellow/cyan, then violet, fanning out to fuchsia/red
+          if (normDist < 0.12) {
+            let t = normDist / 0.12
+            rChan = b[3].r + (b[1].r - b[3].r) * t
+            gChan = b[3].g + (b[1].g - b[3].g) * t
+            bChan = b[3].b + (b[1].b - b[3].b) * t
+          } else if (normDist < 0.45) {
+            let t = (normDist - 0.12) / (0.45 - 0.12)
+            rChan = b[1].r + (b[0].r - b[1].r) * t
+            gChan = b[1].g + (b[0].g - b[1].g) * t
+            bChan = b[1].b + (b[0].b - b[1].b) * t
+          } else if (normDist < 0.8) {
+            let t = (normDist - 0.45) / (0.8 - 0.45)
+            rChan = b[0].r + (b[2].r - b[0].r) * t
+            gChan = b[0].g + (b[2].g - b[0].g) * t
+            bChan = b[0].b + (b[2].b - b[0].b) * t
+          } else {
+            let t = (normDist - 0.8) / (1.0 - 0.8)
+            rChan = b[2].r * (1.0 - t * 0.4)
+            gChan = b[2].g * (1.0 - t * 0.4)
+            bChan = b[2].b * (1.0 - t * 0.4)
+          }
+
+          // Apply spiral arm filaments brightness texture
+          rChan *= filament
+          gChan *= filament
+          bChan *= filament
 
           tempColor.setRGB(rChan, gChan, bChan)
 
@@ -724,6 +755,13 @@ export function BlackHoleCanvas() {
             rChan += (1.0 - rChan) * attractionFactor * 0.5
             gChan += (0.9 - gChan) * attractionFactor * 0.5
             bChan += (0.2 - bChan) * attractionFactor * 0.5
+          }
+
+          if (waveGlowBoost > 0) {
+            // Flare up into glowing white-hot gas as the shockwave sweeps through
+            rChan += (1.0 - rChan) * waveGlowBoost * 0.85
+            gChan += (0.95 - gChan) * waveGlowBoost * 0.85
+            bChan += (1.0 - bChan) * waveGlowBoost * 0.85
           }
 
           if (scaleMult > 1) {

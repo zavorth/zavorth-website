@@ -22,7 +22,7 @@ const ei = THREE.Plane
 
 // Configuration defaults representing our Relativistic Black Hole
 const DEFAULTS = {
-  particleCount: 42000,
+  particleCount: 22000,
   colorSaturation: 1.0,
   scatterTop: 1.0,
   scatterBottom: 0.15,
@@ -194,13 +194,13 @@ export function BlackHoleCanvas() {
     glowCanvas.height = 512
     const gctx = glowCanvas.getContext('2d')!
     const gradient = gctx.createRadialGradient(256, 256, 60, 256, 256, 256)
-    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.0)')     // transparent core
-    gradient.addColorStop(0.25, 'rgba(139, 92, 246, 0.0)')   // still transparent near center
-    gradient.addColorStop(0.4, 'rgba(139, 92, 246, 0.25)')   // violet glow ring starts
-    gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.35)')   // indigo peak
-    gradient.addColorStop(0.6, 'rgba(6, 182, 212, 0.2)')     // cyan falloff
-    gradient.addColorStop(0.75, 'rgba(236, 72, 153, 0.1)')   // fuchsia outer haze
-    gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0)')            // transparent edge
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)')     // transparent core
+    gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.0)')   // still transparent near center
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.25)')   // white glow ring starts (tinted by material)
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)')   // peak
+    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.2)')     // falloff
+    gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.1)')   // outer haze
+    gradient.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)')    // transparent edge
     gctx.fillStyle = gradient
     gctx.fillRect(0, 0, 512, 512)
     const glowTexture = new THREE.CanvasTexture(glowCanvas)
@@ -210,6 +210,7 @@ export function BlackHoleCanvas() {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       opacity: 0.85,
+      color: new THREE.Color(fl.coreGreenColor)
     })
     const glowSprite = new THREE.Sprite(glowSpriteMat)
     glowSprite.scale.set(fl.eventHorizonRadius * 5.5, fl.eventHorizonRadius * 5.5, 1)
@@ -315,7 +316,7 @@ export function BlackHoleCanvas() {
         void main() {
             vColor = color;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = customSize * uPixelRatio * (280.0 / -mvPosition.z);
+            gl_PointSize = customSize * uPixelRatio * (200.0 / -mvPosition.z);
             gl_Position = projectionMatrix * mvPosition;
         }
       `,
@@ -445,6 +446,10 @@ export function BlackHoleCanvas() {
         if (b[k] && targetColors[k]) {
           b[k].lerp(targetColors[k], delta * 4.0)
         }
+      }
+
+      if (glowSpriteMat && b[0]) {
+        glowSpriteMat.color.copy(b[0])
       }
 
       if (activeScale && (lingerTime += delta, lingerTime > fl.entranceLingerSeconds)) {

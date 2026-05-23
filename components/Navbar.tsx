@@ -7,7 +7,7 @@ import { NAV_LINKS } from '../lib/constants'
 import { initMagnetic } from './motion'
 
 /**
- * Navbar — Gemini-grade top bar
+ * Navbar — Zavorth Core top bar
  */
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)

@@ -549,7 +549,7 @@ main, section, footer, nav {
   }
 }
 
-/* ─── Google I/O 2026 / Gemini Premium Glass & Typography Utilities ─── */
+/* ─── Zavorth Premium Glass & Typography Utilities ─── */
 .glass-panel {
   border: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(10, 10, 10, 0.65);
@@ -578,7 +578,7 @@ main, section, footer, nav {
   text-shadow: 0 0 45px rgba(0, 240, 255, 0.2);
 }
 
-.google-sans-display {
+.zavorth-display {
   font-family: var(--font-sans), sans-serif;
   letter-spacing: -0.02em;
   font-weight: 500;
@@ -898,4 +898,99 @@ main, section, footer, nav {
 @media (max-width: 720px) {
   .local-stack-marquee__viewport::before,
   .local-stack-marquee__viewport::after { width: 54px; }
+}
+
+/* ─── Border Beam Animation ─── */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-beam-rotate {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+.border-beam-wrapper {
+  position: relative;
+  border-radius: 9999px;
+}
+
+.border-beam-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--angle),
+    transparent 50%,
+    #f59e0b 65%,
+    #fbbf24 75%,
+    transparent 90%
+  );
+  animation: border-beam-rotate 4s linear infinite;
+  z-index: 0;
+}
+
+.border-beam-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #09090b;
+  z-index: 1;
+}
+
+.border-beam-wrapper > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Zavorth System Dynamic Typing Cursor ─── */
+.typed-container {
+  display: inline-block;
+  position: relative;
+}
+.typed-content {
+  display: inline-block;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+.typed-content .char {
+  display: inline-block;
+  opacity: 0;
+  white-space: pre;
+}
+.cursor-container {
+  position: absolute;
+  transform: translate3d(var(--cursor-pos-x, 0px), var(--cursor-pos-y, 0px), 0);
+  opacity: 0;
+  font-size: inherit;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out, transform 0.08s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.glowing-cursor-bar {
+  position: absolute;
+  height: 0.75em;
+  width: 0.04em;
+  background: linear-gradient(180deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+  border-radius: 0.02em;
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.7), 0 0 12px rgba(139, 92, 246, 0.5);
+  animation: cursorBlink 0.53s infinite;
+  transform-origin: center;
+  transition: box-shadow 0.08s ease-out, transform 0.08s ease-out;
+  margin-top: 0.35em;
+}
+.cursor-container.typing-active .glowing-cursor-bar {
+  animation: none !important;
+  opacity: 1 !important;
+}
+@keyframes cursorBlink {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  to { opacity: 0; }
 }

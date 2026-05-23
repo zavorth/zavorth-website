@@ -22,23 +22,23 @@ const ei = THREE.Plane
 
 // Configuration defaults representing our Relativistic Black Hole
 const DEFAULTS = {
-  particleCount: 40000,
-  colorSaturation: 0.85,
+  particleCount: 65000,
+  colorSaturation: 1.0,
   scatterTop: 1.0,
   scatterBottom: 0.15,
   shrinkSpeed: 12.0,
   entranceDelayMs: 300,
   entranceGrowSpeed: 0.8,
   entranceLingerSeconds: 1.0,
-  eventHorizonRadius: 28.0,
-  accretionDiskRadius: 130.0,
-  gravityLensing: 1.0,
-  dopplerIntensity: 1.0,
-  orbitalSpeed: 0.8,
-  coreGreenColor: '#ff5500', // Outer Accretion Disk (Warm Orange Plasma)
-  coreYellowColor: '#ffcc00', // Inner Ring (Hot Gold Dust)
-  coreRedColor: '#bb2200', // Redshifted Gas (Deep Dark Relativistic Red)
-  coreBlueColor: '#fff5ea', // Blueshifted Gas (Blinding White-Hot Doppler Shift)
+  eventHorizonRadius: 32.0,
+  accretionDiskRadius: 140.0,
+  gravityLensing: 1.4,
+  dopplerIntensity: 1.3,
+  orbitalSpeed: 0.9,
+  coreGreenColor: '#8b5cf6', // Accretion Disk (Zavorth Deep Violet)
+  coreYellowColor: '#06b6d4', // Core Accretion Dust (Zavorth Cyan Glow)
+  coreRedColor: '#ec4899', // Redshifted Gas (Zavorth Electric Fuchsia)
+  coreBlueColor: '#e2f8ff', // Blueshifted Gas (Zavorth Ice White-Hot)
   autoReturnToFront: true,
   autoReturnForce: 0.15,
   autoReturnForceDecay: 0.02
@@ -47,16 +47,34 @@ const DEFAULTS = {
 // Preset color palettes for click cycle
 const PALETTES = [
   {
+    coreGreenColor: '#8b5cf6',
+    coreYellowColor: '#06b6d4',
+    coreRedColor: '#ec4899',
+    coreBlueColor: '#e2f8ff'
+  },
+  {
+    coreGreenColor: '#06b6d4',
+    coreYellowColor: '#ec4899',
+    coreRedColor: '#8b5cf6',
+    coreBlueColor: '#ffffff'
+  },
+  {
+    coreGreenColor: '#a78bfa',
+    coreYellowColor: '#22d3ee',
+    coreRedColor: '#f472b6',
+    coreBlueColor: '#e0f7fa'
+  },
+  {
+    coreGreenColor: '#00f0ff',
+    coreYellowColor: '#ff0055',
+    coreRedColor: '#8b5cf6',
+    coreBlueColor: '#fff5ea'
+  },
+  {
     coreGreenColor: '#ff5500',
     coreYellowColor: '#ffcc00',
     coreRedColor: '#bb2200',
     coreBlueColor: '#fff5ea'
-  },
-  {
-    coreGreenColor: '#8800ff',
-    coreYellowColor: '#ffaa00',
-    coreRedColor: '#ff0055',
-    coreBlueColor: '#00f0ff'
   },
   {
     coreGreenColor: '#ff3300',
@@ -71,28 +89,10 @@ const PALETTES = [
     coreBlueColor: '#00ff55'
   },
   {
-    coreGreenColor: '#111111',
-    coreYellowColor: '#ffffff',
-    coreRedColor: '#444444',
-    coreBlueColor: '#cccccc'
-  },
-  {
     coreGreenColor: '#0c0024',
     coreYellowColor: '#ff0055',
     coreRedColor: '#ff3300',
     coreBlueColor: '#00f0ff'
-  },
-  {
-    coreGreenColor: '#004a1a',
-    coreYellowColor: '#aaff00',
-    coreRedColor: '#00aa55',
-    coreBlueColor: '#e8ffea'
-  },
-  {
-    coreGreenColor: '#3d0066',
-    coreYellowColor: '#ffb3d9',
-    coreRedColor: '#cc0066',
-    coreBlueColor: '#99ccff'
   }
 ]
 
@@ -188,8 +188,36 @@ export function BlackHoleCanvas() {
     eventHorizonMesh.position.y = 35 // Shifted up slightly to leave the screen center clear for the text title
     scene.add(eventHorizonMesh)
 
+    // 5b. Radial Glow Halo around the Event Horizon (simulates light bending around the void)
+    const glowCanvas = document.createElement('canvas')
+    glowCanvas.width = 512
+    glowCanvas.height = 512
+    const gctx = glowCanvas.getContext('2d')!
+    const gradient = gctx.createRadialGradient(256, 256, 60, 256, 256, 256)
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.0)')     // transparent core
+    gradient.addColorStop(0.25, 'rgba(139, 92, 246, 0.0)')   // still transparent near center
+    gradient.addColorStop(0.4, 'rgba(139, 92, 246, 0.25)')   // violet glow ring starts
+    gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.35)')   // indigo peak
+    gradient.addColorStop(0.6, 'rgba(6, 182, 212, 0.2)')     // cyan falloff
+    gradient.addColorStop(0.75, 'rgba(236, 72, 153, 0.1)')   // fuchsia outer haze
+    gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0)')            // transparent edge
+    gctx.fillStyle = gradient
+    gctx.fillRect(0, 0, 512, 512)
+    const glowTexture = new THREE.CanvasTexture(glowCanvas)
+    const glowSpriteMat = new THREE.SpriteMaterial({
+      map: glowTexture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.85,
+    })
+    const glowSprite = new THREE.Sprite(glowSpriteMat)
+    glowSprite.scale.set(fl.eventHorizonRadius * 5.5, fl.eventHorizonRadius * 5.5, 1)
+    glowSprite.position.y = 35
+    scene.add(glowSprite)
+
     // 6. Particles definition
-    let u = { count: fl.particleCount, size: 1.2 }
+    let u = { count: fl.particleCount, size: 1.8 }
     particleGeometry = new wr()
 
     f = new Float32Array(u.count * 3) // Position array
@@ -200,9 +228,9 @@ export function BlackHoleCanvas() {
     _ = new Float32Array(u.count) // vertical orbit height perturbation
     v = new Float32Array(u.count) // size scales
 
-    let photonRingCount = Math.floor(u.count * 0.12)
-    let jetCount = Math.floor(u.count * 0.15)
-    let bgCount = Math.floor(u.count * 0.15)
+    let photonRingCount = Math.floor(u.count * 0.22)
+    let jetCount = Math.floor(u.count * 0.10)
+    let bgCount = Math.floor(u.count * 0.10)
 
     let jetStartIdx = photonRingCount
     let bgStartIdx = jetStartIdx + jetCount
@@ -211,9 +239,9 @@ export function BlackHoleCanvas() {
     for (let e = 0; e < u.count; e++) {
       if (e < photonRingCount) {
         h[e] = Math.random() * Math.PI * 2
-        g[e] = fl.eventHorizonRadius * 1.005 + Math.random() * 1.8
-        _[e] = (Math.random() - 0.5) * 0.4
-        v[e] = 0.4 + Math.random() * 0.7
+        g[e] = fl.eventHorizonRadius * 1.005 + Math.random() * 5.0
+        _[e] = (Math.random() - 0.5) * 0.6
+        v[e] = 0.6 + Math.random() * 1.2
       } else if (e < bgStartIdx) {
         g[e] = Math.random() * 140.0
         _[e] = 1.0 + Math.random() * 3.5
@@ -287,7 +315,7 @@ export function BlackHoleCanvas() {
         void main() {
             vColor = color;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = customSize * uPixelRatio * (240.0 / -mvPosition.z);
+            gl_PointSize = customSize * uPixelRatio * (320.0 / -mvPosition.z);
             gl_Position = projectionMatrix * mvPosition;
         }
       `,
@@ -298,11 +326,13 @@ export function BlackHoleCanvas() {
             float distSq = dot(coord, coord);
             if (distSq > 0.25) discard;
             
-            float glow = exp(-distSq * 18.0);
-            float core = smoothstep(0.08, 0.0, distSq) * 0.35;
+            float glow = exp(-distSq * 10.0);
+            float outerHalo = exp(-distSq * 4.0) * 0.4;
+            float core = smoothstep(0.06, 0.0, distSq) * 0.6;
             
-            float alpha = glow + core;
-            gl_FragColor = vec4(vColor, alpha * 0.82);
+            float alpha = glow + outerHalo + core;
+            vec3 boostedColor = vColor * 1.3 + vec3(0.05, 0.02, 0.08);
+            gl_FragColor = vec4(boostedColor, alpha * 0.92);
         }
       `,
       transparent: true,
@@ -496,9 +526,9 @@ export function BlackHoleCanvas() {
           positions[idx3 + 1] = py
           positions[idx3 + 2] = pz
 
-          sizes[i] = v[i] * 0.65
-          rChan = 0.95
-          gChan = 0.98
+          sizes[i] = v[i] * 1.4
+          rChan = 1.0
+          gChan = 0.95
           bChan = 1.0
         } else if (i < bgStartIdx) {
           let y_val = g[i]
@@ -598,7 +628,9 @@ export function BlackHoleCanvas() {
           let omega = (fl.orbitalSpeed * 350) / (baseRadius * baseRadSqrt)
           let currentAngle = angleOffset + timeTracker * omega
 
-          let turbulence = Math.sin(baseRadius * 0.08 - timeTracker * 3.5) * 1.8 * (1.0 - scrollRatioCurrent)
+          // Zavorth Custom Liquid Accretion Wave-Warp (autoral ripple physics)
+          let helixWarp = Math.sin(baseRadius * 0.16 + timeTracker * 2.5) * 3.5 * (1.0 - scrollRatioCurrent)
+          let turbulence = (Math.sin(baseRadius * 0.08 - timeTracker * 3.5) * 1.8 + helixWarp) * (1.0 - scrollRatioCurrent)
 
           let cosA = Math.cos(currentAngle)
           let sinA = Math.sin(currentAngle)
@@ -607,8 +639,8 @@ export function BlackHoleCanvas() {
           let py_flat = (baseRadius + turbulence) * sinA * sinIncl
           let pz_flat = (baseRadius + turbulence) * sinA * cosIncl
 
-          let py = py_flat + diskZThickness * sinIncl * scatterCurrent
-          let pz = pz_flat + diskZThickness * cosIncl * scatterCurrent
+          let py = py_flat + (diskZThickness + helixWarp * 1.25) * sinIncl * scatterCurrent
+          let pz = pz_flat + (diskZThickness + helixWarp * 1.25) * cosIncl * scatterCurrent
 
           if (pz < 0 && activeLensing > 0) {
             let rSq = px * px + py * py
@@ -763,6 +795,8 @@ export function BlackHoleCanvas() {
 
       ehGeom.dispose()
       ehMat.dispose()
+      glowTexture.dispose()
+      glowSpriteMat.dispose()
       particleGeometry.dispose()
       shaderMat.dispose()
 

@@ -1,155 +1,10 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
+import { AuroraMeshGradient } from './AuroraMeshGradient'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
-
-/* ── Neural Mesh Canvas ── */
-function NeuralMeshCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    let animId = 0
-    let w = 0
-    let h = 0
-
-    // Mouse interaction state
-    let mouseX = -1000
-    let mouseY = -1000
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      mouseX = e.clientX - rect.left
-      mouseY = e.clientY - rect.top
-    }
-
-    const handleMouseLeave = () => {
-      mouseX = -1000
-      mouseY = -1000
-    }
-
-    canvas.addEventListener('mousemove', handleMouseMove)
-    canvas.addEventListener('mouseleave', handleMouseLeave)
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2)
-      const rect = canvas.getBoundingClientRect()
-      w = rect.width
-      h = rect.height
-      canvas.width = w * dpr
-      canvas.height = h * dpr
-      ctx.scale(dpr, dpr)
-    }
-
-    resize()
-    window.addEventListener('resize', resize)
-
-    // Particles setup
-    interface Particle {
-      x: number
-      y: number
-      vx: number
-      vy: number
-      radius: number
-    }
-
-    const particles: Particle[] = []
-    // Adjust particle count based on screen width for performance
-    const PARTICLE_COUNT = window.innerWidth > 768 ? 100 : 50
-    const CONNECTION_DISTANCE = 120
-    const MOUSE_DISTANCE = 180
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
-        radius: Math.random() * 1.5 + 0.5,
-      })
-    }
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h)
-
-      // Update and draw particles
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i]
-        p.x += p.vx
-        p.y += p.vy
-
-        // Bounce off edges smoothly
-        if (p.x < 0 || p.x > w) p.vx *= -1
-        if (p.y < 0 || p.y > h) p.vy *= -1
-
-        // Draw particle
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'
-        ctx.fill()
-
-        // Connect to mouse
-        const dxMouse = mouseX - p.x
-        const dyMouse = mouseY - p.y
-        const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse)
-
-        if (distMouse < MOUSE_DISTANCE) {
-          ctx.beginPath()
-          ctx.moveTo(p.x, p.y)
-          ctx.lineTo(mouseX, mouseY)
-          const opacity = 1 - distMouse / MOUSE_DISTANCE
-          // Amber color connection to mouse
-          ctx.strokeStyle = `rgba(245, 158, 11, ${opacity * 0.4})`
-          ctx.lineWidth = 1
-          ctx.stroke()
-        }
-
-        // Connect to other particles
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j]
-          const dx = p.x - p2.x
-          const dy = p.y - p2.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-
-          if (dist < CONNECTION_DISTANCE) {
-            ctx.beginPath()
-            ctx.moveTo(p.x, p.y)
-            ctx.lineTo(p2.x, p2.y)
-            const opacity = 1 - dist / CONNECTION_DISTANCE
-            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.15})`
-            ctx.lineWidth = 0.5
-            ctx.stroke()
-          }
-        }
-      }
-
-      animId = requestAnimationFrame(draw)
-    }
-
-    draw()
-
-    return () => {
-      cancelAnimationFrame(animId)
-      window.removeEventListener('resize', resize)
-      canvas.removeEventListener('mousemove', handleMouseMove)
-      canvas.removeEventListener('mouseleave', handleMouseLeave)
-    }
-  }, [])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 h-full w-full"
-      style={{ opacity: 0.8 }}
-    />
-  )
-}
 
 export function InstallSection() {
   const [copied, setCopied] = useState(false)
@@ -171,62 +26,13 @@ export function InstallSection() {
 
   return (
     <>
-      {/* Border-beam animation */}
-      <style>{`
-        @property --angle {
-          syntax: "<angle>";
-          initial-value: 0deg;
-          inherits: false;
-        }
-
-        @keyframes border-beam-rotate {
-          from { --angle: 0deg; }
-          to { --angle: 360deg; }
-        }
-
-        .border-beam-wrapper {
-          position: relative;
-          border-radius: 9999px;
-        }
-
-        .border-beam-wrapper::before {
-          content: "";
-          position: absolute;
-          inset: -1px;
-          border-radius: inherit;
-          background: conic-gradient(
-            from var(--angle),
-            transparent 50%,
-            #f59e0b 65%,
-            #fbbf24 75%,
-            transparent 90%
-          );
-          animation: border-beam-rotate 4s linear infinite;
-          z-index: 0;
-        }
-
-        .border-beam-wrapper::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          background: #09090b;
-          z-index: 1;
-        }
-
-        .border-beam-wrapper > * {
-          position: relative;
-          z-index: 2;
-        }
-      `}</style>
-
       <section
         id="install"
         className="relative bg-[#050505] py-32 sm:py-44 overflow-hidden"
       >
-        {/* ── Neural Mesh canvas background ── */}
-        <div className="absolute inset-0 z-0">
-          <NeuralMeshCanvas />
+        {/* ── Premium Aurora Mesh Gradient background ── */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <AuroraMeshGradient />
         </div>
 
         {/* ── CRT scanline overlay ── */}

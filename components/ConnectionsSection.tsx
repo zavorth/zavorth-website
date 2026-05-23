@@ -100,7 +100,7 @@ const integrations = [
     border: 'rgba(251, 191, 36, 0.2)',
   },
   {
-    name: 'Google AI',
+    name: 'Zavorth Core AI',
     tag: 'API',
     Icon: Sparkles,
     color: '#93c5fd',

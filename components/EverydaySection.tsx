@@ -271,7 +271,7 @@ function BentoCard({
           </div>
 
           {/* Texts */}
-          <h3 className="mb-2 text-[17px] font-bold leading-snug tracking-tight text-text-primary google-sans-display">
+          <h3 className="mb-2 text-[17px] font-bold leading-snug tracking-tight text-text-primary zavorth-display">
             {headline}
           </h3>
           <p className="text-[13px] leading-relaxed text-text-muted">

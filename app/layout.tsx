@@ -3,25 +3,25 @@ import { JetBrains_Mono, Playfair_Display } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
 
-const googleSans = localFont({
+const zavorthSans = localFont({
   src: [
     {
-      path: '../public/fonts/GoogleSans-Regular.ttf',
+      path: '../public/fonts/ZavorthSans-Regular.ttf',
       weight: '400',
       style: 'normal',
     },
     {
-      path: '../public/fonts/GoogleSans-Medium.ttf',
+      path: '../public/fonts/ZavorthSans-Medium.ttf',
       weight: '500',
       style: 'normal',
     },
     {
-      path: '../public/fonts/GoogleSans-SemiBold.ttf',
+      path: '../public/fonts/ZavorthSans-SemiBold.ttf',
       weight: '600',
       style: 'normal',
     },
     {
-      path: '../public/fonts/GoogleSans-Bold.ttf',
+      path: '../public/fonts/ZavorthSans-Bold.ttf',
       weight: '700',
       style: 'normal',
     },
@@ -74,7 +74,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${googleSans.variable} ${jbMono.variable} ${playfair.variable}`}>
+    <html lang="pt-BR" className={`${zavorthSans.variable} ${jbMono.variable} ${playfair.variable}`}>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>

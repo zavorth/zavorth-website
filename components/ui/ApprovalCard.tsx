@@ -130,7 +130,7 @@ export function ApprovalCard({
 
       {/* Content wrapper with transition animation */}
       <div ref={contentRef} className="px-5 py-4">
-        <p className="mb-4 text-[15px] font-bold leading-snug text-text-primary google-sans-display">{title}</p>
+        <p className="mb-4 text-[15px] font-bold leading-snug text-text-primary zavorth-display">{title}</p>
 
         <div className="space-y-2">
           {items.map((item) => (

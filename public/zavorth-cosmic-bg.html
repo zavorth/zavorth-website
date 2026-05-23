@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    #particles-container { position: absolute; inset: 0; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="particles-container"></div>
+
+  <script>
+    window.__threeLoaded = false;
+    function loadScript(url) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = url; s.onload = () => resolve(true); s.onerror = () => reject(new Error('Failed: ' + url));
+        document.head.appendChild(s);
+      });
+    }
+    async function loadThreeJS() {
+      const cdns = [
+        'https://unpkg.com/three@0.158.0/build/three.min.js',
+        'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+      ];
+      for (const url of cdns) {
+        try { await loadScript(url); if (typeof THREE !== 'undefined') return true; } catch (e) { console.warn(e.message); }
+      }
+      return false;
+    }
+    loadThreeJS().then(ok => { if (ok) { window.__threeLoaded = true; initApp(); } });
+  </script>
+
+  <script>
+  // Poisson Disk Sampling
+  class PoissonDiskSampler {
+    constructor(w, h, minD, maxD, tries) {
+      this.w = w; this.h = h; this.minD = minD; this.maxD = maxD; this.tries = tries || 20;
+      this.cell = minD / Math.SQRT2;
+      this.gw = Math.ceil(w / this.cell); this.gh = Math.ceil(h / this.cell);
+      this.grid = new Array(this.gw * this.gh).fill(-1);
+      this.pts = []; this.active = [];
+    }
+    fill() {
+      this._add([Math.random() * this.w, Math.random() * this.h]);
+      while (this.active.length > 0) {
+        const ai = Math.floor(Math.random() * this.active.length);
+        const p = this.active[ai]; let found = false;
+        for (let i = 0; i < this.tries; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const d = this.minD + Math.random() * (this.maxD - this.minD);
+          const c = [p[0] + Math.cos(a) * d, p[1] + Math.sin(a) * d];
+          if (c[0] >= 0 && c[0] < this.w && c[1] >= 0 && c[1] < this.h && !this._near(c)) {
+            this._add(c); found = true; break;
+          }
+        }
+        if (!found) this.active.splice(ai, 1);
+      }
+      return this.pts;
+    }
+    _add(p) {
+      const i = this.pts.length; this.pts.push(p); this.active.push(p);
+      const gx = Math.floor(p[0] / this.cell), gy = Math.floor(p[1] / this.cell);
+      if (gx >= 0 && gx < this.gw && gy >= 0 && gy < this.gh) this.grid[gx + gy * this.gw] = i;
+    }
+    _near(p) {
+      const gx = Math.floor(p[0] / this.cell), gy = Math.floor(p[1] / this.cell);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const nx = gx + dx, ny = gy + dy;
+        if (nx < 0 || nx >= this.gw || ny < 0 || ny >= this.gh) continue;
+        const idx = this.grid[nx + ny * this.gw];
+        if (idx >= 0) { const q = this.pts[idx], ex = q[0]-p[0], ey = q[1]-p[1]; if (ex*ex + ey*ey < this.minD * this.minD) return true; }
+      }
+      return false;
+    }
+  }
+
+  class ValueNoise1D {
+    constructor() { this.r = []; for (let i = 0; i < 256; i++) this.r.push(Math.random()); }
+    getVal(x) { const t = x, i = Math.floor(t), f = t - i, s = f*f*(3-2*f); return this.r[i & 255] * (1-s) + this.r[(i+1) & 255] * s; }
+  }
+
+  const NOISE_GLSL = `
+  vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+  vec4 permute(vec4 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+  float permute(float x) { return floor(mod(((x*34.0)+1.0)*x, 289.0)); }
+  vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+  float taylorInvSqrt(float r) { return 1.79284291400159 - 0.85373472095314 * r; }
+  float snoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+    vec2 i = floor(v + dot(v, C.yy)); vec2 x0 = v - i + dot(i, C.xx);
+    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1; i = mod(i, 289.0);
+    vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m; m = m*m;
+    vec3 x = 2.0 * fract(p * C.www) - 1.0; vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5); vec3 a0 = x - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+    vec3 g; g.x = a0.x * x0.x + h.x * x0.y; g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+  }
+  float snoise(vec3 v) {
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    vec3 i = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx);
+    vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy);
+    vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + 2.0 * C.xxx; vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+    i = mod(i, 289.0);
+    vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    float n_ = 1.0/7.0; vec3 ns = n_ * D.wyz - D.xzx;
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_);
+    vec4 x2_ = x_ * ns.x + ns.yyyy; vec4 y2_ = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x2_) - abs(y2_);
+    vec4 b0 = vec4(x2_.xy, y2_.xy); vec4 b1 = vec4(x2_.zw, y2_.zw);
+    vec4 s0 = floor(b0)*2.0 + 1.0; vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+    vec3 p0 = vec3(a0.xy, h.x); vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z); vec3 p3 = vec3(a1.zw, h.w);
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+  }
+  `;
+
+  const SIZE = 256;
+  function mapRange(v, a, b, c, d) { return (v-a)*(d-c)/(b-a)+c; }
+
+  function buildParticleScene(container) {
+    const pr = Math.min(window.devicePixelRatio, 2);
+    const density = 200; const psScale = 0.75;
+    const minD = mapRange(density, 0, 300, 10, 2);
+    const maxD = mapRange(density, 0, 300, 11, 3);
+    const raw = new PoissonDiskSampler(500, 500, minD, maxD, 20).fill();
+    const ptsData = [];
+    for (let i = 0; i < raw.length; i++) ptsData.push(raw[i][0]-250, raw[i][1]-250);
+    const count = ptsData.length / 2;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const W = container.offsetWidth || window.innerWidth;
+    const H = container.offsetHeight || window.innerHeight;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setSize(W, H); renderer.setPixelRatio(pr);
+    container.appendChild(renderer.domElement);
+
+    const gl = renderer.getContext();
+    gl.getExtension('EXT_color_buffer_float');
+    gl.getExtension('OES_texture_float');
+    gl.getExtension('OES_texture_float_linear');
+
+    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 1000);
+    camera.position.z = 3.1;
+
+    const rayPlane = new THREE.Mesh(new THREE.PlaneGeometry(12.5, 12.5), new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide }));
+    scene.add(rayPlane);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2(-99, -99);
+    const intPt = new THREE.Vector3();
+    let isInt = false, mouseOver = false;
+
+    const LENGTH = SIZE * SIZE;
+    const posData = new Float32Array(LENGTH * 4);
+    for (let i = 0; i < count; i++) { posData[i*4] = ptsData[i*2] / 250; posData[i*4+1] = ptsData[i*2+1] / 250; }
+    const posTex = new THREE.DataTexture(posData, SIZE, SIZE, THREE.RGBAFormat, THREE.FloatType);
+    posTex.needsUpdate = true;
+
+    function makeRT() {
+      return new THREE.WebGLRenderTarget(SIZE, SIZE, {
+        wrapS: THREE.ClampToEdgeWrapping, wrapT: THREE.ClampToEdgeWrapping,
+        minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
+        format: THREE.RGBAFormat, type: THREE.FloatType,
+        depthBuffer: false, stencilBuffer: false
+      });
+    }
+    let rt1 = makeRT(), rt2 = makeRT();
+    renderer.setRenderTarget(rt1); renderer.setClearColor(0x000000, 0); renderer.clear();
+    renderer.setRenderTarget(rt2); renderer.setClearColor(0x000000, 0); renderer.clear();
+    renderer.setRenderTarget(null);
+
+    const simScene = new THREE.Scene();
+    const simCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    const simMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uPosition: { value: posTex }, uPosRefs: { value: posTex },
+        uRingPos: { value: new THREE.Vector2(0,0) }, uRingRadius: { value: 0.2 },
+        uDeltaTime: { value: 0 }, uRingWidth: { value: 0.15 },
+        uRingWidth2: { value: 0.05 }, uRingDisplacement: { value: 0.15 }, uTime: { value: 0 }
+      },
+      vertexShader: `void main() { gl_Position = vec4(position, 1.0); }`,
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D uPosition; uniform sampler2D uPosRefs;
+        uniform vec2 uRingPos; uniform float uTime; uniform float uDeltaTime;
+        uniform float uRingRadius; uniform float uRingWidth; uniform float uRingWidth2; uniform float uRingDisplacement;
+        ${NOISE_GLSL}
+        void main() {
+          vec2 tc = gl_FragCoord.xy / vec2(${SIZE}.0);
+          vec4 pF = texture2D(uPosition, tc); float scale = pF.z; float velocity = pF.w;
+          vec2 refPos = texture2D(uPosRefs, tc).xy; float time = uTime * 0.5;
+          vec2 cPos = refPos; vec2 pos = pF.xy; pos *= 0.8;
+          float dist = distance(cPos, uRingPos);
+          float n0 = snoise(vec3(cPos * 0.2 + vec2(18.4924, 72.9744), time * 0.5));
+          float dist1 = distance(cPos + (n0 * 0.005), uRingPos);
+          float t = smoothstep(uRingRadius - (uRingWidth * 2.0), uRingRadius, dist) - smoothstep(uRingRadius, uRingRadius + uRingWidth, dist1);
+          float t2 = smoothstep(uRingRadius - (uRingWidth2 * 2.0), uRingRadius, dist) - smoothstep(uRingRadius, uRingRadius + uRingWidth2, dist1);
+          float t3 = smoothstep(uRingRadius + uRingWidth2, uRingRadius, dist);
+          t = pow(t, 2.0); t2 = pow(t2, 3.0); t += t2 * 3.0; t += t3 * 0.4;
+          t += snoise(vec3(cPos * 30.0 + vec2(11.4924, 12.9744), time * 0.5)) * t3 * 0.5;
+          float nS = snoise(vec3(cPos * 2.0 + vec2(18.4924, 72.9744), time * 0.5));
+          t += pow((nS + 1.5) * 0.5, 2.0) * 0.6;
+          float n1 = snoise(vec3(cPos * 4.0 + vec2(88.494, 32.4397), time * 0.35));
+          float n2 = snoise(vec3(cPos * 4.0 + vec2(50.904, 120.947), time * 0.35));
+          float n3 = snoise(vec3(cPos * 20.0 + vec2(18.4924, 72.9744), time * 0.5));
+          float n4 = snoise(vec3(cPos * 20.0 + vec2(50.904, 120.947), time * 0.5));
+          vec2 disp = vec2(n1, n2) * 0.03; disp += vec2(n3, n4) * 0.005;
+          disp.x += sin((refPos.x * 20.0) + (time * 4.0)) * 0.02 * clamp(dist, 0.0, 1.0);
+          disp.y += cos((refPos.y * 20.0) + (time * 3.0)) * 0.02 * clamp(dist, 0.0, 1.0);
+          pos -= (uRingPos - (cPos + disp)) * pow(t2, 0.75) * uRingDisplacement;
+          float sD = t - scale; sD *= 0.2; scale += sD;
+          vec2 fPos = cPos + disp + (pos * 0.25);
+          velocity *= 0.5; velocity += scale * 0.25;
+          gl_FragColor = vec4(fPos, scale, velocity);
+        }
+      `
+    });
+    simScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), simMat));
+
+    const geom = new THREE.BufferGeometry();
+    const uvs = new Float32Array(count * 2);
+    const positions = new Float32Array(count * 3);
+    const seeds = new Float32Array(count * 4);
+    for (let i = 0; i < count; i++) {
+      uvs[i*2] = (i % SIZE) / SIZE; uvs[i*2+1] = Math.floor(i / SIZE) / SIZE;
+      seeds[i*4] = Math.random(); seeds[i*4+1] = Math.random();
+      seeds[i*4+2] = Math.random(); seeds[i*4+3] = Math.random();
+    }
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geom.setAttribute('seeds', new THREE.BufferAttribute(seeds, 4));
+
+    const dc = { c1:'#a78bfa', c2:'#22d3ee', c3:'#f472b6' };
+    let pScale = W / pr / 2000 * psScale;
+
+    const renderMat = new THREE.ShaderMaterial({
+      transparent: true, depthTest: false, depthWrite: false,
+      uniforms: {
+        uPosition: { value: posTex }, uTime: { value: 0 },
+        uColor1: { value: new THREE.Color(dc.c1) },
+        uColor2: { value: new THREE.Color(dc.c2) },
+        uColor3: { value: new THREE.Color(dc.c3) },
+        uAlpha: { value: 1.0 }, uRingPos: { value: new THREE.Vector2(0,0) },
+        uRez: { value: new THREE.Vector2(W, H) }, uParticleScale: { value: pScale },
+        uPixelRatio: { value: pr }, uColorScheme: { value: 0 }
+      },
+      vertexShader: `
+        precision highp float;
+        attribute vec4 seeds;
+        uniform sampler2D uPosition; uniform float uParticleScale; uniform float uPixelRatio;
+        varying vec4 vSeeds; varying float vVelocity; varying vec2 vLocalPos; varying vec2 vScreenPos; varying float vScale;
+        void main() {
+          vec4 pos = texture2D(uPosition, uv);
+          vSeeds = seeds; vVelocity = pos.w; vScale = pos.z; vLocalPos = pos.xy;
+          vec4 viewSpace = modelViewMatrix * vec4(vec3(pos.xy, 0.0), 1.0);
+          gl_Position = projectionMatrix * viewSpace; vScreenPos = gl_Position.xy;
+          gl_PointSize = ((vScale * 7.0) * (uPixelRatio * 0.5) * uParticleScale);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec4 vSeeds; varying vec2 vScreenPos; varying vec2 vLocalPos; varying float vScale; varying float vVelocity;
+        uniform vec3 uColor1; uniform vec3 uColor2; uniform vec3 uColor3;
+        uniform vec2 uRingPos; uniform vec2 uRez; uniform float uAlpha; uniform float uTime; uniform int uColorScheme;
+        ${NOISE_GLSL}
+        #define PI 3.1415926535897932384626433832795
+        float sdRoundBox(in vec2 p, in vec2 b, in vec4 r) {
+          r.xy = (p.x>0.0)?r.xy : r.zw; r.x = (p.y>0.0)?r.x : r.y;
+          vec2 q = abs(p)-b+r.x; return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r.x;
+        }
+        vec2 rotate(vec2 v, float a) { float s = sin(a); float c = cos(a); return mat2(c, s, -s, c) * v; }
+        void main() {
+          float uBorderSize = 0.2;
+          float ratio = uRez.x / uRez.y;
+          float noiseAngle = snoise(vec3(vLocalPos * 10.0 + vec2(18.4924, 72.9744), uTime * 0.85));
+          float noiseColor = snoise(vec3(vLocalPos * 2.0 + vec2(74.664, 91.556), uTime * 0.5));
+          noiseColor = (noiseColor + 1.0) * 0.5;
+          float angle = atan(vLocalPos.y - uRingPos.y, vLocalPos.x - uRingPos.x);
+          vec2 uv = gl_PointCoord.xy; uv -= vec2(0.5); uv.y *= -1.0;
+          uv = rotate(uv, -angle + (noiseAngle * 0.5));
+          float h = 0.8;
+          float progress = smoothstep(0.0, 0.75, pow(noiseColor, 2.0));
+          vec3 col = mix(mix(uColor1, uColor2, progress/h), mix(uColor2, uColor3, (progress - h)/(1.0 - h)), step(h, progress));
+          vec3 color = col;
+          float rounded = sdRoundBox(uv, vec2(0.5, 0.2), vec4(0.25));
+          rounded = smoothstep(0.1, 0.0, rounded);
+          float a = uAlpha * rounded * smoothstep(0.1, 0.2, vScale);
+          if (a < 0.01) discard;
+          color = clamp(color, 0.0, 1.0);
+          color = mix(color, color * clamp(vVelocity, 0.0, 1.0), float(uColorScheme));
+          gl_FragColor = vec4(color, clamp(a, 0.0, 1.0));
+        }
+      `
+    });
+
+    const mesh = new THREE.Points(geom, renderMat);
+    mesh.scale.set(5, 5, 5);
+    scene.add(mesh);
+
+    const noise = new ValueNoise1D();
+    const ringPos = new THREE.Vector2(0,0);
+    const cursorPos = new THREE.Vector2(0,0);
+    const clock = new THREE.Clock();
+    let time = 0, lastTime = 0, everRendered = false;
+
+    window.addEventListener('mousemove', e => {
+      const r = container.getBoundingClientRect();
+      mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+      mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+      mouseOver = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    });
+
+    window.addEventListener('resize', () => {
+      const ww = container.offsetWidth || window.innerWidth;
+      const hh = container.offsetHeight || window.innerHeight;
+      renderer.setSize(ww, hh); camera.aspect = ww / hh; camera.updateProjectionMatrix();
+      renderMat.uniforms.uRez.value.set(ww, hh);
+      pScale = ww / pr / 2000 * psScale;
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = clock.getElapsedTime() - lastTime; lastTime = clock.getElapsedTime(); time += dt;
+      const tD = (noise.getVal(time * 0.66 + 94.234) - 0.5) * 2;
+      const iD = (noise.getVal(time * 0.75 + 21.028) - 0.5) * 2;
+
+      if (mouseOver) {
+        raycaster.setFromCamera(mouse, camera);
+        const hits = raycaster.intersectObject(rayPlane);
+        if (hits.length > 0) { isInt = true; intPt.copy(hits[0].point); } else isInt = false;
+      } else isInt = false;
+
+      if (isInt) {
+        cursorPos.set(intPt.x * 0.175 + tD * 0.1, intPt.y * 0.175 + iD * 0.1);
+        ringPos.set(ringPos.x + (cursorPos.x - ringPos.x) * 0.02, ringPos.y + (cursorPos.y - ringPos.y) * 0.02);
+      } else {
+        cursorPos.set(tD * 0.2, iD * 0.1);
+        ringPos.set(ringPos.x + (cursorPos.x - ringPos.x) * 0.01, ringPos.y + (cursorPos.y - ringPos.y) * 0.01);
+      }
+
+      simMat.uniforms.uPosition.value = everRendered ? rt1.texture : posTex;
+      simMat.uniforms.uTime.value = clock.getElapsedTime();
+      simMat.uniforms.uDeltaTime.value = dt;
+      simMat.uniforms.uRingRadius.value = 0.175 + Math.sin(time) * 0.03 + Math.cos(time * 3) * 0.02;
+      simMat.uniforms.uRingPos.value = ringPos;
+
+      renderer.setRenderTarget(rt2); renderer.render(simScene, simCam); renderer.setRenderTarget(null);
+
+      renderMat.uniforms.uPosition.value = everRendered ? rt2.texture : posTex;
+      renderMat.uniforms.uTime.value = clock.getElapsedTime();
+      renderMat.uniforms.uRingPos.value = ringPos;
+      renderMat.uniforms.uParticleScale.value = pScale;
+
+      renderer.autoClear = false; renderer.clear(); renderer.render(scene, camera);
+      const tmp = rt1; rt1 = rt2; rt2 = tmp; everRendered = true;
+    }
+    animate();
+  }
+
+  function initApp() {
+    if (THREE.ColorManagement) THREE.ColorManagement.enabled = false;
+    buildParticleScene(document.getElementById('particles-container'));
+  }
+  </script>
+</body>
+</html>

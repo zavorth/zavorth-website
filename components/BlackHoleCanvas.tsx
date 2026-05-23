@@ -22,7 +22,7 @@ const ei = THREE.Plane
 
 // Configuration defaults representing our Relativistic Black Hole
 const DEFAULTS = {
-  particleCount: 65000,
+  particleCount: 42000,
   colorSaturation: 1.0,
   scatterTop: 1.0,
   scatterBottom: 0.15,
@@ -315,7 +315,7 @@ export function BlackHoleCanvas() {
         void main() {
             vColor = color;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = customSize * uPixelRatio * (320.0 / -mvPosition.z);
+            gl_PointSize = customSize * uPixelRatio * (280.0 / -mvPosition.z);
             gl_Position = projectionMatrix * mvPosition;
         }
       `,
@@ -326,13 +326,13 @@ export function BlackHoleCanvas() {
             float distSq = dot(coord, coord);
             if (distSq > 0.25) discard;
             
-            float glow = exp(-distSq * 10.0);
-            float outerHalo = exp(-distSq * 4.0) * 0.4;
-            float core = smoothstep(0.06, 0.0, distSq) * 0.6;
+            float glow = exp(-distSq * 12.0);
+            float outerHalo = exp(-distSq * 5.0) * 0.3;
+            float core = smoothstep(0.06, 0.0, distSq) * 0.5;
             
             float alpha = glow + outerHalo + core;
-            vec3 boostedColor = vColor * 1.3 + vec3(0.05, 0.02, 0.08);
-            gl_FragColor = vec4(boostedColor, alpha * 0.92);
+            vec3 boostedColor = vColor * 1.2 + vec3(0.03, 0.01, 0.05);
+            gl_FragColor = vec4(boostedColor, alpha * 0.88);
         }
       `,
       transparent: true,
@@ -594,15 +594,19 @@ export function BlackHoleCanvas() {
           if (i % 6 === 0) {
             sizes[i] = sizeSeed * 18.0 * (0.5 + 0.5 * Math.sin(timeTracker * 0.5 + radius))
             let nebColor = b[0]
-            rChan = nebColor.r * 0.05
-            gChan = nebColor.g * 0.02
-            bChan = nebColor.b * 0.12
+            rChan = nebColor.r * 0.08
+            gChan = nebColor.g * 0.04
+            bChan = nebColor.b * 0.15
           } else {
-            sizes[i] = sizeSeed * 0.65
-            let starColorSeed = (i * 0.17) % 0.3
-            rChan = 0.7 + starColorSeed
-            gChan = 0.7 + starColorSeed
-            bChan = 0.8 + ((i * 0.23) % 0.2)
+            // Stars tinted by current palette
+            let paletteMix = (i * 0.13) % 1.0
+            let starBase = paletteMix < 0.5 ? b[0] : b[3]
+            let tintStrength = 0.25 + (paletteMix * 0.3)
+            let starWhite = 0.6 + ((i * 0.17) % 0.3)
+
+            rChan = starWhite * (1.0 - tintStrength) + starBase.r * tintStrength
+            gChan = starWhite * (1.0 - tintStrength) + starBase.g * tintStrength
+            bChan = starWhite * (1.0 - tintStrength) + starBase.b * tintStrength
 
             rChan *= 0.2 + 0.8 * scatterCurrent
             gChan *= 0.2 + 0.8 * scatterCurrent

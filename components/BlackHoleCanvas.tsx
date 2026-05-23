@@ -22,7 +22,7 @@ const ei = THREE.Plane
 
 // Configuration defaults representing our Relativistic Black Hole
 const DEFAULTS = {
-  particleCount: 22000,
+  particleCount: 35000,
   colorSaturation: 1.0,
   scatterTop: 1.0,
   scatterBottom: 0.15,
@@ -316,7 +316,7 @@ export function BlackHoleCanvas() {
         void main() {
             vColor = color;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = customSize * uPixelRatio * (200.0 / -mvPosition.z);
+            gl_PointSize = customSize * uPixelRatio * (245.0 / -mvPosition.z);
             gl_Position = projectionMatrix * mvPosition;
         }
       `,
@@ -325,15 +325,16 @@ export function BlackHoleCanvas() {
         void main() {
             vec2 coord = gl_PointCoord - vec2(0.5);
             float distSq = dot(coord, coord);
-            if (distSq > 0.25) discard;
             
-            float glow = exp(-distSq * 12.0);
-            float outerHalo = exp(-distSq * 5.0) * 0.3;
-            float core = smoothstep(0.06, 0.0, distSq) * 0.5;
+            // Smoothly fade out at the edges instead of using discard (which ruins GPU early-z and stalls rasterization)
+            float borderFade = 1.0 - smoothstep(0.18, 0.25, distSq);
             
-            float alpha = glow + outerHalo + core;
-            vec3 boostedColor = vColor * 1.2 + vec3(0.03, 0.01, 0.05);
-            gl_FragColor = vec4(boostedColor, alpha * 0.88);
+            float glow = exp(-distSq * 9.0);
+            float core = smoothstep(0.08, 0.0, distSq) * 0.6;
+            
+            float alpha = (glow + core) * borderFade;
+            vec3 boostedColor = vColor * 1.35 + vec3(0.04, 0.01, 0.06);
+            gl_FragColor = vec4(boostedColor, alpha * 0.9);
         }
       `,
       transparent: true,

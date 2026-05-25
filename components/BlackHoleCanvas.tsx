@@ -163,12 +163,15 @@ export function BlackHoleCanvas() {
       console.warn('WebGL context creation failed — black hole disabled:', err)
       return
     }
-    renderer.setSize(container.clientWidth, container.clientHeight)
+    const initWidth = container.clientWidth || window.innerWidth
+    const initHeight = container.clientHeight || window.innerHeight
+
+    renderer.setSize(initWidth, initHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     container.appendChild(renderer.domElement)
 
     // 3. Camera
-    camera = new $i(75, container.clientWidth / container.clientHeight, 0.1, 2000)
+    camera = new $i(75, initWidth / initHeight, 0.1, 2000)
     camera.position.z = 240
 
     // 4. Orbit Controls
@@ -777,12 +780,18 @@ export function BlackHoleCanvas() {
 
     const onResize = () => {
       if (!containerRef.current) return
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight
+      const w = containerRef.current.clientWidth || window.innerWidth
+      const h = containerRef.current.clientHeight || window.innerHeight
+      if (w === 0 || h === 0) return
+      camera.aspect = w / h
       camera.updateProjectionMatrix()
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight)
+      renderer.setSize(w, h)
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2)
     }
+
+    const resizeObserver = new ResizeObserver(() => onResize())
+    resizeObserver.observe(containerRef.current)
 
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerleave', onPointerLeave)
@@ -957,6 +966,7 @@ export function BlackHoleCanvas() {
 
     // Cleanup logic on component unmount
     return () => {
+      resizeObserver.disconnect()
       cancelAnimationFrame(animationFrameId)
       clearTimeout(activeScaleTimeout)
 

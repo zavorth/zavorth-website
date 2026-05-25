@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
-import { AuroraMeshGradient } from './AuroraMeshGradient'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
@@ -30,56 +29,81 @@ export function InstallSection() {
         id="install"
         className="relative bg-[#050505] py-32 sm:py-44 overflow-hidden"
       >
-        {/* ── Premium Aurora Mesh Gradient background ── */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <AuroraMeshGradient />
+        {/* ── Animated gradient orbs (CSS-only, ultra-lightweight) ── */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          {/* Primary orb — slow drift top-right */}
+          <div
+            className="absolute rounded-full blur-[120px] opacity-[0.07]"
+            style={{
+              width: '600px',
+              height: '600px',
+              top: '-10%',
+              right: '-5%',
+              background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)',
+              animation: 'installOrb1 18s ease-in-out infinite',
+            }}
+          />
+          {/* Secondary orb — slow drift bottom-left */}
+          <div
+            className="absolute rounded-full blur-[100px] opacity-[0.05]"
+            style={{
+              width: '500px',
+              height: '500px',
+              bottom: '-15%',
+              left: '-8%',
+              background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)',
+              animation: 'installOrb2 22s ease-in-out infinite',
+            }}
+          />
+          {/* Tertiary accent — subtle amber warmth at center */}
+          <div
+            className="absolute rounded-full blur-[140px] opacity-[0.04]"
+            style={{
+              width: '400px',
+              height: '400px',
+              top: '40%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)',
+              animation: 'installOrb3 15s ease-in-out infinite',
+            }}
+          />
         </div>
 
-        {/* ── CRT scanline overlay ── */}
+        {/* ── Subtle grid pattern ── */}
         <div
-          className="pointer-events-none absolute inset-0 z-10 opacity-[0.04]"
+          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.025]"
           style={{
-            backgroundImage:
-              'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.5) 1px, rgba(255,255,255,0.5) 2px)',
-            backgroundSize: '100% 2px',
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px',
           }}
         />
 
         {/* ── Radial vignette ── */}
         <div
-          className="pointer-events-none absolute inset-0 z-10"
+          className="pointer-events-none absolute inset-0 z-[2]"
           style={{
             background:
-              'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 30%, rgba(0,0,0,0.6) 100%)',
+              'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 30%, rgba(5,5,5,0.8) 100%)',
           }}
         />
 
-        {/* ── Faint geometric scratch lines (like x.ai) ── */}
-        <svg
-          className="pointer-events-none absolute inset-0 z-10 h-full w-full opacity-[0.015]"
-          preserveAspectRatio="none"
-        >
-          <line x1="10%" y1="0%" x2="90%" y2="100%" stroke="white" strokeWidth="0.5" />
-          <line x1="55%" y1="0%" x2="25%" y2="100%" stroke="white" strokeWidth="0.4" />
-          <line x1="30%" y1="70%" x2="70%" y2="75%" stroke="white" strokeWidth="0.35" />
-          <line x1="0%" y1="55%" x2="95%" y2="0%" stroke="white" strokeWidth="0.25" />
-        </svg>
-
         {/* ── Content ── */}
         <div className="relative z-20 mx-auto max-w-4xl px-6 text-center">
-          {/* Giant ZAVORTH watermark — Grok-style animated ghost text */}
+          {/* Giant ZAVORTH watermark */}
           <div className="relative flex select-none items-center justify-center -mb-8 sm:-mb-14 pb-8">
             <h2
               className="pointer-events-none whitespace-nowrap text-center font-extrabold leading-[0.8] tracking-[-0.06em]"
               style={{
                 fontSize: 'clamp(4.5rem, 15vw, 11rem)',
-                background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(130,130,130,1) 30%, rgba(30,30,30,0) 80%)',
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.08) 40%, rgba(30,30,30,0) 80%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
                 WebkitTextFillColor: 'transparent',
-                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
               }}
             >
               ZAVORTH
@@ -124,6 +148,24 @@ export function InstallSection() {
           </div>
         </div>
       </section>
+
+      {/* Keyframe animations for the gradient orbs */}
+      <style jsx>{`
+        @keyframes installOrb1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-40px, 30px) scale(1.1); }
+          66% { transform: translate(20px, -20px) scale(0.95); }
+        }
+        @keyframes installOrb2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -25px) scale(1.08); }
+          66% { transform: translate(-25px, 15px) scale(0.92); }
+        }
+        @keyframes installOrb3 {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.04; }
+          50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.06; }
+        }
+      `}</style>
     </>
   )
 }

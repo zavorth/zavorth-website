@@ -1,228 +1,192 @@
 'use client'
 
-import React, { useLayoutEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
-  Bot,
-  Box,
-  Brain,
-  FileSearch,
-  Globe,
-  Hash,
-  MessageCircle,
-  MessageSquare,
   Send,
-  Sparkles,
+  MessageSquare,
+  Hash,
+  LayoutDashboard,
   Webhook,
-  Terminal,
+  Brain,
+  Box,
+  Globe,
+  Bot,
+  Sparkles,
 } from 'lucide-react'
 import gsap from 'gsap'
-import { createReveal, ensureGsapPlugins } from './motion'
+import { ensureGsapPlugins } from './motion'
+import { LocalStackMarquee } from './LocalStackMarquee'
 
-const integrations = [
+interface Connector {
+  name: string
+  desc: string
+  Icon: React.ElementType
+  accent: string
+}
+
+const connectors: Connector[] = [
   {
     name: 'Telegram',
-    tag: 'Chat',
+    desc: 'Aprovações e controle remoto em tempo real.',
     Icon: Send,
-    color: '#38bdf8',
-    bg: 'rgba(56, 189, 248, 0.11)',
-    border: 'rgba(56, 189, 248, 0.22)',
+    accent: '#38bdf8',
   },
   {
     name: 'Discord',
-    tag: 'Chat',
+    desc: 'Gerenciamento de tarefas por bots isolados.',
     Icon: MessageSquare,
-    color: '#818cf8',
-    bg: 'rgba(129, 140, 248, 0.12)',
-    border: 'rgba(129, 140, 248, 0.23)',
+    accent: '#818cf8',
   },
   {
     name: 'Slack',
-    tag: 'Chat',
+    desc: 'Notificações e briefs diários automatizados.',
     Icon: Hash,
-    color: '#e879f9',
-    bg: 'rgba(232, 121, 249, 0.11)',
-    border: 'rgba(232, 121, 249, 0.23)',
+    accent: '#e879f9',
   },
   {
-    name: 'WhatsApp',
-    tag: 'Chat',
-    Icon: MessageCircle,
-    color: '#22c55e',
-    bg: 'rgba(34, 197, 94, 0.11)',
-    border: 'rgba(34, 197, 94, 0.23)',
+    name: 'Command Center',
+    desc: 'Painel local de governança e auditoria.',
+    Icon: LayoutDashboard,
+    accent: '#f59e0b',
   },
   {
-    name: 'Browser',
-    tag: 'Tool',
-    Icon: Globe,
-    color: '#60a5fa',
-    bg: 'rgba(96, 165, 250, 0.1)',
-    border: 'rgba(96, 165, 250, 0.22)',
-  },
-  {
-    name: 'Docker',
-    tag: 'Runtime',
-    Icon: Box,
-    color: '#38bdf8',
-    bg: 'rgba(56, 189, 248, 0.1)',
-    border: 'rgba(56, 189, 248, 0.2)',
-  },
-  {
-    name: 'MCP',
-    tag: 'Protocol',
+    name: 'MCP Protocol',
+    desc: 'Integre qualquer ferramenta pelo padrão MCP.',
     Icon: Webhook,
-    color: '#f59e0b',
-    bg: 'rgba(245, 158, 11, 0.11)',
-    border: 'rgba(245, 158, 11, 0.22)',
+    accent: '#fb923c',
+  },
+  {
+    name: 'Mnemos Memory',
+    desc: 'Banco vetorial local para PDFs e arquivos.',
+    Icon: Brain,
+    accent: '#2dd4bf',
+  },
+  {
+    name: 'Docker Sandbox',
+    desc: 'Ambientes isolados para execução segura.',
+    Icon: Box,
+    accent: '#22d3ee',
+  },
+  {
+    name: 'Browser Controller',
+    desc: 'Navegação e extração web em sandbox.',
+    Icon: Globe,
+    accent: '#34d399',
   },
   {
     name: 'Ollama',
-    tag: 'Local',
+    desc: 'DeepSeek, Llama, Mistral — 100% local.',
     Icon: Bot,
-    color: '#a7f3d0',
-    bg: 'rgba(167, 243, 208, 0.09)',
-    border: 'rgba(167, 243, 208, 0.18)',
+    accent: '#fb7185',
   },
   {
-    name: 'OpenAI',
-    tag: 'API',
+    name: 'Google Gemini',
+    desc: 'Modelos de última geração otimizados.',
     Icon: Sparkles,
-    color: '#f8fafc',
-    bg: 'rgba(248, 250, 252, 0.08)',
-    border: 'rgba(248, 250, 252, 0.16)',
+    accent: '#60a5fa',
   },
   {
-    name: 'Anthropic',
-    tag: 'API',
+    name: 'Anthropic Claude',
+    desc: 'Mapeamento de intenções em sandbox.',
     Icon: Brain,
-    color: '#fbbf24',
-    bg: 'rgba(251, 191, 36, 0.1)',
-    border: 'rgba(251, 191, 36, 0.2)',
+    accent: '#fbbf24',
   },
   {
-    name: 'Zavorth Core AI',
-    tag: 'API',
+    name: 'OpenAI GPT',
+    desc: 'Inteligência avançada para fluxos complexos.',
     Icon: Sparkles,
-    color: '#93c5fd',
-    bg: 'rgba(147, 197, 253, 0.1)',
-    border: 'rgba(147, 197, 253, 0.2)',
-  },
-  {
-    name: 'Filesystem',
-    tag: 'Tool',
-    Icon: FileSearch,
-    color: '#cbd5e1',
-    bg: 'rgba(203, 213, 225, 0.08)',
-    border: 'rgba(203, 213, 225, 0.16)',
+    accent: '#a1a1aa',
   },
 ]
 
 export function ConnectionsSection() {
   const rootRef = useRef<HTMLDivElement>(null)
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!rootRef.current) return
     ensureGsapPlugins()
 
     const ctx = gsap.context(() => {
-      createReveal('[data-conn-header]', {
-        trigger: rootRef.current!,
-        start: 'top 78%',
-        y: 18,
-        duration: 0.8,
-      })
-      createReveal('[data-conn-item]', {
-        trigger: '[data-conn-content]',
-        start: 'top 82%',
-        y: 18,
-        duration: 0.75,
-        stagger: 0.045,
-      })
+      gsap.fromTo(
+        '[data-conn-item]',
+        { y: 12, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.5,
+          stagger: 0.04,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: rootRef.current!,
+            start: 'top 80%',
+            once: true,
+          },
+        }
+      )
     }, rootRef)
 
     return () => ctx.revert()
   }, [])
 
   return (
-    <section id="connections" ref={rootRef} className="relative section-rhythm">
-      <div className="mx-auto max-w-6xl px-5 sm:px-6">
-        <div data-conn-header className="text-center mb-12 md:mb-14">
-          <p className="eyebrow mb-4 justify-center mx-auto">Channel Mesh</p>
-          <h2 className="section-title-display text-heading sm:text-display-sm text-text-primary mb-5">
-            Conecta com o que{' '}
-            <span className="text-amber">já existe.</span>
-          </h2>
-          <p className="section-lead text-body-lg text-text-muted leading-relaxed max-w-2xl mx-auto">
-            O Zavorth se integra ao ecossistema que você já usa, sem trocar de stack.
-            Dashboard, CLI, Telegram, API — mesmo agente, qualquer superfície.
+    <section
+      id="connections"
+      ref={rootRef}
+      className="relative bg-[#060606] border-t border-white/[0.04] py-24 sm:py-32"
+    >
+      <div className="mx-auto max-w-5xl px-6">
+        {/* Header */}
+        <div data-conn-item className="text-center mb-16">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500 mb-4">
+            Integrações
           </p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white leading-snug">
+            Tudo que você já usa, conectado.
+          </h2>
         </div>
 
-        <div
-          data-conn-content
-          className="relative overflow-hidden rounded-[26px] border border-white/[0.06] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_24px_80px_rgba(0,0,0,0.25)] sm:p-3"
-          style={{
-            background:
-              'radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.06), transparent 42%), rgba(255,255,255,0.018)',
-          }}
-        >
-          <div
-            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber/30 to-transparent"
-            aria-hidden="true"
-          />
-
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {integrations.map((item) => {
-              const Icon = item.Icon
-
-              return (
-                <div
-                  key={item.name}
-                  data-conn-item
-                  className="group relative overflow-hidden rounded-2xl border border-white/[0.055] bg-white/[0.025] p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-white/[0.11] hover:bg-white/[0.04]"
-                >
-                  <div
-                    className="pointer-events-none absolute -right-8 -top-10 h-20 w-20 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
-                    style={{ background: item.color }}
-                    aria-hidden="true"
+        {/* Grid — clean rows */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-0 gap-y-0">
+          {connectors.map((c) => {
+            const Icon = c.Icon
+            return (
+              <div
+                key={c.name}
+                data-conn-item
+                className="group relative px-5 py-6 border-b border-r border-white/[0.04] last:border-r-0 [&:nth-child(2n)]:border-r-0 sm:[&:nth-child(2n)]:border-r sm:[&:nth-child(3n)]:border-r-0 lg:[&:nth-child(3n)]:border-r lg:[&:nth-child(4n)]:border-r-0 hover:bg-white/[0.015] transition-colors duration-300"
+              >
+                {/* Icon */}
+                <div className="mb-3">
+                  <Icon
+                    className="h-5 w-5 transition-colors duration-300"
+                    style={{ color: c.accent }}
+                    strokeWidth={1.5}
                   />
-
-                  <div className="relative flex items-center gap-3">
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-transform duration-300 group-hover:scale-105"
-                      style={{
-                        background: item.bg,
-                        borderColor: item.border,
-                        color: item.color,
-                      }}
-                    >
-                      <Icon size={17} strokeWidth={2.2} />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-semibold leading-tight text-neutral-100">
-                        {item.name}
-                      </p>
-                      <span
-                        className="mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.12em]"
-                        style={{
-                          color: item.color,
-                          background: item.bg,
-                        }}
-                      >
-                        {item.tag}
-                      </span>
-                    </div>
-                  </div>
                 </div>
-              )
-            })}
-          </div>
+
+                {/* Name */}
+                <p className="text-[13px] font-medium text-neutral-200 mb-1">
+                  {c.name}
+                </p>
+
+                {/* Description */}
+                <p className="text-[11px] text-neutral-600 leading-relaxed">
+                  {c.desc}
+                </p>
+              </div>
+            )
+          })}
         </div>
 
-        <div data-conn-item className="mt-6 text-center">
-          <p className="text-[12px] text-text-faint font-mono uppercase tracking-[0.16em]">
-            + skills customizáveis · MCP servers · subagentes
+        {/* Relocated Entry Surfaces Marquee */}
+        <div data-conn-item className="mt-20 w-full pointer-events-auto">
+          <LocalStackMarquee />
+        </div>
+
+        {/* Footnote */}
+        <div data-conn-item className="mt-16">
+          <p className="text-center font-mono text-[10px] text-neutral-600 uppercase tracking-widest">
+            + plugins customizáveis &middot; mcp servers &middot; micro-agentes locais
           </p>
         </div>
       </div>

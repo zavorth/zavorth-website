@@ -1,45 +1,42 @@
 'use client'
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
-import { Menu, X } from 'lucide-react'
+import {
+  Menu, X, ChevronDown,
+  LayoutDashboard, Terminal, Send, Brain, GitBranch, Sparkles
+} from 'lucide-react'
 import { BrandMark } from './BrandMark'
 import { NAV_LINKS } from '../lib/constants'
-import { initMagnetic } from './motion'
+
+const PRODUCT_TILES = [
+  { name: 'Command Center', desc: 'Dashboard para readiness, aprovações, provedores e recibos.', href: '#how-it-works', Icon: LayoutDashboard },
+  { name: 'CLI/TUI', desc: 'Terminal para status, comandos, aprovações e checks diários.', href: '#install', Icon: Terminal },
+  { name: 'Canais', desc: 'Telegram, Discord e API com aprovações governadas.', href: '#security', Icon: Send },
+  { name: 'Mnemos', desc: 'Memória local e compreensão universal de documentos.', href: '#skills', Icon: Brain },
+  { name: 'Swarm v2', desc: 'Planejamento multi-agente com budgets e isolamento.', href: '#how-it-works', Icon: GitBranch },
+  { name: 'Skills', desc: 'Skills nativas com curadoria, scoring e aprovação.', href: '#skills', Icon: Sparkles },
+]
 
 /**
- * Navbar — Zavorth Core top bar
+ * Navbar — Zavorth Core top bar (Google/Minimalist Style)
  */
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeId, setActiveId] = useState<string>('')
+  const [isProductOpen, setIsProductOpen] = useState(false)
+  const [isMobileProductOpen, setIsMobileProductOpen] = useState(false)
+  const [entranceCompleted, setEntranceCompleted] = useState(false)
   const navRef = useRef<HTMLElement>(null)
-  
-  // Refs for magnetic effect
-  const ctaRef = useRef<HTMLAnchorElement>(null)
-
-  useEffect(() => {
-    // Setup magnetic effects on mount
-    let cleanupCTA: (() => void) | undefined
-    if (ctaRef.current) {
-      cleanupCTA = initMagnetic(ctaRef.current, 0.4)
-    }
-    
-    // Magnetic links
-    const linkCleanups: (() => void)[] = []
-    document.querySelectorAll('.navbar-link').forEach((el) => {
-      linkCleanups.push(initMagnetic(el as HTMLElement, 0.2))
-    })
-
-    return () => {
-      if (cleanupCTA) cleanupCTA()
-      linkCleanups.forEach(cleanup => cleanup())
-    }
-  }, [])
+  const productTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40)
+      const scrolled = window.scrollY > 10
+      setIsScrolled(scrolled)
+      if (scrolled) {
+        setEntranceCompleted(true)
+      }
 
       const sections = NAV_LINKS
         .map((link) => document.getElementById(link.id))
@@ -54,7 +51,15 @@ export function Navbar() {
 
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+
+    const timer = setTimeout(() => {
+      setEntranceCompleted(true)
+    }, 2200) // 1400ms delay + 800ms animation duration
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      clearTimeout(timer)
+    }
   }, [])
 
   useEffect(() => {
@@ -67,6 +72,7 @@ export function Navbar() {
   const scrollToSection = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setIsMobileMenuOpen(false)
+    setIsProductOpen(false)
   }, [])
 
   const scrollToTop = useCallback(() => {
@@ -74,116 +80,194 @@ export function Navbar() {
     setIsMobileMenuOpen(false)
   }, [])
 
+  const handleProductEnter = useCallback(() => {
+    if (productTimeoutRef.current) {
+      clearTimeout(productTimeoutRef.current)
+      productTimeoutRef.current = null
+    }
+    setIsProductOpen(true)
+  }, [])
+
+  const handleProductLeave = useCallback(() => {
+    productTimeoutRef.current = setTimeout(() => {
+      setIsProductOpen(false)
+    }, 150)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (productTimeoutRef.current) clearTimeout(productTimeoutRef.current)
+    }
+  }, [])
+
   return (
     <>
-      <nav
-        ref={navRef}
-        className={`navbar-root fixed left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      <style>{`
+        @keyframes navbarSlideDown {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -24px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
+        }
+        .navbar-animate-entrance {
+          opacity: 0;
+          transform: translate(-50%, -24px);
+          animation: navbarSlideDown 800ms cubic-bezier(0.16, 1, 0.3, 1) 1400ms forwards;
+        }
+      `}</style>
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 z-50 transition-all ease-in-out ${
           isScrolled
-            ? 'navbar-scrolled top-3 mx-auto max-w-[94%] sm:max-w-3xl lg:max-w-4xl'
-            : 'navbar-top top-0'
+            ? 'top-3 w-[94%] sm:w-[90%] max-w-[1100px]'
+            : 'top-5 w-[96%] max-w-[1240px]'
+        } ${
+          entranceCompleted
+            ? 'opacity-100 translate-y-0'
+            : 'navbar-animate-entrance pointer-events-none'
         }`}
-        aria-label="Primary"
+        style={{
+          transitionDuration: !isScrolled ? '800ms' : '500ms',
+        }}
       >
-        <div className={`navbar-inner border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isScrolled
-            ? 'rounded-full border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)] px-3 sm:px-5'
-            : 'rounded-none border-transparent bg-transparent px-5 sm:px-6'
-        }`}>
-          <div className="mx-auto max-w-content">
-            <div className={`flex items-center justify-between transition-all duration-500 ${
-              isScrolled ? 'h-[3.25rem]' : 'h-[3.75rem]'
-            }`}>
+        <nav
+          ref={navRef}
+          className={`w-full rounded-full border border-white/[0.05] bg-[#07070a]/40 backdrop-blur-2xl transition-all duration-500 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] ${
+            isScrolled
+              ? 'py-2 px-6 border-white/[0.08] bg-[#07070a]/70 shadow-[0_16px_40px_0_rgba(0,0,0,0.7)]'
+              : 'py-3.5 px-8'
+          }`}
+          aria-label="Primary"
+        >
+          <div className="flex items-center justify-between">
 
-              {/* ─── Logo ─── */}
-              <button
-                onClick={scrollToTop}
-                className="group flex items-center gap-2 transition-all duration-300"
-                aria-label="Zavorth — voltar ao topo"
+            {/* ─── Logo ─── */}
+            <button
+              onClick={scrollToTop}
+              className="group flex items-center gap-2.5 transition-all duration-300 hover:scale-[1.02]"
+              aria-label="Zavorth — voltar ao topo"
+            >
+              <BrandMark className="h-5.5 w-5.5" animated={!isScrolled} />
+              <span className="text-[16px] font-semibold tracking-tight text-white transition-colors group-hover:text-amber-400">
+                Zavorth
+              </span>
+            </button>
+
+            {/* ─── Desktop Navigation Links ─── */}
+            <div className="hidden items-center gap-2 lg:flex ml-8">
+              {/* Product Dropdown */}
+              <div
+                className="relative flex items-center"
+                onMouseEnter={handleProductEnter}
+                onMouseLeave={handleProductLeave}
               >
-                <div className="relative">
-                  {/* Ambient glow behind icon on hover */}
-                  <div className="absolute inset-0 rounded-full bg-amber/20 blur-lg opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
-                  <BrandMark className="relative h-7 w-7 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110" />
-                </div>
-                <span className="text-[15px] font-semibold tracking-[-0.02em] text-white/90 transition-colors duration-300 group-hover:text-white">
-                  Zavorth
-                </span>
-              </button>
-
-              {/* ─── Desktop Navigation Links ─── */}
-              <div className="hidden items-center gap-1 lg:flex">
-                {NAV_LINKS.map((link) => {
-                  const active = activeId === link.id
-                  return (
-                    <button
-                      key={link.id}
-                      onClick={() => scrollToSection(link.id)}
-                      className={`navbar-link relative whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-colors duration-300 ${
-                        active
-                          ? 'text-white bg-white/[0.08]'
-                          : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      {link.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* ─── Desktop Right Side ─── */}
-              <div className="hidden items-center gap-3 lg:flex">
-                {/* Status indicator — minimal */}
-                <div className="flex items-center gap-2 opacity-70">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-40" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber" />
-                  </span>
-                  <span className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-white/40">
-                    pronto
-                  </span>
-                </div>
-
-                {/* CTA Button — glass with amber accent */}
-                <a
-                  ref={ctaRef}
-                  href="#install"
-                  onClick={(e) => { e.preventDefault(); scrollToSection('install') }}
-                  className="navbar-cta group relative overflow-hidden rounded-full px-5 py-2 text-[13px] font-semibold text-[#1a1207] transition-all duration-300"
+                <button
+                  className={`flex items-center gap-1 text-[13px] font-medium tracking-tight px-3.5 py-1.5 rounded-full transition-all duration-300 border ${
+                    isProductOpen
+                      ? 'text-white bg-white/[0.04] border-white/[0.08]'
+                      : 'text-neutral-400 hover:text-white hover:bg-white/[0.02] border-transparent'
+                  }`}
                 >
-                  {/* Button background with gradient */}
-                  <div
-                    className="absolute inset-0 rounded-full transition-all duration-300 group-hover:shadow-[0_4px_20px_rgba(245,158,11,0.35)]"
-                    style={{
-                      background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%)',
-                    }}
-                    aria-hidden="true"
+                  Produto
+                  <ChevronDown
+                    size={12}
+                    className={`transition-transform duration-300 ${isProductOpen ? 'rotate-180' : ''}`}
                   />
-                  {/* Sheen overlay */}
-                  <div
-                    className="absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    style={{
-                      background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%)',
-                    }}
-                    aria-hidden="true"
-                  />
-                  <span className="relative z-10">Começar agora</span>
-                </a>
+                </button>
+
+                {/* Dropdown panel */}
+                <div
+                  className="absolute top-full pt-3 opacity-0 invisible pointer-events-none transition-all duration-300"
+                  style={{
+                    left: '50%',
+                    marginLeft: '-160px',
+                    opacity: isProductOpen ? 1 : 0,
+                    visibility: isProductOpen ? 'visible' : 'hidden',
+                    pointerEvents: isProductOpen ? 'auto' : 'none',
+                    transform: isProductOpen ? 'translateY(0)' : 'translateY(-6px)'
+                  }}
+                >
+                  <div className="w-[325px] rounded-2xl border border-white/[0.08] bg-[#07070a]/90 backdrop-blur-3xl shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8)] p-2">
+                    <div className="grid grid-cols-1 gap-1">
+                      {PRODUCT_TILES.map((tile) => (
+                        <button
+                          key={tile.name}
+                          onClick={() => {
+                            const id = tile.href.replace('#', '')
+                            scrollToSection(id)
+                          }}
+                          className="w-full flex items-start gap-3 rounded-xl p-2.5 text-left transition-all duration-200 hover:bg-white/[0.04] border border-transparent hover:border-white/[0.03]"
+                        >
+                          <div className="p-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05] text-amber-500 shrink-0">
+                            <tile.Icon size={14} />
+                          </div>
+                          <div>
+                            <span className="block text-[13px] font-semibold text-white mb-0.5">
+                              {tile.name}
+                            </span>
+                            <span className="block text-[11px] leading-snug text-neutral-400">
+                              {tile.desc}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* ─── Mobile Toggle ─── */}
-              <button
-                className="relative p-2 text-white/50 transition-colors hover:text-white/80 lg:hidden"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-                aria-expanded={isMobileMenuOpen}
-              >
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
+              {/* Regular nav links */}
+              {NAV_LINKS.map((link) => {
+                const active = activeId === link.id
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => scrollToSection(link.id)}
+                    className={`relative px-3.5 py-1.5 rounded-full text-[13px] font-medium tracking-tight transition-all duration-300 border ${
+                      active
+                        ? 'text-amber-400 bg-white/[0.04] border-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                        : 'text-neutral-400 hover:text-white hover:bg-white/[0.02] border-transparent'
+                    }`}
+                  >
+                    <span className="relative">
+                      {link.label}
+                      <span
+                        className={`absolute -bottom-1 left-0 right-0 h-[1.5px] bg-amber-500 rounded-full transition-transform duration-300 origin-center ${
+                          active ? 'scale-x-100 opacity-80' : 'scale-x-0 opacity-0'
+                        }`}
+                      />
+                    </span>
+                  </button>
+                )
+              })}
             </div>
+
+            {/* ─── Desktop Right Side ─── */}
+            <div className="hidden items-center gap-4 lg:flex ml-auto">
+              <a
+                href="#install"
+                onClick={(e) => { e.preventDefault(); scrollToSection('install') }}
+                className="flex items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:text-white hover:bg-amber-500 hover:border-amber-500 px-5 py-1.5 text-[13px] font-semibold transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.12)] hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] hover:scale-[1.03] active:scale-[0.97]"
+              >
+                Começar agora
+              </a>
+            </div>
+
+            {/* ─── Mobile Toggle ─── */}
+            <button
+              className="relative p-2 text-neutral-400 transition-colors hover:text-white lg:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       {/* ─── Mobile Menu ─── */}
       {isMobileMenuOpen && (
@@ -191,40 +275,71 @@ export function Navbar() {
           className="fixed inset-0 z-40 lg:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label="Navegação mobile"
         >
           <div
-            className="absolute inset-0 bg-[#030303]/95 backdrop-blur-xl"
+            className="absolute inset-0 bg-[#050505]/95 backdrop-blur-xl"
             onClick={() => setIsMobileMenuOpen(false)}
-            aria-hidden="true"
           />
-          <div className="relative mt-[3.75rem] border-t border-white/[0.06] px-6 py-8">
-            <nav className="flex flex-col gap-1">
+          <div className="relative mt-20 border-t border-white/[0.06] px-6 py-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
+            <nav className="flex flex-col gap-2">
+              <button
+                onClick={() => setIsMobileProductOpen(!isMobileProductOpen)}
+                className={`w-full flex items-center justify-between rounded-xl px-4 py-3 text-left text-[14px] font-medium transition-colors ${
+                  isMobileProductOpen ? 'bg-white/[0.05] text-white border border-white/[0.05]' : 'text-neutral-300 border border-transparent'
+                }`}
+              >
+                Produto
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${isMobileProductOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isMobileProductOpen && (
+                <div className="ml-2 mb-2 space-y-1">
+                  {PRODUCT_TILES.map((tile) => (
+                    <button
+                      key={tile.name}
+                      onClick={() => {
+                        const id = tile.href.replace('#', '')
+                        scrollToSection(id)
+                      }}
+                      className="w-full flex items-start gap-3 rounded-lg px-4 py-2.5 text-left transition-colors hover:bg-white/[0.04]"
+                    >
+                      <tile.Icon size={14} className="mt-1 shrink-0 text-neutral-500" />
+                      <div>
+                        <span className="block text-[13px] font-medium text-white mb-0.5">
+                          {tile.name}
+                        </span>
+                        <span className="block text-[11px] text-neutral-500">
+                          {tile.desc}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {NAV_LINKS.map((link) => {
                 const active = activeId === link.id
                 return (
                   <button
-                    key={link.id}
-                    onClick={() => scrollToSection(link.id)}
-                    className={`w-full rounded-xl px-4 py-3.5 text-left text-[15px] font-medium transition-all duration-200 ${
-                      active
-                        ? 'bg-white/[0.06] text-white'
-                        : 'text-white/50 hover:bg-white/[0.03] hover:text-white/80'
-                    }`}
+                     key={link.id}
+                     onClick={() => scrollToSection(link.id)}
+                     className={`w-full rounded-xl px-4 py-3 text-left text-[14px] font-medium transition-colors border ${
+                       active ? 'bg-white/[0.05] text-white border-white/[0.05]' : 'text-neutral-300 hover:bg-white/[0.02] border-transparent'
+                     }`}
                   >
                     {link.label}
                   </button>
                 )
               })}
             </nav>
-            <div className="mt-8 border-t border-white/[0.06] pt-6">
+            <div className="mt-8">
               <a
                 href="#install"
                 onClick={(e) => { e.preventDefault(); scrollToSection('install'); setIsMobileMenuOpen(false) }}
-                className="block w-full rounded-xl py-3.5 text-center text-[15px] font-semibold text-[#1a1207] transition-all duration-300"
-                style={{
-                  background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%)',
-                }}
+                className="block w-full rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 py-3 text-center text-[14px] font-semibold transition-all shadow-[0_0_15px_rgba(245,158,11,0.12)] hover:bg-amber-500 hover:text-white"
               >
                 Começar agora
               </a>

@@ -994,3 +994,94 @@ main, section, footer, nav {
   10% { opacity: 1; }
   to { opacity: 0; }
 }
+
+/* ─── Display Heading ─── */
+.zavorth-heading-display {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-feature-settings: 'ss01' on, 'cv01' on;
+}
+
+/* ─── Navbar Top Fade ─── */
+.navbar-top-fade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8rem;
+  background: linear-gradient(to bottom, rgba(5,5,5,0.8) 0%, rgba(5,5,5,0.4) 40%, transparent 100%);
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.5s ease;
+}
+
+/* ─── Product Dropdown Animation ─── */
+.product-dropdown {
+  transform-origin: top center;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.product-dropdown[data-open='false'] {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
+}
+
+.product-dropdown[data-open='true'] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* ─── Terminal Typing Animation ─── */
+@keyframes terminalLineIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.terminal-line-animated {
+  animation: terminalLineIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes terminalProgressFill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.terminal-progress-bar {
+  height: 2px;
+  background: linear-gradient(90deg, #f59e0b, #22c55e);
+  border-radius: 1px;
+  transition: width 0.3s ease-out;
+}
+
+/* ─── Text Shimmer ─── */
+@keyframes textShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.9) 0%,
+    rgba(245,158,11,0.9) 25%,
+    rgba(255,255,255,0.9) 50%,
+    rgba(245,158,11,0.9) 75%,
+    rgba(255,255,255,0.9) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 8s linear infinite;
+}

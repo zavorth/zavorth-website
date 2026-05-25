@@ -1,10 +1,15 @@
 'use client'
 
-import React, { useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import gsap from 'gsap'
-import { BlackHoleCanvas } from './BlackHoleCanvas'
+import dynamic from 'next/dynamic'
 import { LocalStackMarquee } from './LocalStackMarquee'
 import { initMagnetic } from './motion'
+
+const BlackHoleCanvas = dynamic(
+  () => import('./BlackHoleCanvas').then((mod) => mod.BlackHoleCanvas),
+  { ssr: false }
+)
 
 /**
  * Hero Section — Zavorth Core Style
@@ -20,13 +25,72 @@ import { initMagnetic } from './motion'
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
   const titleContainerRef = useRef<HTMLDivElement>(null)
-  const taglineRef = useRef<HTMLDivElement>(null)
   const ctaWrapRef = useRef<HTMLDivElement>(null)
   const ctaBtnRef = useRef<HTMLAnchorElement>(null)
-  const marqueeRef = useRef<HTMLDivElement>(null)
   const canvasWrapRef = useRef<HTMLDivElement>(null)
+  const textLayerRef = useRef<HTMLDivElement>(null)
+  const textParallaxRef = useRef<HTMLDivElement>(null)
 
   const [titleTyped, setTitleTyped] = useState(false)
+
+  // Direct DOM scroll tracking for buttery smooth performance (zero React renders)
+  useEffect(() => {
+    const section = sectionRef.current
+    const canvasWrap = canvasWrapRef.current
+    const textLayer = textLayerRef.current
+
+    if (!section) return
+
+    let targetProgress = 0
+    let currentProgress = 0
+    let isLoopActive = true
+
+    const handleScroll = () => {
+      const rect = section.getBoundingClientRect()
+      let progress = 0
+      if (rect.top < 0) {
+        const scrollableHeight = rect.height - window.innerHeight
+        progress = scrollableHeight > 0 ? Math.min(1, -rect.top / scrollableHeight) : 1
+      }
+      targetProgress = progress
+    }
+
+    const updateLoop = () => {
+      if (!isLoopActive) return
+
+      // Smooth scroll interpolation (damping: 0.15 on scroll down, 0.25 on scroll back up)
+      const damping = targetProgress < currentProgress ? 0.25 : 0.15
+      currentProgress += (targetProgress - currentProgress) * damping
+
+      const titleScale = 1 - currentProgress * (1 - 0.47)
+      const titleOpacity = Math.max(0, 1 - currentProgress * 1.5)
+      const canvasOpacity = currentProgress >= 0.7 ? Math.max(0, 1 - (currentProgress - 0.7) / 0.3) : 1
+
+      if (textLayer) {
+        textLayer.style.transform = `translateY(120px) scale(${titleScale})`
+        textLayer.style.opacity = `${titleOpacity}`
+      }
+
+      if (canvasWrap) {
+        const innerCanvas = canvasWrap.querySelector('.inner-canvas') as HTMLDivElement
+        if (innerCanvas) {
+          innerCanvas.style.opacity = `${canvasOpacity}`
+        }
+      }
+
+      requestAnimationFrame(updateLoop)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    
+    // Start animation loop
+    requestAnimationFrame(updateLoop)
+
+    return () => {
+      isLoopActive = false
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
 
   const line1Text = "Uma IA que trabalha"
   const line2Text = "com você — não por trás."
@@ -39,7 +103,7 @@ export function Hero() {
   }, [])
 
   // Phase 1: Background Canvas Fades In immediately
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!sectionRef.current || !canvasWrapRef.current) return
 
     const ctx = gsap.context(() => {
@@ -47,9 +111,7 @@ export function Hero() {
       
       // Initially hide standard GSAP targets
       gsap.set(canvasWrap, { opacity: 0 })
-      if (taglineRef.current) gsap.set(taglineRef.current, { opacity: 0, y: 15, filter: 'blur(8px)' })
       if (ctaWrapRef.current) gsap.set(ctaWrapRef.current, { opacity: 0, y: 15 })
-      if (marqueeRef.current) gsap.set(marqueeRef.current, { opacity: 0 })
 
       // Fade in the stellar background canvas
       gsap.to(canvasWrap, {
@@ -93,7 +155,7 @@ export function Hero() {
     }
 
     const timeouts: NodeJS.Timeout[] = []
-    const staggerSpeed = 0.045
+    const staggerSpeed = 0.015 // Speeded up typing speed
     const staggerMs = staggerSpeed * 1000
     let cumulativeDelay = 0.0 // 0ms initial load delay
 
@@ -155,31 +217,13 @@ export function Hero() {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline()
 
-      // Stagger tagline fade-in with micro-blur
-      tl.to(taglineRef.current, {
-        opacity: 1,
-        y: 0,
-        filter: 'blur(0px)',
-        duration: 0.8,
-        ease: 'power3.out',
-      })
-
       // Fade in the interactive CTA buttons
       tl.to(ctaWrapRef.current, {
         opacity: 1,
         y: 0,
         duration: 0.6,
         ease: 'power3.out',
-      }, '-=0.5')
-
-      // Fade in the marquee
-      if (marqueeRef.current) {
-        tl.to(marqueeRef.current, {
-          opacity: 1,
-          duration: 0.6,
-          ease: 'power2.out',
-        }, '-=0.3')
-      }
+      })
     }, sectionRef)
 
     return () => ctx.revert()
@@ -195,24 +239,48 @@ export function Hero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
+      className="relative h-[130vh] bg-[#020204]"
     >
-      {/* Canvas Animation Layer — receives ALL pointer events */}
-      <div
-        ref={canvasWrapRef}
-        className="absolute inset-0 z-0"
-        style={{ opacity: 0 }}
-      >
-        <BlackHoleCanvas />
-      </div>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center z-0">
+        {/* Canvas Animation Layer — receives ALL pointer events */}
+        <div
+          ref={canvasWrapRef}
+          className="absolute inset-0 z-0"
+          style={{ 
+            opacity: 0,
+            transform: 'scale(1) translate(0px, 0px)',
+            transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+          }}
+        >
+          <div className="inner-canvas w-full h-full transition-opacity duration-100" style={{ opacity: 1 }}>
+            <BlackHoleCanvas />
+          </div>
+        </div>
 
-      {/* Text Content Layer */}
-      <div className="relative z-10 pointer-events-none mx-auto flex w-full max-w-5xl flex-col items-center text-center select-none px-5">
+        {/* Text Content Layer */}
+        <div 
+          ref={textLayerRef}
+          className="relative z-10 pointer-events-none mx-auto flex w-full max-w-5xl flex-col items-center text-center select-none px-5"
+          style={{
+            transform: 'translateY(120px) scale(1)',
+            opacity: 1,
+            transformOrigin: 'center center',
+            transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.1s ease-out'
+          }}
+        >
+          <div
+            ref={textParallaxRef}
+            className="w-full flex flex-col items-center justify-center"
+            style={{
+              transform: 'translate(0px, 0px)',
+              transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+            }}
+          >
         {/* Title — animated with custom recursive dynamic typing cursor */}
         <h1
-          className="text-[36px] sm:text-[56px] lg:text-[72px] xl:text-[84px] font-black leading-[1.05] tracking-[-0.04em] text-white zavorth-display select-text pointer-events-auto"
+          className="text-[36px] sm:text-[56px] lg:text-[72px] xl:text-[84px] font-black leading-[1.05] tracking-[-0.04em] text-white zavorth-display select-none pointer-events-none"
         >
-          <div ref={titleContainerRef} className="typed-container select-text">
+          <div ref={titleContainerRef} className="typed-container select-none">
             <div className="cursor-container">
               <div className="glowing-cursor-bar" />
             </div>
@@ -250,17 +318,8 @@ export function Hero() {
           </div>
         </h1>
 
-        {/* Dynamic Tagline — Fades in staggered after title typing completes */}
-        <div
-          ref={taglineRef}
-          className="mt-8 text-[15px] sm:text-[18px] md:text-[20px] text-gray-400 font-medium tracking-tight max-w-3xl leading-relaxed pointer-events-auto"
-          style={{ opacity: 0 }}
-        >
-          Empoderando desenvolvedores a orquestrar agência autônoma em escala massiva.
-        </div>
-
         {/* CTA — enabled on the button itself */}
-        <div ref={ctaWrapRef} className="mt-10 pointer-events-auto" style={{ opacity: 0 }}>
+        <div ref={ctaWrapRef} className="mt-12 pointer-events-auto" style={{ opacity: 0 }}>
           <a
             ref={ctaBtnRef}
             href="#how-it-works"
@@ -270,10 +329,7 @@ export function Hero() {
             Descobrir mais
           </a>
         </div>
-
-        {/* Marquee — infinite scroll of entry surfaces */}
-        <div ref={marqueeRef} className="mt-8 w-full pointer-events-auto" style={{ opacity: 0 }}>
-          <LocalStackMarquee />
+        </div>
         </div>
       </div>
     </section>

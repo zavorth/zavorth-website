@@ -1,135 +1,208 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
-import { ensureGsapPlugins, initTilt3D } from './motion'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-const TERMINAL_LINES = [
-  { prefix: '❯', text: 'zavorth "Organize meus arquivos por projeto e avise no Telegram"', prefixColor: 'text-[#5AB5CB]', textColor: 'text-white' },
-  { prefix: '', text: '', prefixColor: '', textColor: '' },
-  { prefix: '⌁', text: 'Parsing natural language...', prefixColor: 'text-white/40', textColor: 'text-white/50' },
-  { prefix: '⌁', text: 'Mission structured → scope: filesystem, channel: telegram', prefixColor: 'text-white/40', textColor: 'text-white/50' },
-  { prefix: '⌁', text: 'Policy broker → tools: [fs.move, fs.mkdir] ALLOWED', prefixColor: 'text-white/40', textColor: 'text-emerald-400' },
-  { prefix: '⌁', text: 'Policy broker → fs.delete BLOCKED (requires approval)', prefixColor: 'text-white/40', textColor: 'text-amber-400' },
-  { prefix: '', text: '', prefixColor: '', textColor: '' },
-  { prefix: '▸', text: 'Executing mission...', prefixColor: 'text-white/40', textColor: 'text-white/50' },
-  { prefix: '  ', text: 'moved 36 files → /Trabalho', prefixColor: '', textColor: 'text-white/40' },
-  { prefix: '  ', text: 'telegram.send(summary) → delivered', prefixColor: '', textColor: 'text-white/40' },
-  { prefix: '', text: '', prefixColor: '', textColor: '' },
-  { prefix: '✓', text: 'Done. Receipt #ZV-2026-0521 generated. Rollback available.', prefixColor: 'text-emerald-400', textColor: 'text-emerald-400' },
+const steps = [
+  {
+    num: '01',
+    title: 'Você dá o comando',
+    description:
+      'Linguagem natural, sem sintaxe especial. O classificador neural interpreta sua intenção e decompõe em ações atômicas.',
+    example: 'zavorth "organizar downloads e logar"',
+  },
+  {
+    num: '02',
+    title: 'O agente avalia o risco',
+    description:
+      'Cada ação é classificada individualmente. Operações de baixo risco executam automaticamente. Ações destrutivas pausam e aguardam sua aprovação.',
+    example: 'fs.move → Baixo risco · telegram.send → Médio risco',
+  },
+  {
+    num: '03',
+    title: 'Execução selada',
+    description:
+      'Após a execução, todas as ações são empacotadas em um recibo criptográfico imutável — um registro auditável salvo localmente no seu disco.',
+    example: 'Ledger Hash: ZV-901-X9 · Assinado localmente',
+  },
 ]
 
 export function HowItWorksSection() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const terminalRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLElement>(null)
+  const lineRef = useRef<HTMLDivElement>(null)
 
-  useLayoutEffect(() => {
-    if (!sectionRef.current) return
-    ensureGsapPlugins()
+  useEffect(() => {
+    if (!rootRef.current || !lineRef.current) return
+    gsap.registerPlugin(ScrollTrigger)
 
     const ctx = gsap.context(() => {
+      // Vertical progress line
       gsap.fromTo(
-        '[data-reveal]',
-        { y: 20, opacity: 0 },
+        lineRef.current,
+        { scaleY: 0 },
         {
-          y: 0,
-          opacity: 1,
-          duration: 0.7,
-          stagger: 0.08,
-          ease: 'power3.out',
+          scaleY: 1,
+          ease: 'none',
           scrollTrigger: {
-            trigger: sectionRef.current!,
-            start: 'top 80%',
-            once: true,
+            trigger: rootRef.current,
+            start: 'top 35%',
+            end: 'bottom 65%',
+            scrub: true,
           },
         }
       )
-    }, sectionRef)
-    
-    let cleanupTilt: (() => void) | undefined
-    if (terminalRef.current) {
-      cleanupTilt = initTilt3D(terminalRef.current, 4) // max tilt 4 degrees
-    }
 
-    return () => {
-      ctx.revert()
-      if (cleanupTilt) cleanupTilt()
-    }
+      // Item reveals & active glows
+      const items = gsap.utils.toArray('.flow-step')
+      items.forEach((item: any) => {
+        // Entrance animation
+        gsap.fromTo(
+          item,
+          { opacity: 0.3, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 85%',
+              end: 'top 60%',
+              scrub: true,
+            },
+          }
+        )
+
+        // Glowing border/shadow and active bullet highlights
+        const card = item.querySelector('.step-card')
+        const bullet = item.querySelector('.step-bullet')
+        const bulletInner = item.querySelector('.step-bullet-inner')
+
+        if (card && bullet) {
+          // Glow card
+          gsap.fromTo(
+            card,
+            { borderColor: 'rgba(255, 255, 255, 0.04)', backgroundColor: 'rgba(255, 255, 255, 0.01)', boxShadow: '0 0 0px rgba(0,0,0,0)' },
+            {
+              borderColor: 'rgba(245, 158, 11, 0.25)',
+              backgroundColor: 'rgba(245, 158, 11, 0.02)',
+              boxShadow: '0 10px 30px rgba(245, 158, 11, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+              scrollTrigger: {
+                trigger: item,
+                start: 'top 60%',
+                end: 'bottom 45%',
+                scrub: true,
+              }
+            }
+          )
+
+          // Highlight bullet
+          gsap.fromTo(
+            bullet,
+            { borderColor: 'rgba(255, 255, 255, 0.08)', scale: 1 },
+            {
+              borderColor: 'rgba(245, 158, 11, 0.6)',
+              scale: 1.15,
+              scrollTrigger: {
+                trigger: item,
+                start: 'top 60%',
+                end: 'bottom 45%',
+                scrub: true,
+              }
+            }
+          )
+
+          if (bulletInner) {
+            gsap.fromTo(
+              bulletInner,
+              { backgroundColor: '#4b5563', scale: 1 },
+              {
+                backgroundColor: '#f59e0b',
+                scale: 1.25,
+                scrollTrigger: {
+                  trigger: item,
+                  start: 'top 60%',
+                  end: 'bottom 45%',
+                  scrub: true,
+                }
+              }
+            )
+          }
+        }
+      })
+    }, rootRef)
+
+    return () => ctx.revert()
   }, [])
 
   return (
     <section
+      ref={rootRef}
       id="how-it-works"
-      ref={sectionRef}
-      className="bg-[#050505] py-24 sm:py-32 perspective-1000"
+      className="relative bg-[#050505] border-t border-white/[0.06] py-24 sm:py-32 overflow-hidden"
     >
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="grid gap-16 lg:grid-cols-2 lg:gap-20 items-start">
-          {/* Left — Text */}
-          <div>
-            <h2
-              data-reveal
-              className="text-4xl font-bold tracking-tight text-white sm:text-5xl leading-[1.1] mb-10"
-            >
-              Como o Zavorth funciona
-            </h2>
+      <div className="mx-auto max-w-3xl px-6">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-28 space-y-4">
+          <span className="text-xs font-mono uppercase tracking-widest text-amber-500">
+            Fluxo de Execução
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] text-white">
+            Do comando ao recibo,
+            <br className="hidden sm:block" /> em milissegundos.
+          </h2>
+          <p className="text-base sm:text-lg text-neutral-400 font-light leading-relaxed">
+            Três etapas. Classificação neural, governança de risco e auditoria
+            criptográfica — tudo automático, tudo local.
+          </p>
+        </div>
 
-            <div className="space-y-6">
-              <p data-reveal className="text-lg leading-relaxed text-white/60">
-                Você escreve em linguagem natural. O runtime interpreta a
-                instrução e estrutura uma missão com escopo de arquivos,
-                controle de canais e artefatos de saída — sem templates, sem
-                configuração manual.
-              </p>
-
-              <p data-reveal className="text-lg leading-relaxed text-white/60">
-                Antes de qualquer execução, um policy broker avalia permissões
-                em tempo real. Ferramentas, provedores e canais passam pelo
-                mesmo árbitro de regras. Ações sensíveis param até você decidir.
-              </p>
-
-              <p data-reveal className="text-lg leading-relaxed text-white/60">
-                Tudo executa localmente. Cada ação gera um recibo operacional
-                auditável com rollback disponível. Nada escala silenciosamente
-                sem o seu controle.
-              </p>
-            </div>
+        {/* Timeline */}
+        <div className="relative">
+          {/* Vertical line */}
+          <div className="absolute left-6 top-3 bottom-3 w-[2px] bg-white/[0.03] origin-top pointer-events-none rounded-full">
+            <div
+              ref={lineRef}
+              className="w-full h-full bg-gradient-to-b from-amber-500 via-fuchsia-500 to-cyan-500 origin-top scale-y-0 rounded-full"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.4))' }}
+            />
           </div>
 
-          {/* Right — Terminal */}
-          <div data-reveal>
-            <div 
-              ref={terminalRef} 
-              className="rounded-lg border border-white/10 bg-[#141414] overflow-hidden shadow-2xl transition-shadow duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_20px_rgba(255,255,255,0.05)] transform-style-3d"
-            >
-              {/* Title bar */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
-                <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
-                <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
-                <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
-                <span className="ml-3 font-mono text-xs text-white/40">
-                  zavorth — terminal
-                </span>
-              </div>
+          <div className="space-y-12">
+            {steps.map((step) => (
+              <div key={step.num} className="flow-step relative pl-16">
+                {/* Bullet */}
+                <div className="step-bullet absolute left-6 top-6 -translate-x-1/2 w-4.5 h-4.5 rounded-full bg-[#050505] border border-white/[0.08] flex items-center justify-center z-10 transition-all duration-300 shadow-md">
+                  <div className="step-bullet-inner w-1.5 h-1.5 rounded-full bg-neutral-600 transition-colors duration-300" />
+                </div>
 
-              {/* Terminal body */}
-              <div className="p-5 font-mono text-[13px] leading-[1.75] min-h-[320px]">
-                {TERMINAL_LINES.map((line, i) =>
-                  line.text === '' ? (
-                    <div key={i} className="h-5" />
-                  ) : (
-                    <div key={i} className="flex gap-2">
-                      {line.prefix && (
-                        <span className={`shrink-0 select-none ${line.prefixColor}`}>
-                          {line.prefix}
-                        </span>
-                      )}
-                      <span className={line.textColor}>{line.text}</span>
+                {/* Glassmorphic Step Bento Card */}
+                <div className="step-card rounded-2xl border border-white/[0.04] bg-[#0c0c0e]/30 p-6 sm:p-8 transition-all duration-500 shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
+                  <div className="space-y-3">
+                    <span className="font-mono text-xs text-amber-500 font-semibold tracking-wider">
+                      {step.num}
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight tracking-tight">
+                      {step.title}
+                    </h3>
+                    <p className="text-neutral-400 text-sm sm:text-base leading-relaxed max-w-xl">
+                      {step.description}
+                    </p>
+                    
+                    {/* Simulated Command Box */}
+                    <div className="mt-5 rounded-xl border border-white/[0.05] bg-black/40 px-4 py-3 font-mono text-[12px] text-neutral-400 flex items-center justify-between shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
+                      <div className="flex items-center gap-2.5 truncate">
+                        <span className="text-neutral-600 select-none">$</span>
+                        <span className="text-neutral-300 font-light truncate">{step.example}</span>
+                      </div>
+                      <span className="text-[9px] text-neutral-600 uppercase tracking-widest hidden sm:inline select-none">
+                        Output
+                      </span>
                     </div>
-                  )
-                )}
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

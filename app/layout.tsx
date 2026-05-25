@@ -74,11 +74,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${zavorthSans.variable} ${jbMono.variable} ${playfair.variable}`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${zavorthSans.variable} ${jbMono.variable} ${playfair.variable}`}>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
-      <body className="min-h-screen bg-surface font-sans antialiased">
+      <body suppressHydrationWarning className="min-h-screen bg-surface font-sans antialiased">
         {children}
       </body>
     </html>

@@ -22,8 +22,8 @@ const ei = THREE.Plane
 
 // Configuration defaults representing our Relativistic Black Hole
 const DEFAULTS = {
-  particleCount: 35000,
-  colorSaturation: 1.0,
+  particleCount: 38000,
+  colorSaturation: 1.1,
   scatterTop: 1.0,
   scatterBottom: 0.15,
   shrinkSpeed: 12.0,
@@ -32,7 +32,7 @@ const DEFAULTS = {
   entranceLingerSeconds: 1.0,
   eventHorizonRadius: 32.0,
   accretionDiskRadius: 140.0,
-  gravityLensing: 1.4,
+  gravityLensing: 1.45,
   dopplerIntensity: 1.3,
   orbitalSpeed: 0.9,
   coreGreenColor: '#8b5cf6', // Accretion Disk (Zavorth Deep Violet)
@@ -98,6 +98,7 @@ const PALETTES = [
 
 export function BlackHoleCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) return
@@ -116,29 +117,17 @@ export function BlackHoleCanvas() {
       renderer: THREE.WebGLRenderer,
       controls: OrbitControls
     let particleGeometry: THREE.BufferGeometry, pointsObject: THREE.Points
-    let f: Float32Array,
-      p: Float32Array,
-      m: Float32Array,
-      h: Float32Array,
-      g: Float32Array,
-      _: Float32Array,
-      v: Float32Array // Typed arrays for attributes
     let b: THREE.Color[],
-      targetColors: THREE.Color[] = [] // Base and secondary colors
-    let waves: { radius: number; stateIndex: number; width: number; speed: number }[] = []
-    let raycaster: THREE.Raycaster,
-      mouse2D: THREE.Vector2,
-      projectionPlane: THREE.Plane
-    let cameraTarget: THREE.Vector3, cameraLocalTarget: THREE.Vector3
+      targetColors: THREE.Color[] = [] // Base colors
     let isMouseActive = false
     let autoReturnTimer = 0.15
     let isUserDragging = false
     let hasScrolled = false
     let activeScale = false
-    let lingerTime = 0
     let timeTracker = 0
     let clock = new xa()
     let currentPaletteIndex = 0
+    let waveRadius = -999.0
 
     // Physically opaque event horizon mesh
     let eventHorizonMesh: THREE.Mesh
@@ -146,14 +135,23 @@ export function BlackHoleCanvas() {
     // Scroll animation physics tracking variables
     let scatterCurrent = fl.scatterTop
     let scatterTarget = fl.scatterTop
-    let scrollRatioTarget = 0
     let scrollRatioCurrent = 0
 
     // 1. Scene setup
     scene = new An()
 
     // 2. WebGL Renderer
-    renderer = new Hc({ antialias: false, alpha: true })
+    try {
+      renderer = new Hc({ 
+        antialias: false, 
+        alpha: true,
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false
+      })
+    } catch (err) {
+      console.warn('WebGL context creation failed — black hole disabled:', err)
+      return
+    }
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     container.appendChild(renderer.domElement)
@@ -185,22 +183,22 @@ export function BlackHoleCanvas() {
     const ehGeom = new THREE.SphereGeometry(fl.eventHorizonRadius * 0.95, 32, 32)
     const ehMat = new THREE.MeshBasicMaterial({ color: 0x000000 })
     eventHorizonMesh = new THREE.Mesh(ehGeom, ehMat)
-    eventHorizonMesh.position.y = 35 // Shifted up slightly to leave the screen center clear for the text title
+    eventHorizonMesh.position.y = 35 
     scene.add(eventHorizonMesh)
 
-    // 5b. Radial Glow Halo around the Event Horizon (simulates light bending around the void)
+    // 5b. Radial Glow Halo around the Event Horizon
     const glowCanvas = document.createElement('canvas')
     glowCanvas.width = 512
     glowCanvas.height = 512
     const gctx = glowCanvas.getContext('2d')!
     const gradient = gctx.createRadialGradient(256, 256, 60, 256, 256, 256)
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)')     // transparent core
-    gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.0)')   // still transparent near center
-    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.25)')   // white glow ring starts (tinted by material)
-    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)')   // peak
-    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.2)')     // falloff
-    gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.1)')   // outer haze
-    gradient.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)')    // transparent edge
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)')     
+    gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.0)')   
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.25)')   
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)')   
+    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.2)')     
+    gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.1)')   
+    gradient.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)')    
     gctx.fillStyle = gradient
     gctx.fillRect(0, 0, 512, 512)
     const glowTexture = new THREE.CanvasTexture(glowCanvas)
@@ -218,64 +216,62 @@ export function BlackHoleCanvas() {
     scene.add(glowSprite)
 
     // 6. Particles definition
-    let u = { count: fl.particleCount, size: 1.8 }
+    let u = { count: fl.particleCount }
     particleGeometry = new wr()
 
-    f = new Float32Array(u.count * 3) // Position array
-    p = new Float32Array(u.count * 3) // Color array
-    m = new Float32Array(u.count) // customSize array
-    h = new Float32Array(u.count) // angles
-    g = new Float32Array(u.count) // distance radii
-    _ = new Float32Array(u.count) // vertical orbit height perturbation
-    v = new Float32Array(u.count) // size scales
+    const staticPositions = new Float32Array(u.count * 3) 
+    const staticRandoms = new Float32Array(u.count * 3) // x: sizeScale, y: radScatter, z: depthSeed
+    const staticIndices = new Float32Array(u.count) 
 
-    let photonRingCount = Math.floor(u.count * 0.22)
-    let jetCount = Math.floor(u.count * 0.10)
-    let bgCount = Math.floor(u.count * 0.10)
-
-    let jetStartIdx = photonRingCount
-    let bgStartIdx = jetStartIdx + jetCount
-    let diskStartIdx = bgStartIdx + bgCount
+    let photonRingCount = Math.floor(u.count * 0.16)
+    let bgCount = Math.floor(u.count * 0.12)
+    let diskStartIdx = photonRingCount + bgCount
 
     for (let e = 0; e < u.count; e++) {
+      let rVal, thetaVal, zVal
+      let sizeVal = 0.7 + Math.random() * 1.2
+      let radScatterVal = Math.random()
+      let depthSeedVal = Math.random() * 2.0 - 1.0
+
+      staticIndices[e] = e
+
       if (e < photonRingCount) {
-        h[e] = Math.random() * Math.PI * 2
-        g[e] = fl.eventHorizonRadius * 1.005 + Math.random() * 5.0
-        _[e] = (Math.random() - 0.5) * 0.6
-        v[e] = 0.6 + Math.random() * 1.2
-      } else if (e < bgStartIdx) {
-        g[e] = Math.random() * 140.0
-        _[e] = 1.0 + Math.random() * 3.5
-        h[e] = Math.random() * Math.PI * 2
-        v[e] = Math.random() > 0.5 ? 1.0 : -1.0
+        thetaVal = Math.random() * Math.PI * 2
+        rVal = fl.eventHorizonRadius * 1.005 + Math.random() * 2.5
+        zVal = (Math.random() - 0.5) * 0.2
+        sizeVal = 0.6 + Math.random() * 0.8
       } else if (e < diskStartIdx) {
-        let radius = 180.0 + Math.random() * 150.0
-        let theta = Math.random() * Math.PI * 2
-        let phi = Math.acos(2.0 * Math.random() - 1.0)
-
-        g[e] = radius
-        h[e] = theta
-        _[e] = phi
-        v[e] = 0.6 + Math.random() * 1.5
+        // Background stars
+        rVal = 180.0 + Math.random() * 150.0
+        thetaVal = Math.random() * Math.PI * 2
+        zVal = Math.acos(2.0 * Math.random() - 1.0)
+        sizeVal = 0.25 + Math.random() * 0.5
       } else {
-        let armIndex = e % 3
-        let angleBase = armIndex * ((Math.PI * 2) / 3)
-
-        let normRadius = Math.pow(Math.random(), 2.2)
-        let r =
-          fl.eventHorizonRadius * 1.1 +
-          (fl.accretionDiskRadius - fl.eventHorizonRadius * 1.1) * normRadius
-
-        g[e] = r
-        h[e] = angleBase + r * 0.024 + (Math.random() - 0.5) * 0.32
-        _[e] = (Math.random() + Math.random() - 1.0) * (2.5 + normRadius * 10.0)
-        v[e] = 0.6 + Math.random() * 1.4
+        // Accretion Disk - continuous circular distribution (no spiral arms!)
+        let normRadius = Math.pow(Math.random(), 1.8)
+        rVal = fl.eventHorizonRadius * 1.25 + (fl.accretionDiskRadius - fl.eventHorizonRadius * 1.25) * normRadius
+        
+        // Perfectly uniform circular distribution
+        thetaVal = Math.random() * Math.PI * 2
+        
+        // Flared thickness: disk is thin near the horizon and gets thicker at the outer edge
+        zVal = (Math.random() + Math.random() - 1.0) * (0.8 + normRadius * 6.0)
+        
+        sizeVal = 0.5 + Math.random() * 1.0
       }
+
+      staticPositions[e * 3] = rVal
+      staticPositions[e * 3 + 1] = thetaVal
+      staticPositions[e * 3 + 2] = zVal
+
+      staticRandoms[e * 3] = sizeVal
+      staticRandoms[e * 3 + 1] = radScatterVal
+      staticRandoms[e * 3 + 2] = depthSeedVal
     }
 
-    particleGeometry.setAttribute('position', new lr(f, 3))
-    particleGeometry.setAttribute('color', new lr(p, 3))
-    particleGeometry.setAttribute('customSize', new lr(m, 1))
+    particleGeometry.setAttribute('position', new lr(staticPositions, 3))
+    particleGeometry.setAttribute('aRandoms', new lr(staticRandoms, 3))
+    particleGeometry.setAttribute('aIndex', new lr(staticIndices, 1))
 
     // Setup colors
     const parseColor = (col: string) =>
@@ -299,40 +295,320 @@ export function BlackHoleCanvas() {
       col.setHSL(HSL.h, HSL.s * fl.colorSaturation, HSL.l)
     }
 
-    raycaster = new va()
-    mouse2D = new q(-9999, -9999)
-    projectionPlane = new ei(new J(0, 0, 1), 0)
-    cameraTarget = new J()
-    cameraLocalTarget = new J()
+    // Shader Uniforms
+    const uniforms = {
+      uTime: { value: 0 },
+      uScrollProgress: { value: 0 },
+      uGravityLensing: { value: fl.gravityLensing },
+      uDopplerIntensity: { value: fl.dopplerIntensity },
+      uOrbitalSpeed: { value: fl.orbitalSpeed },
+      uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+      uColors: { value: b },
+      uNewColors: { value: [targetColors[0], targetColors[1], targetColors[2], targetColors[3]] },
+      uWaveRadius: { value: -999.0 },
+      uWaveWidth: { value: 45.0 },
+      uParticleCount: { value: Number(u.count) }
+    }
 
-    // Custom depth shader
+    // Custom depth shader - ALL physics, filaments, waves, and VIEW-SPACE lensing executed on the GPU!
     const shaderMat = new Ei({
-      uniforms: { uPixelRatio: { value: window.devicePixelRatio } },
+      uniforms: uniforms,
       vertexColors: true,
       vertexShader: `
-        attribute float customSize;
-        varying vec3 vColor;
+        uniform float uTime;
+        uniform float uScrollProgress;
+        uniform float uGravityLensing;
+        uniform float uDopplerIntensity;
+        uniform float uOrbitalSpeed;
         uniform float uPixelRatio;
+        uniform vec3 uColors[4];
+        uniform vec3 uNewColors[4];
+        uniform float uWaveRadius;
+        uniform float uWaveWidth;
+        uniform float uParticleCount;
+
+        attribute vec3 aRandoms; // x: sizeScale, y: radScatter, z: depthSeed
+        attribute float aIndex;
+        varying vec3 vColor;
+
+        const float PI = 3.14159265359;
+
+        // Smoothstep approximation on GPU
+        float getSmoothFactor(float start, float end, float val) {
+            float r = clamp((val - start) / (end - start), 0.0, 1.0);
+            return r * r * (3.0 - 2.0 * r);
+        }
+
         void main() {
-            vColor = color;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = customSize * uPixelRatio * (245.0 / -mvPosition.z);
+            float particleIdx = aIndex;
+            
+            // Base static attributes from JavaScript
+            float baseRadius = position.x;
+            float angleOffset = position.y;
+            float zDepth = position.z;
+            
+            float sizeScale = aRandoms.x;
+            float radScatter = aRandoms.y;
+            float depthSeed = aRandoms.z;
+            
+            float eventHorizonRadius = 32.0;
+            float accretionDiskRadius = 140.0;
+            
+            float px = 0.0;
+            float py = 0.0;
+            float pz = 0.0;
+            
+            float shrinkRatio = min(1.0, uScrollProgress * 2.0); 
+            float P = 1.0 - (1.0 - 0.15) * shrinkRatio; 
+            
+            float inclination = 0.28 * P;
+            float cosIncl = cos(inclination);
+            float sinIncl = sin(inclination);
+            
+            float orbitalVelocityZ = 0.0;
+            float finalSize = sizeScale;
+            
+            // Particle partitioning
+            float photonRingLimit = uParticleCount * 0.16;
+            float bgLimit = uParticleCount * 0.28;
+            
+            float isPhotonRing = step(particleIdx, photonRingLimit - 0.5);
+            float isBg = step(photonRingLimit - 0.5, particleIdx) * step(particleIdx, bgLimit - 0.5);
+            float isDisk = step(bgLimit - 0.5, particleIdx);
+            
+            if (isPhotonRing > 0.5) {
+                // Photon Ring
+                float omega = (uOrbitalSpeed * 650.0) / (baseRadius * sqrt(baseRadius) + 0.01);
+                float currentAngle = angleOffset + uTime * omega;
+                
+                px = baseRadius * cos(currentAngle);
+                py = baseRadius * sin(currentAngle) * sinIncl;
+                pz = baseRadius * sin(currentAngle) * cosIncl;
+                
+                px *= (0.3 + 0.7 * P);
+                py *= (0.3 + 0.7 * P);
+                pz *= (0.1 + 0.9 * P);
+                
+                finalSize = sizeScale * 1.4;
+                
+            } else if (isBg > 0.5) {
+                // Background Stars
+                float bgSpin = angleOffset + uTime * 0.015;
+                px = baseRadius * cos(bgSpin) * sin(zDepth);
+                py = baseRadius * sin(bgSpin) * sin(zDepth);
+                pz = baseRadius * cos(zDepth);
+                
+            } else {
+                // Accretion Disk - continuous circular motion
+                float baseRadSqrt = sqrt(baseRadius);
+                float omega = (uOrbitalSpeed * 350.0) / (baseRadius * baseRadSqrt + 0.01);
+                float currentAngle = angleOffset + uTime * omega;
+                
+                float cosA = cos(currentAngle);
+                float sinA = sin(currentAngle);
+                
+                px = baseRadius * cosA;
+                float py_flat = baseRadius * sinA * sinIncl;
+                float pz_flat = baseRadius * sinA * cosIncl;
+                
+                py = py_flat + zDepth * sinIncl * P;
+                pz = pz_flat + zDepth * cosIncl * P;
+                
+                // Keplerian velocity component along Z-axis (towards/away from camera)
+                // Corrected to use -cosA so that Doppler beaming is symmetric left/right!
+                orbitalVelocityZ = -cosA * cosIncl * (40.0 / (baseRadSqrt + 0.01));
+                
+                px *= (0.3 + 0.7 * P);
+                py *= (0.3 + 0.7 * P);
+                pz *= (0.1 + 0.9 * P);
+                
+                // Continuous, smooth laminar gas cloud size (no spiral filament clumping)
+                finalSize = sizeScale * (0.8 + (1.0 - min(baseRadius / accretionDiskRadius, 1.0)) * 1.5);
+            }
+            
+            // Transform to view space
+            vec4 mvPosition = modelViewMatrix * vec4(px, py, pz, 1.0);
+            
+            // View-space position of the black hole center
+            vec4 viewCenter = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+            
+            // Relativistic Gravitational Lensing in View Space
+            float activeLensing = uGravityLensing * P;
+            if (activeLensing > 0.0 && isBg < 0.5) {
+                vec3 rel = mvPosition.xyz - viewCenter.xyz;
+                
+                // Calculate the disk's normal in view space
+                float inclination = 0.28 * P;
+                float cosIncl = cos(inclination);
+                float sinIncl = sin(inclination);
+                vec3 normalWorld = vec3(0.0, cosIncl, -sinIncl);
+                vec3 normalView = normalize(normalMatrix * normalWorld);
+                
+                float aspectFactor = length(normalView.xy);
+                if (aspectFactor > 0.005) {
+                    vec2 minorAxis = normalView.xy / aspectFactor;
+                    vec2 majorAxis = vec2(-minorAxis.y, minorAxis.x);
+                    
+                    float x_major = dot(rel.xy, majorAxis);
+                    float y_minor = dot(rel.xy, minorAxis);
+                    
+                    // We check if the particle is behind the black hole along the camera's line of sight
+                    if (rel.z < 0.0) {
+                        float r_phys = baseRadius;
+                        
+                        // How much we warp depends on lensing intensity and scroll progress
+                        float lensWeight = smoothstep(accretionDiskRadius, eventHorizonRadius * 1.05, r_phys);
+                        float finalWeight = lensWeight * min(1.0, activeLensing) * aspectFactor;
+                        
+                        float isEven = step(0.5, mod(particleIdx, 2.0));
+                        
+                        if (isEven > 0.5) {
+                            // Top Arch (Primary image of the back of the disk)
+                            float lensedY = sqrt(max(0.0, r_phys * r_phys - x_major * x_major));
+                            float mixedY = mix(y_minor, lensedY, finalWeight);
+                            
+                            rel.xy = x_major * majorAxis + mixedY * minorAxis;
+                            // Shift lensed depth slightly forward to prevent occlusion by the black horizon sphere
+                            rel.z = mix(rel.z, eventHorizonRadius * 0.15, finalWeight);
+                        } else {
+                            // Bottom Arch (Secondary image of the back of the disk)
+                            float r_bottom = eventHorizonRadius + (r_phys - eventHorizonRadius) * 0.15;
+                            float clampedX = x_major * (r_bottom / r_phys);
+                            float lensedX = clampedX;
+                            float lensedY = -sqrt(max(0.0, r_bottom * r_bottom - clampedX * clampedX));
+                            
+                            float mixedX = mix(x_major, lensedX, finalWeight);
+                            float mixedY = mix(y_minor, lensedY, finalWeight);
+                            
+                            rel.xy = mixedX * majorAxis + mixedY * minorAxis;
+                            rel.z = mix(rel.z, eventHorizonRadius * 0.15, finalWeight);
+                        }
+                        
+                        mvPosition.xyz = viewCenter.xyz + rel;
+                    }
+                }
+            }
+
+            // Elegant entrance fade on load (no position scaling to avoid clumping)
+            float entranceScale = smoothstep(0.0, 2.5, uTime);
+            
+            // Compute mouse click color transition wave
+            float dist = length(vec3(px, py, pz));
+            float blendT = 0.0;
+            if (uWaveRadius >= 0.0) {
+                blendT = clamp((uWaveRadius - dist) / uWaveWidth + 0.5, 0.0, 1.0);
+            }
+
+            vec3 c0 = mix(uColors[0], uNewColors[0], blendT);
+            vec3 c1 = mix(uColors[1], uNewColors[1], blendT);
+            vec3 c2 = mix(uColors[2], uNewColors[2], blendT);
+            vec3 c3 = mix(uColors[3], uNewColors[3], blendT);
+
+            vec3 thermalCol = vec3(1.0);
+
+            if (isPhotonRing > 0.5) {
+                // Photon Ring: white-hot center mixed with palette
+                thermalCol = mix(c3, c1, 0.18) * 0.9;
+                
+            } else if (isBg > 0.5) {
+                // Background Stars
+                float radius = baseRadius;
+                float isNebula = step(0.83, fract(particleIdx * 0.17)); 
+                if (isNebula > 0.5) {
+                    finalSize = sizeScale * 2.2 * (0.5 + 0.5 * sin(uTime * 0.5 + radius));
+                    thermalCol = c0 * 0.12;
+                } else {
+                    float starWhite = 0.15 + mod(particleIdx * 0.17, 0.15);
+                    float tintStrength = 0.5 + mod(particleIdx * 0.13, 0.3);
+                    vec3 starBase = (mod(particleIdx, 2.0) < 1.0) ? c0 : c3;
+                    thermalCol = (vec3(starWhite) * (1.0 - tintStrength) + starBase * tintStrength) * 0.55;
+                    thermalCol *= 0.4 + 0.6 * P;
+                }
+                
+            } else {
+                // Accretion Disk: smooth physical color gradient
+                float normDist = min((baseRadius - eventHorizonRadius) / (accretionDiskRadius - eventHorizonRadius), 1.0);
+                vec3 diskBaseCol = vec3(0.0);
+                if (normDist < 0.12) {
+                    diskBaseCol = mix(c3, c1, normDist / 0.12);
+                } else if (normDist < 0.45) {
+                    diskBaseCol = mix(c1, c0, (normDist - 0.12) / 0.33);
+                } else if (normDist < 0.8) {
+                    diskBaseCol = mix(c0, c2, (normDist - 0.45) / 0.35);
+                } else {
+                    diskBaseCol = mix(c2, c2 * 0.6, (normDist - 0.8) / 0.2);
+                }
+                
+                thermalCol = diskBaseCol;
+            }
+            
+            // Soft size fade-in on load, and soft fade-out on scroll
+            float sizeFlash = smoothstep(0.0, 1.0, entranceScale);
+            float scrollFade = 1.0 - uScrollProgress * 0.85;
+            
+            float currentSize = finalSize * sizeFlash * scrollFade * uPixelRatio * (245.0 / -mvPosition.z);
+            gl_PointSize = max(0.5, currentSize);
             gl_Position = projectionMatrix * mvPosition;
+            
+            // Color shifting
+            float thermalShift = getSmoothFactor(0.0, 1.0, getSmoothFactor(0.08, 0.55, uTime * 0.22));
+            vec3 activeCol = c0;
+            vec3 altCol = vec3(activeCol.b, activeCol.r, activeCol.g);
+            vec3 finalBaseCol = mix(activeCol, altCol, thermalShift);
+            
+            if (isPhotonRing < 0.5 && isBg < 0.5) {
+                thermalCol = mix(thermalCol, finalBaseCol, 0.25);
+            }
+            
+            // Fade out opacity during entrance and scroll
+            thermalCol *= entranceScale * scrollFade;
+            
+            // Gentle Relativistic Beaming & Doppler shifts
+            float doppler = orbitalVelocityZ * 0.16 * uDopplerIntensity;
+            vec3 finalCol = thermalCol;
+            float brightnessMultiplier = 1.0;
+            
+            if (doppler > 0.0) {
+                finalCol = mix(thermalCol, vec3(0.88, 0.98, 1.0) * entranceScale * scrollFade, doppler * 0.95);
+                brightnessMultiplier = 1.0 + doppler * 0.85;
+            } else if (doppler < 0.0) {
+                finalCol = mix(thermalCol, vec3(0.92, 0.18, 0.45) * entranceScale * scrollFade, -doppler * 0.95);
+                brightnessMultiplier = 1.0 + doppler * 0.45;
+            }
+            
+            // Click wave boost
+            float waveGlowBoost = 0.0;
+            if (uWaveRadius >= 0.0) {
+                float wDist = abs(dist - uWaveRadius);
+                if (wDist < uWaveWidth) {
+                    waveGlowBoost = 1.0 - wDist / uWaveWidth;
+                }
+            }
+
+            if (waveGlowBoost > 0.0) {
+                brightnessMultiplier *= (1.0 + waveGlowBoost * 1.5);
+            }
+            
+            vColor = finalCol * brightnessMultiplier;
         }
       `,
       fragmentShader: `
         varying vec3 vColor;
+        uniform float uScrollProgress;
         void main() {
             vec2 coord = gl_PointCoord - vec2(0.5);
             float distSq = dot(coord, coord);
             
-            // Smoothly fade out at the edges instead of using discard (which ruins GPU early-z and stalls rasterization)
+            // Smoothly fade out at the edges instead of using hard discard
             float borderFade = 1.0 - smoothstep(0.18, 0.25, distSq);
             
             float glow = exp(-distSq * 9.0);
             float core = smoothstep(0.08, 0.0, distSq) * 0.6;
             
             float alpha = (glow + core) * borderFade;
+            // Dissolve opacity on scroll
+            alpha *= (1.0 - uScrollProgress * 0.85);
+            
             vec3 boostedColor = vColor * 1.35 + vec3(0.04, 0.01, 0.06);
             gl_FragColor = vec4(boostedColor, alpha * 0.9);
         }
@@ -342,9 +618,12 @@ export function BlackHoleCanvas() {
       blending: THREE.AdditiveBlending
     })
 
+    materialRef.current = shaderMat
+
     pointsObject = new ui(particleGeometry, shaderMat)
-    pointsObject.scale.set(0, 0, 0)
-    pointsObject.position.y = 35 // Shifted up to align perfectly with the Event Horizon sphere
+    // Initialize points scale to (1,1,1) so particles don't clump at the center on start
+    pointsObject.scale.set(1, 1, 1)
+    pointsObject.position.y = 35 
     pointsObject.visible = false
     scene.add(pointsObject)
 
@@ -353,50 +632,45 @@ export function BlackHoleCanvas() {
       activeScale = true
     }, fl.entranceDelayMs)
 
-    // Global Event Listeners inside useEffect
-    const onScroll = () => {
-      const heroEl = document.getElementById('hero')
-      if (!heroEl) return
-
-      const rect = heroEl.getBoundingClientRect()
-      let progress = 0
-
-      if (rect.top < 0) {
-        let heightDiff = rect.height - window.innerHeight
-        progress = heightDiff > 0 ? Math.min(1.0, -rect.top / heightDiff) : 1.0
-      }
-
-      scrollRatioTarget = progress
-      let shrinkRatio = Math.min(1.0, progress * fl.shrinkSpeed)
-      scatterTarget = fl.scatterTop - (fl.scatterTop - fl.scatterBottom) * shrinkRatio
-    }
-
     const onPointerMove = (e: PointerEvent) => {
-      mouse2D.x = (e.clientX / window.innerWidth) * 2 - 1
-      mouse2D.y = -(e.clientY / window.innerHeight) * 2 + 1
-      isMouseActive = true
+      // Raycasting target tracking is updated, but pointer attraction has been removed as per mouse movement tilt policy
     }
 
     const onPointerLeave = () => {
       isMouseActive = false
-      mouse2D.set(-9999, -9999)
     }
 
-    const onPointerDown = () => {
-      waves.push({
-        radius: fl.eventHorizonRadius,
-        stateIndex: 1,
-        width: 60,
-        speed: 680
-      })
+    const onPointerDown = (evt: PointerEvent) => {
+      // Ignore click on links, buttons, inputs, navbar controls, etc.
+      const target = evt.target as HTMLElement | null
+      if (target) {
+        const tagName = target.tagName
+        if (
+          tagName === 'A' ||
+          tagName === 'BUTTON' ||
+          tagName === 'INPUT' ||
+          tagName === 'SELECT' ||
+          tagName === 'TEXTAREA' ||
+          target.closest('a') ||
+          target.closest('button') ||
+          target.closest('#controls') ||
+          target.closest('.hero-buttons') ||
+          target.closest('header')
+        ) {
+          return
+        }
+      }
+
+      // Reset and trigger propagating wave
+      waveRadius = 0.0
 
       currentPaletteIndex = (currentPaletteIndex + 1) % PALETTES.length
       const nextPalette = PALETTES[currentPaletteIndex]
 
       fl.coreGreenColor = nextPalette.coreGreenColor
-      fl.coreYellowColor = nextPalette.coreYellowColor;
-      fl.coreRedColor = nextPalette.coreRedColor;
-      fl.coreBlueColor = nextPalette.coreBlueColor;
+      fl.coreYellowColor = nextPalette.coreYellowColor
+      fl.coreRedColor = nextPalette.coreRedColor
+      fl.coreBlueColor = nextPalette.coreBlueColor
 
       const parseCol = (col: string) =>
         col.startsWith('#') || col.startsWith('rgb') ? col : '#' + col
@@ -425,14 +699,12 @@ export function BlackHoleCanvas() {
       shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2)
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerleave', onPointerLeave)
-    container.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('resize', onResize)
 
     // Reuse temporary variables to prevent garbage collection spikes in 60 FPS loop
-    const tempColor = new Z()
     const normalVec = new J()
     const centerVec = new J(0, 35, 0)
     let animationFrameId: number
@@ -442,6 +714,9 @@ export function BlackHoleCanvas() {
       animationFrameId = requestAnimationFrame(animate)
 
       let delta = clock.getDelta()
+      
+      // Increment timeTracker directly on mount for immediate fade-in
+      timeTracker += delta
 
       for (let k = 0; k < 4; k++) {
         if (b[k] && targetColors[k]) {
@@ -453,346 +728,85 @@ export function BlackHoleCanvas() {
         glowSpriteMat.color.copy(b[0])
       }
 
-      if (activeScale && (lingerTime += delta, lingerTime > fl.entranceLingerSeconds)) {
-        if (!hasScrolled) {
-          timeTracker += delta
+      // Update wave propagation
+      if (waveRadius >= 0.0) {
+        waveRadius += delta * 550.0 // propagate outwards
+        if (waveRadius > 500.0) {
+          waveRadius = -999.0
+          // Finalize palette copy to base colors
+          for (let k = 0; k < 4; k++) {
+            b[k].copy(targetColors[k])
+          }
+        }
+      } else {
+        // No active wave, base colors can gently lerp
+        for (let k = 0; k < 4; k++) {
+          if (b[k] && targetColors[k]) {
+            b[k].lerp(targetColors[k], delta * 4.0)
+          }
         }
       }
 
-      scatterCurrent += (scatterTarget - scatterCurrent) * 0.1
-      scrollRatioCurrent += (scrollRatioTarget - scrollRatioCurrent) * 0.1
+      // Force Three.js to re-upload uniforms to GPU for smooth color transitions
+      if (uniforms.uColors) {
+        uniforms.uColors.value = [b[0], b[1], b[2], b[3]]
+      }
+      if (uniforms.uNewColors) {
+        uniforms.uNewColors.value = [targetColors[0], targetColors[1], targetColors[2], targetColors[3]]
+      }
+      uniforms.uWaveRadius.value = waveRadius
+
+      // Smooth scroll tracking directly in RAF loop
+      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
+      const height = typeof window !== 'undefined' ? window.innerHeight : 800
+      const scrollableHeight = height * 0.3
+      let targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
+
+      // Smooth scroll interpolation (damping: 0.15 scroll down, 0.25 scroll up)
+      const damping = targetProgress < scrollRatioCurrent ? 0.25 : 0.15
+      scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * damping
+
+      let shrinkRatio = Math.min(1.0, scrollRatioCurrent * fl.shrinkSpeed)
+      let targetScatter = fl.scatterTop - (fl.scatterTop - fl.scatterBottom) * shrinkRatio
+      scatterCurrent += (targetScatter - scatterCurrent) * damping
+
+      let currentY = 35 + scrollRatioCurrent * 45
+      centerVec.y = currentY
+
+      // Calculate entrance scale for event horizon mesh and halo glow
+      let entranceScale = Math.min(1.0, timeTracker / 2.5)
 
       if (eventHorizonMesh) {
-        let targetScale = 1.0 - scrollRatioCurrent * 0.3
+        let targetScale = (1.0 - scrollRatioCurrent * 0.3) * entranceScale
         let depthScale = targetScale * (0.2 + 0.8 * scatterCurrent)
         eventHorizonMesh.scale.set(targetScale, targetScale, depthScale)
+        eventHorizonMesh.position.set(0, currentY, 0)
       }
 
-      waves.forEach(w => (w.radius += delta * w.speed))
-      while (waves.length > 0 && waves[0].radius >= fl.accretionDiskRadius * 1.5) {
-        waves.shift()
+      if (glowSprite && glowSpriteMat && b[0]) {
+        let glowBreathe = Math.sin(timeTracker * 1.5) * 0.12 + 0.88
+        let glowOpacity = (0.45 + 0.1 * Math.sin(timeTracker * 2.2)) * (1.0 - scrollRatioCurrent * 0.8) * entranceScale
+        let currentScrollScale = (1.0 - scrollRatioCurrent * 0.6) * entranceScale
+        glowSprite.scale.set(
+          fl.eventHorizonRadius * 5.5 * glowBreathe * currentScrollScale,
+          fl.eventHorizonRadius * 5.5 * glowBreathe * currentScrollScale,
+          1
+        )
+        glowSpriteMat.opacity = glowOpacity
+        glowSprite.position.set(0, currentY, 0)
       }
 
-      pointsObject.updateMatrixWorld()
+      if (pointsObject) pointsObject.position.y = currentY
 
-      if (isMouseActive && !isUserDragging) {
-        camera.getWorldDirection(normalVec)
-        normalVec.negate()
-        projectionPlane.setFromNormalAndCoplanarPoint(normalVec, centerVec)
-
-        raycaster.setFromCamera(mouse2D, camera)
-        raycaster.ray.intersectPlane(projectionPlane, cameraTarget)
-        cameraLocalTarget.copy(cameraTarget)
-        pointsObject.worldToLocal(cameraLocalTarget)
-      } else {
-        cameraLocalTarget.set(-9999, -9999, -9999)
-      }
-
-      let posAttr = pointsObject.geometry.attributes.position as THREE.BufferAttribute
-      let colAttr = pointsObject.geometry.attributes.color as THREE.BufferAttribute
-      let sizeAttr = pointsObject.geometry.attributes.customSize as THREE.BufferAttribute
-
-      let positions = posAttr.array as Float32Array
-      let colors = colAttr.array as Float32Array
-      let sizes = sizeAttr.array as Float32Array
-
-      let count = fl.particleCount
-
-      let inclination = 0.28 * scatterCurrent
-      let cosIncl = Math.cos(inclination)
-      let sinIncl = Math.sin(inclination)
-      let activeLensing = fl.gravityLensing * scatterCurrent
-
-      let inflowRate = 18.0 * fl.orbitalSpeed * (1.0 - scrollRatioCurrent * 0.95)
-      let jetSpeed = 160.0 * fl.orbitalSpeed
-
-      for (let i = 0; i < count; i++) {
-        let idx3 = i * 3
-        let scaleMult = 1.0
-        let rChan = 0,
-          gChan = 0,
-          bChan = 0
-        let attractionFactor = 0
-
-        if (i < photonRingCount) {
-          let baseRadius = g[i]
-          let angleOffset = h[i]
-          let omega = (fl.orbitalSpeed * 650) / (baseRadius * Math.sqrt(baseRadius))
-          let currentAngle = angleOffset + timeTracker * omega
-
-          let px = baseRadius * Math.cos(currentAngle)
-          let py = baseRadius * Math.sin(currentAngle) * sinIncl
-          let pz = baseRadius * Math.sin(currentAngle) * cosIncl
-
-          px *= 0.3 + 0.7 * scatterCurrent
-          py *= 0.3 + 0.7 * scatterCurrent
-          pz *= 0.1 + 0.9 * scatterCurrent
-
-          positions[idx3] = px
-          positions[idx3 + 1] = py
-          positions[idx3 + 2] = pz
-
-          sizes[i] = v[i] * 1.4
-          // Blend photon ring white core with the active secondary color b[1] to match the palette
-          let ringColor = b && b[1] ? b[1] : new THREE.Color(0.8, 0.95, 1.0)
-          rChan = 0.82 + ringColor.r * 0.18
-          gChan = 0.82 + ringColor.g * 0.18
-          bChan = 0.82 + ringColor.b * 0.18
-        } else if (i < bgStartIdx) {
-          let y_val = g[i]
-          let initSpiralRadius = _[i]
-          let angleBase = h[i]
-          let direction = v[i]
-
-          y_val += delta * jetSpeed * (1.0 + y_val * 0.006)
-          if (y_val > 140) {
-            y_val = 0.5 + Math.random() * 5.0
-            angleBase = Math.random() * Math.PI * 2
-            h[i] = angleBase
-          }
-          g[i] = y_val
-
-          let jetSpin = angleBase + timeTracker * (direction * 14.0) + y_val * 0.12
-          let coneRadius = initSpiralRadius + y_val * 0.08
-
-          let px = coneRadius * Math.cos(jetSpin)
-          let py = y_val * direction * scatterCurrent
-          let pz = coneRadius * Math.sin(jetSpin)
-
-          px += Math.sin(timeTracker * 8 + y_val * 0.1) * 1.5
-          pz += Math.cos(timeTracker * 8 + y_val * 0.1) * 1.5
-
-          positions[idx3] = px
-          positions[idx3 + 1] = py
-          positions[idx3 + 2] = pz
-
-          let lifeRatio = Math.max(0, 1 - y_val / 140)
-          // Relativistic jet energy pulse wave traveling outward along the Y axis
-          let pulse = Math.sin(y_val * 0.12 - timeTracker * 10.0) * 0.35 + 0.65
-          sizes[i] = (0.5 + lifeRatio * 1.5) * (0.8 + Math.random() * 0.5) * (0.6 + pulse * 0.8)
-
-          let jetBaseColor = b[3]
-          let jetTipColor = b[0]
-          tempColor.copy(jetBaseColor).lerp(jetTipColor, 1 - lifeRatio)
-
-          rChan = tempColor.r * lifeRatio * 0.9 * pulse
-          gChan = tempColor.g * lifeRatio * 0.9 * pulse
-          bChan = tempColor.b * lifeRatio * 0.9 * pulse
-        } else if (i < diskStartIdx) {
-          let radius = g[i]
-          let theta = h[i]
-          let phi = _[i]
-          let sizeSeed = v[i]
-
-          let bgSpin = theta + timeTracker * 0.015
-
-          let px = radius * Math.cos(bgSpin) * Math.sin(phi)
-          let py = radius * Math.sin(bgSpin) * Math.sin(phi)
-          let pz = radius * Math.cos(phi)
-
-          let rProjSq = px * px + py * py
-          if (pz < 0 && activeLensing > 0) {
-            let deflection = (fl.eventHorizonRadius * fl.eventHorizonRadius * 1.6) / (rProjSq + 0.1)
-            px += px * deflection * activeLensing
-            py += py * deflection * activeLensing
-          }
-
-          positions[idx3] = px
-          positions[idx3 + 1] = py
-          positions[idx3 + 2] = pz
-
-          if (i % 6 === 0) {
-            sizes[i] = sizeSeed * 18.0 * (0.5 + 0.5 * Math.sin(timeTracker * 0.5 + radius))
-            let nebColor = b[0]
-            rChan = nebColor.r * 0.08
-            gChan = nebColor.g * 0.04
-            bChan = nebColor.b * 0.15
-          } else {
-            // Stars tinted by current palette
-            let paletteMix = (i * 0.13) % 1.0
-            let starBase = paletteMix < 0.5 ? b[0] : b[3]
-            let tintStrength = 0.25 + (paletteMix * 0.3)
-            let starWhite = 0.6 + ((i * 0.17) % 0.3)
-
-            rChan = starWhite * (1.0 - tintStrength) + starBase.r * tintStrength
-            gChan = starWhite * (1.0 - tintStrength) + starBase.g * tintStrength
-            bChan = starWhite * (1.0 - tintStrength) + starBase.b * tintStrength
-
-            rChan *= 0.2 + 0.8 * scatterCurrent
-            gChan *= 0.2 + 0.8 * scatterCurrent
-            bChan *= 0.2 + 0.8 * scatterCurrent
-          }
-        } else {
-          let baseRadius = g[i]
-          let angleOffset = h[i]
-          let diskZThickness = _[i]
-
-          let baseRadSqrt = Math.sqrt(baseRadius)
-
-          baseRadius -= delta * inflowRate * (30.0 / (baseRadSqrt + 0.1))
-          if (baseRadius < fl.eventHorizonRadius * 1.05) {
-            baseRadius =
-              fl.eventHorizonRadius * 1.6 +
-              Math.random() * (fl.accretionDiskRadius - fl.eventHorizonRadius * 1.6)
-            angleOffset = Math.random() * Math.PI * 2
-            h[i] = angleOffset
-          }
-          g[i] = baseRadius
-
-          let omega = (fl.orbitalSpeed * 350) / (baseRadius * baseRadSqrt)
-          let currentAngle = angleOffset + timeTracker * omega
-
-          // Zavorth Custom Liquid Accretion Wave-Warp (autoral ripple physics)
-          let helixWarp = Math.sin(baseRadius * 0.16 + timeTracker * 2.5) * 3.5 * (1.0 - scrollRatioCurrent)
-          let turbulence = (Math.sin(baseRadius * 0.08 - timeTracker * 3.5) * 1.8 + helixWarp) * (1.0 - scrollRatioCurrent)
-
-          let cosA = Math.cos(currentAngle)
-          let sinA = Math.sin(currentAngle)
-
-          let px = (baseRadius + turbulence) * cosA
-          let py_flat = (baseRadius + turbulence) * sinA * sinIncl
-          let pz_flat = (baseRadius + turbulence) * sinA * cosIncl
-
-          let py = py_flat + (diskZThickness + helixWarp * 1.25) * sinIncl * scatterCurrent
-          let pz = pz_flat + (diskZThickness + helixWarp * 1.25) * cosIncl * scatterCurrent
-
-          if (pz < 0 && activeLensing > 0) {
-            let rSq = px * px + py * py
-            let deflection = (fl.eventHorizonRadius * fl.eventHorizonRadius) / (rSq + 0.1)
-            py += Math.sign(py_flat) * deflection * 48 * activeLensing
-          }
-
-          px *= 0.3 + 0.7 * scatterCurrent
-          py *= 0.3 + 0.7 * scatterCurrent
-          pz *= 0.1 + 0.9 * scatterCurrent
-
-          positions[idx3] = px
-          positions[idx3 + 1] = py
-          positions[idx3 + 2] = pz
-
-          let distance = Math.sqrt(px * px + py * py + pz * pz)
-          if (distance === 0) distance = 0.001
-
-          let waveGlowBoost = 0.0
-          for (let k = 0; k < waves.length; k++) {
-            let w = waves[k]
-            let wDist = Math.abs(distance - w.radius)
-            if (wDist < w.width) {
-              let innerFactor = 1 - wDist / w.width
-              scaleMult = Math.max(scaleMult, 1 + innerFactor * 1.3)
-              waveGlowBoost = Math.max(waveGlowBoost, innerFactor)
-            }
-          }
-
-          if (isMouseActive) {
-            let dx = px - cameraLocalTarget.x
-            let dy = py - cameraLocalTarget.y
-            let dz = pz - cameraLocalTarget.z
-            let cursorDist = Math.sqrt(dx * dx + dy * dy + dz * dz)
-            if (cursorDist < 75) {
-              attractionFactor = 1 - ml(0, 1, cursorDist / 75)
-              scaleMult = Math.max(scaleMult, 1 + attractionFactor * 0.7)
-            }
-          }
-
-          // Accretion disk spiral arm filaments & clumping factor
-          let filament = Math.sin(angleOffset * 5.0 + baseRadius * 0.08 - timeTracker * 4.5) * 0.22 + 0.78
-          
-          // Scale particle size based on spiral arm filament density to enhance structural layout
-          sizes[i] = v[i] * (0.8 + (1.0 - Math.min(baseRadius / fl.accretionDiskRadius, 1)) * 1.5) * (0.8 + (filament - 0.78) * 0.8)
-
-          let orbitalVelocityZ = -sinA * cosIncl * (40 / baseRadSqrt)
-          let doppler = orbitalVelocityZ * 0.16 * fl.dopplerIntensity
-
-          let normDist = Math.min(
-            (baseRadius - fl.eventHorizonRadius) / (fl.accretionDiskRadius - fl.eventHorizonRadius),
-            1
-          )
-
-          // Multi-layer temperature profile: white-hot inner edge, transition to yellow/cyan, then violet, fanning out to fuchsia/red
-          if (normDist < 0.12) {
-            let t = normDist / 0.12
-            rChan = b[3].r + (b[1].r - b[3].r) * t
-            gChan = b[3].g + (b[1].g - b[3].g) * t
-            bChan = b[3].b + (b[1].b - b[3].b) * t
-          } else if (normDist < 0.45) {
-            let t = (normDist - 0.12) / (0.45 - 0.12)
-            rChan = b[1].r + (b[0].r - b[1].r) * t
-            gChan = b[1].g + (b[0].g - b[1].g) * t
-            bChan = b[1].b + (b[0].b - b[1].b) * t
-          } else if (normDist < 0.8) {
-            let t = (normDist - 0.45) / (0.8 - 0.45)
-            rChan = b[0].r + (b[2].r - b[0].r) * t
-            gChan = b[0].g + (b[2].g - b[0].g) * t
-            bChan = b[0].b + (b[2].b - b[0].b) * t
-          } else {
-            let t = (normDist - 0.8) / (1.0 - 0.8)
-            rChan = b[2].r * (1.0 - t * 0.4)
-            gChan = b[2].g * (1.0 - t * 0.4)
-            bChan = b[2].b * (1.0 - t * 0.4)
-          }
-
-          // Apply spiral arm filaments brightness texture
-          rChan *= filament
-          gChan *= filament
-          bChan *= filament
-
-          tempColor.setRGB(rChan, gChan, bChan)
-
-          if (doppler > 0) {
-            tempColor.lerp(b[3], doppler * 0.95)
-            scaleMult *= 1.0 + doppler * 0.85
-          } else if (doppler < 0) {
-            tempColor.lerp(b[2], -doppler * 0.95)
-            scaleMult *= 1.0 + doppler * 0.45
-          }
-
-          rChan = tempColor.r
-          gChan = tempColor.g
-          bChan = tempColor.b
-
-          if (attractionFactor > 0) {
-            rChan += (1.0 - rChan) * attractionFactor * 0.5
-            gChan += (0.9 - gChan) * attractionFactor * 0.5
-            bChan += (0.2 - bChan) * attractionFactor * 0.5
-          }
-
-          if (waveGlowBoost > 0) {
-            // Flare up into glowing white-hot gas as the shockwave sweeps through
-            rChan += (1.0 - rChan) * waveGlowBoost * 0.85
-            gChan += (0.95 - gChan) * waveGlowBoost * 0.85
-            bChan += (1.0 - bChan) * waveGlowBoost * 0.85
-          }
-
-          if (scaleMult > 1) {
-            rChan = Math.min(1.0, rChan * scaleMult)
-            gChan = Math.min(1.0, gChan * scaleMult)
-            bChan = Math.min(1.0, bChan * scaleMult)
-          } else if (scaleMult < 1) {
-            rChan = Math.max(0.02, rChan * scaleMult)
-            gChan = Math.max(0.01, gChan * scaleMult)
-            bChan = Math.max(0.0, bChan * scaleMult)
-          }
-        }
-
-        colors[idx3] = rChan
-        colors[idx3 + 1] = gChan
-        colors[idx3 + 2] = bChan
-      }
-
-      posAttr.needsUpdate = true
-      colAttr.needsUpdate = true
-      sizeAttr.needsUpdate = true
-
-      if (activeScale) {
-        pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
-      }
+      // Update uniforms
+      uniforms.uTime.value = timeTracker
+      uniforms.uScrollProgress.value = scrollRatioCurrent
 
       if (fl.autoReturnToFront && hasScrolled && !isUserDragging) {
         if (autoReturnTimer > 0.001) {
           let bhCenter = centerVec
-          let frontPos = new J(0, 35, 240)
-          let backPos = new J(0, 35, -240)
+          let frontPos = new J(0, centerVec.y, 240)
+          let backPos = new J(0, centerVec.y, -240)
 
           let chosenTarget =
             camera.position.distanceToSquared(frontPos) < camera.position.distanceToSquared(backPos)
@@ -826,15 +840,14 @@ export function BlackHoleCanvas() {
 
     animate()
 
-    // Cleanup logic on component unmount to prevent leaks!
+    // Cleanup logic on component unmount
     return () => {
       cancelAnimationFrame(animationFrameId)
       clearTimeout(activeScaleTimeout)
 
-      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerleave', onPointerLeave)
-      container.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('resize', onResize)
 
       controls.removeEventListener('start', onControlsStart)
@@ -843,23 +856,29 @@ export function BlackHoleCanvas() {
 
       ehGeom.dispose()
       ehMat.dispose()
+
       glowTexture.dispose()
       glowSpriteMat.dispose()
       particleGeometry.dispose()
       shaderMat.dispose()
 
-      renderer.dispose()
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement)
+      if (renderer) {
+        renderer.forceContextLoss()
+        renderer.dispose()
+        if (container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement)
+        }
       }
     }
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 z-0 h-[120%] w-full pointer-events-auto -translate-y-[15%] sm:-translate-y-[18%]"
-      style={{ background: 'transparent' }}
-    />
+    <div className="relative w-full h-full select-none">
+      <div
+        ref={containerRef}
+        className="absolute inset-0 z-0 h-[120%] w-full pointer-events-auto -translate-y-[15%] sm:-translate-y-[18%]"
+        style={{ background: 'transparent' }}
+      />
+    </div>
   )
 }

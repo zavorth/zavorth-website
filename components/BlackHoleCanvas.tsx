@@ -307,6 +307,7 @@ export function BlackHoleCanvas() {
       uNewColors: { value: [targetColors[0], targetColors[1], targetColors[2], targetColors[3]] },
       uWaveRadius: { value: -999.0 },
       uWaveWidth: { value: 45.0 },
+      uWaveOrigin: { value: new J(0, 0, 0) },
       uParticleCount: { value: Number(u.count) }
     }
 
@@ -325,6 +326,7 @@ export function BlackHoleCanvas() {
         uniform vec3 uNewColors[4];
         uniform float uWaveRadius;
         uniform float uWaveWidth;
+        uniform vec3 uWaveOrigin;
         uniform float uParticleCount;
 
         attribute vec3 aRandoms; // x: sizeScale, y: radScatter, z: depthSeed
@@ -426,6 +428,18 @@ export function BlackHoleCanvas() {
                 finalSize = sizeScale * (0.8 + (1.0 - min(baseRadius / accretionDiskRadius, 1.0)) * 1.5);
             }
             
+            // High-frequency hot-gas shimmering/twinkling near the event horizon
+            float shimmer = 1.0;
+            if (isPhotonRing > 0.5) {
+                // Photon ring shimmer
+                shimmer = 0.85 + 0.3 * sin(uTime * 15.0 + particleIdx * 2.3);
+            } else if (isDisk > 0.5) {
+                // Accretion disk inner edge shimmer
+                float innerEdgeFactor = smoothstep(eventHorizonRadius * 1.8, eventHorizonRadius * 1.0, baseRadius);
+                shimmer = 1.0 + innerEdgeFactor * 0.25 * sin(uTime * 12.0 + particleIdx * 1.7);
+            }
+            finalSize *= shimmer;
+            
             // Transform to view space
             vec4 mvPosition = modelViewMatrix * vec4(px, py, pz, 1.0);
             
@@ -493,7 +507,7 @@ export function BlackHoleCanvas() {
             float entranceScale = smoothstep(0.0, 2.5, uTime);
             
             // Compute mouse click color transition wave
-            float dist = length(vec3(px, py, pz));
+            float dist = length(vec3(px, py, pz) - uWaveOrigin);
             float blendT = 0.0;
             if (uWaveRadius >= 0.0) {
                 blendT = clamp((uWaveRadius - dist) / uWaveWidth + 0.5, 0.0, 1.0);
@@ -664,6 +678,35 @@ export function BlackHoleCanvas() {
       // Reset and trigger propagating wave
       waveRadius = 0.0
 
+      // Raycast click position onto the accretion disk plane to set uWaveOrigin
+      const rect = renderer.domElement.getBoundingClientRect()
+      const mX = ((evt.clientX - rect.left) / rect.width) * 2 - 1
+      const mY = -((evt.clientY - rect.top) / rect.height) * 2 + 1
+      
+      const clickMouse = new q(mX, mY)
+      const raycaster = new va()
+      raycaster.setFromCamera(clickMouse, camera)
+      
+      const targetIntersection = new J()
+      const currentInclination = 0.28 * (1.0 - Math.min(1.0, scrollRatioCurrent * 2.0))
+      const cosI = Math.cos(currentInclination)
+      const sinI = Math.sin(currentInclination)
+      
+      // Accretion disk plane: normal is normalWorld (0, cosI, -sinI)
+      // Since the center of the black hole is at (0, centerVec.y, 0)
+      const normalWorld = new J(0, cosI, -sinI)
+      const diskPlane = new ei(normalWorld, -normalWorld.dot(new J(0, centerVec.y, 0)))
+      
+      if (raycaster.ray.intersectPlane(diskPlane, targetIntersection)) {
+        // Convert to local coordinates relative to the black hole's local center (0, centerVec.y, 0)
+        const localClick = targetIntersection.clone().sub(new J(0, centerVec.y, 0))
+        // Rotate the click position inversely by the pointsObject's rotation to align it in local particle space!
+        localClick.applyEuler(new THREE.Euler(-pointsObject.rotation.x, -pointsObject.rotation.y, -pointsObject.rotation.z))
+        uniforms.uWaveOrigin.value.copy(localClick)
+      } else {
+        uniforms.uWaveOrigin.value.set(0, 0, 0)
+      }
+
       currentPaletteIndex = (currentPaletteIndex + 1) % PALETTES.length
       const nextPalette = PALETTES[currentPaletteIndex]
 
@@ -766,11 +809,15 @@ export function BlackHoleCanvas() {
       const damping = targetProgress < scrollRatioCurrent ? 0.25 : 0.15
       scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * damping
 
-      let shrinkRatio = Math.min(1.0, scrollRatioCurrent * fl.shrinkSpeed)
-      let targetScatter = fl.scatterTop - (fl.scatterTop - fl.scatterBottom) * shrinkRatio
-      scatterCurrent += (targetScatter - scatterCurrent) * damping
+      // Slow 3D floating bobbing & tilting drift
+      // Decreases as user scrolls down (P gets smaller)
+      const shrinkRatio = Math.min(1.0, scrollRatioCurrent * fl.shrinkSpeed)
+      const P = 1.0 - (1.0 - 0.15) * shrinkRatio
+      const driftY = Math.sin(timeTracker * 0.4) * 1.5 * P
+      const tiltX = Math.sin(timeTracker * 0.3) * 0.04 * P
+      const tiltZ = Math.cos(timeTracker * 0.35) * 0.03 * P
 
-      let currentY = 35 + scrollRatioCurrent * 45
+      let currentY = 35 + scrollRatioCurrent * 45 + driftY
       centerVec.y = currentY
 
       // Calculate entrance scale for event horizon mesh and halo glow
@@ -781,6 +828,7 @@ export function BlackHoleCanvas() {
         let depthScale = targetScale * (0.2 + 0.8 * scatterCurrent)
         eventHorizonMesh.scale.set(targetScale, targetScale, depthScale)
         eventHorizonMesh.position.set(0, currentY, 0)
+        eventHorizonMesh.rotation.set(tiltX, timeTracker * 0.08, tiltZ)
       }
 
       if (glowSprite && glowSpriteMat && b[0]) {
@@ -794,9 +842,13 @@ export function BlackHoleCanvas() {
         )
         glowSpriteMat.opacity = glowOpacity
         glowSprite.position.set(0, currentY, 0)
+        glowSpriteMat.rotation = timeTracker * 0.03
       }
 
-      if (pointsObject) pointsObject.position.y = currentY
+      if (pointsObject) {
+        pointsObject.position.set(0, currentY, 0)
+        pointsObject.rotation.set(tiltX, 0, tiltZ)
+      }
 
       // Update uniforms
       uniforms.uTime.value = timeTracker

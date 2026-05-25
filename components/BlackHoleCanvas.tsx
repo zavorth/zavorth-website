@@ -27,7 +27,7 @@ const DEFAULTS = {
   scatterTop: 1.0,
   scatterBottom: 0.15,
   shrinkSpeed: 12.0,
-  entranceDelayMs: 300,
+  entranceDelayMs: 1000,
   entranceGrowSpeed: 0.8,
   entranceLingerSeconds: 1.0,
   eventHorizonRadius: 32.0,
@@ -39,7 +39,7 @@ const DEFAULTS = {
   coreYellowColor: '#06b6d4', // Core Accretion Dust (Zavorth Cyan Glow)
   coreRedColor: '#ec4899', // Redshifted Gas (Zavorth Electric Fuchsia)
   coreBlueColor: '#e2f8ff', // Blueshifted Gas (Zavorth Ice White-Hot)
-  autoReturnToFront: true,
+  autoReturnToFront: false,
   autoReturnForce: 0.15,
   autoReturnForceDecay: 0.02
 }
@@ -111,6 +111,17 @@ export function BlackHoleCanvas() {
       return r * r * (3 - 2 * r)
     }
 
+    function hslToHex(h: number, s: number, l: number) {
+      l /= 100
+      const a = (s * Math.min(l, 1 - l)) / 100
+      const f = (n: number) => {
+        const k = (n + h / 30) % 12
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+        return Math.round(255 * color).toString(16).padStart(2, '0')
+      }
+      return `#${f(0)}${f(8)}${f(4)}`
+    }
+
     // Global simulation variables
     let scene: THREE.Scene,
       camera: THREE.PerspectiveCamera,
@@ -179,11 +190,12 @@ export function BlackHoleCanvas() {
     controls.addEventListener('start', onControlsStart)
     controls.addEventListener('end', onControlsEnd)
 
-    // 5. Black Hole Event Horizon sphere mesh
+    // 5. Black Hole Event Horizon sphere mesh (starts invisible and scales up on load)
     const ehGeom = new THREE.SphereGeometry(fl.eventHorizonRadius * 0.95, 32, 32)
     const ehMat = new THREE.MeshBasicMaterial({ color: 0x000000 })
     eventHorizonMesh = new THREE.Mesh(ehGeom, ehMat)
     eventHorizonMesh.position.y = 35 
+    eventHorizonMesh.visible = false
     scene.add(eventHorizonMesh)
 
     // 5b. Radial Glow Halo around the Event Horizon
@@ -213,6 +225,7 @@ export function BlackHoleCanvas() {
     const glowSprite = new THREE.Sprite(glowSpriteMat)
     glowSprite.scale.set(fl.eventHorizonRadius * 5.5, fl.eventHorizonRadius * 5.5, 1)
     glowSprite.position.y = 35
+    glowSprite.visible = false
     scene.add(glowSprite)
 
     // 6. Particles definition
@@ -416,9 +429,10 @@ export function BlackHoleCanvas() {
                 py = py_flat + zDepth * sinIncl * P;
                 pz = pz_flat + zDepth * cosIncl * P;
                 
-                // Keplerian velocity component along Z-axis (towards/away from camera)
-                // Corrected to use -cosA so that Doppler beaming is symmetric left/right!
-                orbitalVelocityZ = -cosA * cosIncl * (40.0 / (baseRadSqrt + 0.01));
+                // Keplerian velocity component along Z-axis in view space using the view-space velocity vector
+                vec3 localVelocityDir = vec3(-sinA, cosA * sinIncl, cosA * cosIncl);
+                vec3 viewVelocityDir = normalMatrix * localVelocityDir;
+                orbitalVelocityZ = -viewVelocityDir.z * (40.0 / (baseRadSqrt + 0.01));
                 
                 px *= (0.3 + 0.7 * P);
                 py *= (0.3 + 0.7 * P);
@@ -583,10 +597,12 @@ export function BlackHoleCanvas() {
             float brightnessMultiplier = 1.0;
             
             if (doppler > 0.0) {
-                finalCol = mix(thermalCol, c3 * entranceScale * scrollFade, doppler * 0.95);
-                brightnessMultiplier = 1.0 + doppler * 0.85;
+                // Blueshifted (approaching): gets brighter and shifts towards white-hot core color c3
+                finalCol = mix(thermalCol, c3, doppler * 0.5);
+                brightnessMultiplier = 1.0 + doppler * 1.3;
             } else if (doppler < 0.0) {
-                finalCol = mix(thermalCol, c2 * entranceScale * scrollFade, -doppler * 0.95);
+                // Redshifted (receding): gets dimmer and shifts towards warm redshifted color c2
+                finalCol = mix(thermalCol, c2, -doppler * 0.5);
                 brightnessMultiplier = 1.0 + doppler * 0.45;
             }
             
@@ -635,14 +651,16 @@ export function BlackHoleCanvas() {
     materialRef.current = shaderMat
 
     pointsObject = new ui(particleGeometry, shaderMat)
-    // Initialize points scale to (1,1,1) so particles don't clump at the center on start
-    pointsObject.scale.set(1, 1, 1)
+    // Initialize points scale to (0,0,0) to expand from center on load (based on gemini-hero)
+    pointsObject.scale.set(0, 0, 0)
     pointsObject.position.y = 35 
     pointsObject.visible = false
     scene.add(pointsObject)
 
     let activeScaleTimeout = setTimeout(() => {
       pointsObject.visible = true
+      if (eventHorizonMesh) eventHorizonMesh.visible = true
+      if (glowSprite) glowSprite.visible = true
       activeScale = true
     }, fl.entranceDelayMs)
 
@@ -707,13 +725,37 @@ export function BlackHoleCanvas() {
         uniforms.uWaveOrigin.value.set(0, 0, 0)
       }
 
-      currentPaletteIndex = (currentPaletteIndex + 1) % PALETTES.length
-      const nextPalette = PALETTES[currentPaletteIndex]
+      // Generate a semantic random cosmic color palette
+      // Harmonious options: 0 = Analogous, 1 = Split-Complementary, 2 = Triadic
+      const harmonyType = Math.floor(Math.random() * 3)
+      const baseHue = Math.floor(Math.random() * 360)
+      const saturation = 90 + Math.floor(Math.random() * 10) // 90-100%
+      const baseLightness = 45 + Math.floor(Math.random() * 15) // 45-60%
 
-      fl.coreGreenColor = nextPalette.coreGreenColor
-      fl.coreYellowColor = nextPalette.coreYellowColor
-      fl.coreRedColor = nextPalette.coreRedColor
-      fl.coreBlueColor = nextPalette.coreBlueColor
+      let h0 = baseHue
+      let h1 = baseHue
+      let h2 = baseHue
+      let h3 = baseHue // White-hot core tint
+
+      if (harmonyType === 0) {
+        // Analogous (harmonious single gas cloud)
+        h1 = (baseHue + 30) % 360
+        h2 = (baseHue - 30 + 360) % 360
+      } else if (harmonyType === 1) {
+        // Split-Complementary (energetic contrast)
+        h1 = (baseHue + 30) % 360
+        h2 = (baseHue + 150) % 360
+      } else {
+        // Triadic (vibrant multi-element nebula)
+        h1 = (baseHue + 120) % 360
+        h2 = (baseHue + 240) % 360
+      }
+
+      fl.coreGreenColor = hslToHex(h0, saturation, baseLightness)
+      fl.coreYellowColor = hslToHex(h1, saturation, baseLightness + 5)
+      fl.coreRedColor = hslToHex(h2, saturation - 10, baseLightness - 5)
+      // Icy white with a soft tint of the base hue
+      fl.coreBlueColor = hslToHex(h3, 30, 95)
 
       const parseCol = (col: string) =>
         col.startsWith('#') || col.startsWith('rgb') ? col : '#' + col
@@ -752,23 +794,37 @@ export function BlackHoleCanvas() {
     const centerVec = new J(0, 35, 0)
     let animationFrameId: number
 
+    let wasOffscreen = false
+
     // Animation loop
     const animate = () => {
+      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
+      const height = typeof window !== 'undefined' ? window.innerHeight : 800
+      const isOffscreen = scrollY > height * 1.5
+
+      if (isOffscreen) {
+        wasOffscreen = true
+        animationFrameId = requestAnimationFrame(animate)
+        return
+      }
+
+      if (wasOffscreen) {
+        clock.getDelta() // reset clock delta to prevent jump
+        wasOffscreen = false
+      }
+
       animationFrameId = requestAnimationFrame(animate)
 
       let delta = clock.getDelta()
       
-      // Increment timeTracker directly on mount for immediate fade-in
-      timeTracker += delta
-
-      for (let k = 0; k < 4; k++) {
-        if (b[k] && targetColors[k]) {
-          b[k].lerp(targetColors[k], delta * 4.0)
-        }
+      // Increment timeTracker only when activeScale is true (after the entrance delay)
+      if (activeScale) {
+        timeTracker += delta
       }
 
-      if (glowSpriteMat && b[0]) {
-        glowSpriteMat.color.copy(b[0])
+      if (glowSpriteMat) {
+        // Smoothly transition glow halo color to the target color
+        glowSpriteMat.color.lerp(targetColors[0], delta * 4.0)
       }
 
       // Update wave propagation
@@ -800,8 +856,6 @@ export function BlackHoleCanvas() {
       uniforms.uWaveRadius.value = waveRadius
 
       // Smooth scroll tracking directly in RAF loop
-      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
-      const height = typeof window !== 'undefined' ? window.innerHeight : 800
       const scrollableHeight = height * 0.3
       let targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
 
@@ -809,13 +863,16 @@ export function BlackHoleCanvas() {
       const damping = targetProgress < scrollRatioCurrent ? 0.25 : 0.15
       scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * damping
 
-      // Slow 3D floating bobbing & tilting drift
+      // Dynamic, constant 3D tilting wobble and rotation (similar to gemini-hero)
       // Decreases as user scrolls down (P gets smaller)
       const shrinkRatio = Math.min(1.0, scrollRatioCurrent * fl.shrinkSpeed)
       const P = 1.0 - (1.0 - 0.15) * shrinkRatio
       const driftY = Math.sin(timeTracker * 0.4) * 1.5 * P
-      const tiltX = Math.sin(timeTracker * 0.3) * 0.04 * P
-      const tiltZ = Math.cos(timeTracker * 0.35) * 0.03 * P
+      
+      const wobbleTime = timeTracker * 0.22
+      const rotX = Math.pow(Math.sin(wobbleTime * 2.0), 3) * 0.45 * P
+      const rotY = timeTracker * 0.06 * P
+      const rotZ = Math.pow(Math.sin(wobbleTime), 3) * -0.35 * P
 
       let currentY = 35 + scrollRatioCurrent * 45 + driftY
       centerVec.y = currentY
@@ -828,7 +885,7 @@ export function BlackHoleCanvas() {
         let depthScale = targetScale * (0.2 + 0.8 * scatterCurrent)
         eventHorizonMesh.scale.set(targetScale, targetScale, depthScale)
         eventHorizonMesh.position.set(0, currentY, 0)
-        eventHorizonMesh.rotation.set(tiltX, timeTracker * 0.08, tiltZ)
+        eventHorizonMesh.rotation.set(rotX, rotY, rotZ)
       }
 
       if (glowSprite && glowSpriteMat && b[0]) {
@@ -842,12 +899,15 @@ export function BlackHoleCanvas() {
         )
         glowSpriteMat.opacity = glowOpacity
         glowSprite.position.set(0, currentY, 0)
-        glowSpriteMat.rotation = timeTracker * 0.03
+        glowSpriteMat.rotation = rotY
       }
 
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
-        pointsObject.rotation.set(tiltX, 0, tiltZ)
+        pointsObject.rotation.set(rotX, rotY, rotZ)
+        if (activeScale) {
+          pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
+        }
       }
 
       // Update uniforms
@@ -872,7 +932,8 @@ export function BlackHoleCanvas() {
           let lerpForce = autoReturnTimer * 5
           camera.position.lerp(chosenTarget, delta * lerpForce)
 
-          camera.up.set(0, 1, 0)
+          // Smoothly align the up vector during auto-return
+          camera.up.lerp(new J(0, 1, 0), delta * lerpForce).normalize()
 
           normalVec.subVectors(camera.position, bhCenter).setLength(240)
           camera.position.copy(bhCenter).add(normalVec)
@@ -881,9 +942,11 @@ export function BlackHoleCanvas() {
         } else {
           hasScrolled = false
         }
-      }
-      if (!isUserDragging) {
-        camera.up.set(0, 1, 0)
+      } else {
+        // Complete freedom: slowly and smoothly align the up vector when user stops dragging, without snapping or locking
+        if (!isUserDragging && camera.up.y < 0.999) {
+          camera.up.lerp(new J(0, 1, 0), delta * 2.0).normalize()
+        }
       }
 
       controls.update()

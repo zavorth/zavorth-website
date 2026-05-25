@@ -657,15 +657,12 @@ export function BlackHoleCanvas() {
     // Initialize points scale to (0,0,0) to expand from center on load (based on gemini-hero)
     pointsObject.scale.set(0, 0, 0)
     pointsObject.position.y = 35 
-    pointsObject.visible = false
+    pointsObject.visible = true
     scene.add(pointsObject)
 
-    let activeScaleTimeout = setTimeout(() => {
-      pointsObject.visible = true
-      if (eventHorizonMesh) eventHorizonMesh.visible = true
-      if (glowSprite) glowSprite.visible = true
-      activeScale = true
-    }, fl.entranceDelayMs)
+    if (eventHorizonMesh) eventHorizonMesh.visible = true
+    if (glowSprite) glowSprite.visible = true
+    activeScale = true
 
     const onPointerMove = (e: PointerEvent) => {
       // Raycasting target tracking is updated, but pointer attraction has been removed as per mouse movement tilt policy
@@ -968,7 +965,6 @@ export function BlackHoleCanvas() {
     return () => {
       resizeObserver.disconnect()
       cancelAnimationFrame(animationFrameId)
-      clearTimeout(activeScaleTimeout)
 
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerleave', onPointerLeave)

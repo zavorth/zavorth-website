@@ -1,13 +1,11 @@
 import React from 'react'
 import { Navbar } from '../components/Navbar'
 import { Hero } from '../components/Hero'
+import { OverviewSection } from '../components/OverviewSection'
 import { HowItWorksSection } from '../components/HowItWorksSection'
-import { DashboardSection } from '../components/DashboardSection'
-import { SecuritySection } from '../components/SecuritySection'
-import { PreviewSection } from '../components/PreviewSection'
 import { SkillsSection } from '../components/SkillsSection'
+import { SecuritySection } from '../components/SecuritySection'
 import { ConnectionsSection } from '../components/ConnectionsSection'
-import { EverydaySection } from '../components/EverydaySection'
 import { InstallSection } from '../components/InstallSection'
 import { Footer } from '../components/Footer'
 
@@ -17,31 +15,28 @@ export default function Home() {
       <Navbar />
       <Hero />
 
-      {/* Narrative Section 1: The Paradigm */}
+      {/* Terminal Vivo — Animated Console Demo */}
+      <OverviewSection />
+
+      {/* Timeline Cinematográfica — Vertical Step Flow */}
       <HowItWorksSection />
 
-      {/* Narrative Section 2: The Command Center */}
-      <DashboardSection />
-
-      {/* Narrative Section 2.5: Security & Privacy */}
-      <SecuritySection />
-
-      {/* Narrative Section 2.8: Interactive Preview */}
-      <PreviewSection />
-
-      {/* Narrative Section 3: The Web of Connections */}
+      {/* Bento Grid Premium — Native Modules Spotlight */}
       <SkillsSection />
 
-      {/* Narrative Section 3.5: Integrations & Channels */}
+      {/* Showcase de Métricas — Governance & Benefits */}
+      <SecuritySection />
+
+      {/* Grid Orbital — Integrations & Connections */}
       <ConnectionsSection />
 
-      {/* Narrative Section 4: Everyday Leverage */}
-      <EverydaySection />
-
       <div className="section-divider" />
+      
+      {/* CLI Installation Pill */}
       <InstallSection />
 
       <Footer />
     </main>
   )
 }
+

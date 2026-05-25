@@ -971,28 +971,33 @@ main, section, footer, nav {
   opacity: 0;
   font-size: inherit;
   pointer-events: none;
-  transition: opacity 0.15s ease-in-out, transform 0.08s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.15s ease-in-out;
 }
-.glowing-cursor-bar {
-  position: absolute;
-  height: 0.75em;
-  width: 0.04em;
-  background: linear-gradient(180deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
-  border-radius: 0.02em;
-  box-shadow: 0 0 6px rgba(6, 182, 212, 0.7), 0 0 12px rgba(139, 92, 246, 0.5);
-  animation: cursorBlink 0.53s infinite;
-  transform-origin: center;
-  transition: box-shadow 0.08s ease-out, transform 0.08s ease-out;
-  margin-top: 0.35em;
+.blinking-cursor {
+  width: 4px;
+  height: 1.25em;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #F59E0B, #EC4899, #3B82F6, #10B981, #F59E0B);
+  background-size: 100% 400%;
+  box-shadow: 
+    0 0 8px rgba(245, 158, 11, 0.6),
+    0 0 16px rgba(236, 72, 153, 0.4),
+    0 0 24px rgba(59, 130, 246, 0.3);
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: -0.1em;
+  animation: 
+    ag-blink .5s infinite,
+    ag-cursor-flow 3s linear infinite;
 }
-.cursor-container.typing-active .glowing-cursor-bar {
-  animation: none !important;
-  opacity: 1 !important;
+@keyframes ag-cursor-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
 }
-@keyframes cursorBlink {
+@keyframes ag-blink {
   0% { opacity: 0; }
   10% { opacity: 1; }
-  to { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 /* ─── Display Heading ─── */
@@ -1084,4 +1089,209 @@ main, section, footer, nav {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: textShimmer 8s linear infinite;
+}
+
+/* ─── Premium Scroll Indicator ─── */
+.scroll-indicator-text {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  animation: ag-text-pulse 2s ease-in-out infinite;
+}
+
+.scroll-mouse-icon {
+  width: 22px;
+  height: 36px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 99px;
+  position: relative;
+  box-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.05),
+    inset 0 0 6px rgba(255, 255, 255, 0.02);
+}
+
+.scroll-mouse-wheel {
+  width: 4px;
+  height: 8px;
+  background: linear-gradient(180deg, #F59E0B, #EC4899);
+  border-radius: 99px;
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollWheelAnim 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+}
+
+@keyframes ag-text-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes scrollWheelAnim {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-2px) scaleY(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scaleY(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(10px) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scaleY(0.5);
+  }
+}
+
+/* ─── Redesigned Section Utilities ─── */
+
+/* Typing cursor blink */
+.typing-cursor {
+  display: inline-block;
+  animation: cursorBlink 1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Terminal scan line effect */
+.terminal-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.15), transparent);
+  pointer-events: none;
+  animation: scanLine 3s linear infinite;
+}
+
+@keyframes scanLine {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Timeline vertical line pulse */
+.timeline-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(245, 158, 11, 0.4) 20%,
+    rgba(245, 158, 11, 0.6) 50%,
+    rgba(245, 158, 11, 0.4) 80%,
+    transparent 100%
+  );
+}
+
+.timeline-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(245, 158, 11, 0.3),
+    transparent
+  );
+  animation: timelinePulse 3s ease-in-out infinite;
+}
+
+@keyframes timelinePulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Dot pattern background */
+.dot-pattern {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Accent bars for metric cards */
+.accent-bar {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 999px;
+}
+
+.accent-bar-amber {
+  background: linear-gradient(180deg, #F59E0B, #D97706);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.accent-bar-emerald {
+  background: linear-gradient(180deg, #34D399, #10B981);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.3);
+}
+
+.accent-bar-cyan {
+  background: linear-gradient(180deg, #22D3EE, #06B6D4);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
+}
+
+/* Card hover lift */
+.card-hover-lift {
+  transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Staggered fade-in animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-fade-in {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Link animated underline */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: width 300ms ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
 }

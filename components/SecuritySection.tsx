@@ -1,126 +1,121 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ensureGsapPlugins } from './motion'
-import { KeyRound, EyeOff, FileCheck2 } from 'lucide-react'
+import { Lock, Smartphone, RefreshCw, type LucideIcon } from 'lucide-react'
 
-const features = [
+interface SecurityCard {
+  title: string
+  desc: string
+  icon: LucideIcon
+  accentColor: string
+  accentBg: string
+  accentBar: string
+}
+
+const cards: SecurityCard[] = [
   {
-    icon: KeyRound,
-    title: 'Isolamento SecretRef',
-    description:
-      'Chaves de API e tokens resolvem apenas em runtime local — nunca são expostos ao LLM.',
+    title: 'Privacidade por padrão (SecretRef)',
+    desc: 'Chaves de API e tokens resolvem apenas no runtime local, nunca expostos em logs ou requisições externas.',
+    icon: Lock,
+    accentColor: 'text-amber-500',
+    accentBg: 'bg-amber-500/10',
+    accentBar: 'bg-amber-500',
   },
   {
-    icon: EyeOff,
-    title: 'Execução local',
-    description:
-      'Zero telemetria, zero cloud. Seus dados e logs permanecem integralmente no seu disco.',
+    title: 'Aprovação remota via Telegram',
+    desc: 'Ações críticas disparam notificações no seu celular e aguardam aprovação explícita antes de executar.',
+    icon: Smartphone,
+    accentColor: 'text-emerald-400',
+    accentBg: 'bg-emerald-400/10',
+    accentBar: 'bg-emerald-400',
   },
   {
-    icon: FileCheck2,
-    title: 'Recibos criptográficos',
-    description:
-      'Cada ação gera um recibo assinado e verificável digitalmente para auditoria completa.',
+    title: 'Fallback inteligente local',
+    desc: 'Se a conexão externa cair, o roteador migra automaticamente para modelos locais sem perder contexto.',
+    icon: RefreshCw,
+    accentColor: 'text-cyan-400',
+    accentBg: 'bg-cyan-400/10',
+    accentBar: 'bg-cyan-400',
   },
 ]
 
 export function SecuritySection() {
-  const rootRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    if (!rootRef.current) return
-    ensureGsapPlugins()
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '[data-sec-reveal]',
-        { y: 25, opacity: 0, filter: 'blur(6px)' },
-        {
-          y: 0,
-          opacity: 1,
-          filter: 'blur(0px)',
-          duration: 0.8,
-          stagger: 0.08,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: rootRef.current!,
-            start: 'top 80%',
-            once: true,
-          },
-        }
-      )
-    }, rootRef)
-
-    return () => ctx.revert()
-  }, [])
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget
-    const rect = card.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    card.style.setProperty('--mouse-x', `${x}px`)
-    card.style.setProperty('--mouse-y', `${y}px`)
-  }
-
   return (
-    <section
-      id="security"
-      ref={rootRef}
-      className="relative bg-[#050505] border-t border-white/[0.06] py-24 sm:py-32 overflow-hidden"
-    >
-      {/* Background Glow */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-[400px] w-[400px] rounded-full bg-cyan-500/[0.015] blur-[120px] pointer-events-none" />
+    <section id="security" className="relative py-24 sm:py-32 overflow-hidden">
+      {/* Background radial glow */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
+      >
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/[0.03] blur-[120px]" />
+      </div>
 
-      <div className="mx-auto max-w-5xl px-6">
-        {/* Header - Centered and Spacious */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <p
-            data-sec-reveal
-            className="font-mono text-xs uppercase tracking-[0.2em] text-amber-500"
-          >
-            Segurança &amp; Privacidade
-          </p>
+      <div className="relative mx-auto max-w-5xl px-6">
+        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
+          {/* Left — Copy */}
+          <div>
+            <span className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-amber-500">
+              Vantagens
+            </span>
 
-          <h2
-            data-sec-reveal
-            className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight"
-          >
-            Suas credenciais nunca saem da sua máquina.
-          </h2>
+            <h2 className="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl">
+              IA local com{' '}
+              <span className="text-white">governança real.</span>
+            </h2>
 
-          <p
-            data-sec-reveal
-            className="text-sm sm:text-base leading-relaxed text-neutral-400 max-w-xl mx-auto font-light"
-          >
-            O Zavorth opera com isolamento total de credenciais através do sistema SecretRef. API keys e tokens resolvem exclusivamente em runtime local, sem trafegar pela rede.
-          </p>
-        </div>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-neutral-400">
+              Diga adeus a vazamentos de dados, latências de rede e
+              configurações complexas.
+            </p>
 
-        {/* Minimal Glass Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              onMouseMove={handleMouseMove}
-              data-sec-reveal
-              className="spotlight-card spotlight-border relative rounded-2xl border border-white/[0.04] bg-[#07070a]/20 backdrop-blur-md p-6 flex flex-col justify-between overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)] transition-all duration-300 hover:border-white/[0.08]"
+            <a
+              href="#"
+              className="group mt-8 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] px-5 py-2.5 text-sm font-medium text-neutral-300 transition-all duration-300 hover:border-white/[0.15] hover:text-white"
             >
-              <div className="space-y-4">
-                <div className="p-2 h-9 w-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
-                  <f.icon className="h-4.5 w-4.5" strokeWidth={1.5} />
+              Saiba mais
+              <span className="transition-transform duration-300 group-hover:translate-x-0.5">
+                →
+              </span>
+            </a>
+          </div>
+
+          {/* Right — Metric Cards */}
+          <div className="flex flex-col gap-4">
+            {cards.map((card) => {
+              const Icon = card.icon
+
+              return (
+                <div
+                  key={card.title}
+                  className="group relative flex items-start gap-4 overflow-hidden rounded-xl border border-white/[0.05] bg-white/[0.02] p-5 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.03]"
+                >
+                  {/* Accent bar */}
+                  <div
+                    className={`absolute left-0 top-0 h-full w-1 rounded-l ${card.accentBar}`}
+                  />
+
+                  {/* Icon */}
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${card.accentBg}`}
+                  >
+                    <Icon
+                      className={`h-5 w-5 ${card.accentColor}`}
+                      strokeWidth={1.5}
+                    />
+                  </div>
+
+                  {/* Text */}
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-semibold text-white">
+                      {card.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-neutral-400">
+                      {card.desc}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-semibold text-white tracking-tight">
-                  {f.title}
-                </h3>
-                <p className="text-xs leading-relaxed text-neutral-400 font-light">
-                  {f.description}
-                </p>
-              </div>
-            </div>
-          ))}
+              )
+            })}
+          </div>
         </div>
       </div>
     </section>

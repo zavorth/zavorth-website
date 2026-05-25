@@ -1,211 +1,159 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Terminal, ShieldCheck, FileCheck } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 
-const steps = [
+interface Step {
+  num: string
+  title: string
+  desc: string
+  icon: LucideIcon
+}
+
+const steps: Step[] = [
   {
     num: '01',
-    title: 'Você dá o comando',
-    description:
-      'Linguagem natural, sem sintaxe especial. O classificador neural interpreta sua intenção e decompõe em ações atômicas.',
-    example: 'zavorth "organizar downloads e logar"',
+    title: 'Diga o que precisa',
+    desc: 'Escreva comandos em linguagem natural. Zavorth interpreta sua intenção e traduz em ações executáveis dentro do ambiente local.',
+    icon: Terminal,
   },
   {
     num: '02',
-    title: 'O agente avalia o risco',
-    description:
-      'Cada ação é classificada individualmente. Operações de baixo risco executam automaticamente. Ações destrutivas pausam e aguardam sua aprovação.',
-    example: 'fs.move → Baixo risco · telegram.send → Médio risco',
+    title: 'Análise de risco local',
+    desc: 'O motor inspeciona a intenção do comando, verifica permissões e isola a execução em um sandbox seguro antes de prosseguir.',
+    icon: ShieldCheck,
   },
   {
     num: '03',
-    title: 'Execução selada',
-    description:
-      'Após a execução, todas as ações são empacotadas em um recibo criptográfico imutável — um registro auditável salvo localmente no seu disco.',
-    example: 'Ledger Hash: ZV-901-X9 · Assinado localmente',
+    title: 'Recibo criptográfico',
+    desc: 'Após a execução segura, um recibo assinado criptograficamente é gerado com hash, timestamp e detalhes completos da operação.',
+    icon: FileCheck,
   },
 ]
 
 export function HowItWorksSection() {
-  const rootRef = useRef<HTMLElement>(null)
-  const lineRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!rootRef.current || !lineRef.current) return
-    gsap.registerPlugin(ScrollTrigger)
-
-    const ctx = gsap.context(() => {
-      // Vertical progress line
-      gsap.fromTo(
-        lineRef.current,
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: rootRef.current,
-            start: 'top 35%',
-            end: 'bottom 65%',
-            scrub: true,
-          },
-        }
-      )
-
-      // Item reveals & active glows
-      const items = gsap.utils.toArray('.flow-step')
-      items.forEach((item: any) => {
-        // Entrance animation
-        gsap.fromTo(
-          item,
-          { opacity: 0.3, y: 20 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            scrollTrigger: {
-              trigger: item,
-              start: 'top 85%',
-              end: 'top 60%',
-              scrub: true,
-            },
-          }
-        )
-
-        // Glowing border/shadow and active bullet highlights
-        const card = item.querySelector('.step-card')
-        const bullet = item.querySelector('.step-bullet')
-        const bulletInner = item.querySelector('.step-bullet-inner')
-
-        if (card && bullet) {
-          // Glow card
-          gsap.fromTo(
-            card,
-            { borderColor: 'rgba(255, 255, 255, 0.04)', backgroundColor: 'rgba(255, 255, 255, 0.01)', boxShadow: '0 0 0px rgba(0,0,0,0)' },
-            {
-              borderColor: 'rgba(245, 158, 11, 0.25)',
-              backgroundColor: 'rgba(245, 158, 11, 0.02)',
-              boxShadow: '0 10px 30px rgba(245, 158, 11, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-              scrollTrigger: {
-                trigger: item,
-                start: 'top 60%',
-                end: 'bottom 45%',
-                scrub: true,
-              }
-            }
-          )
-
-          // Highlight bullet
-          gsap.fromTo(
-            bullet,
-            { borderColor: 'rgba(255, 255, 255, 0.08)', scale: 1 },
-            {
-              borderColor: 'rgba(245, 158, 11, 0.6)',
-              scale: 1.15,
-              scrollTrigger: {
-                trigger: item,
-                start: 'top 60%',
-                end: 'bottom 45%',
-                scrub: true,
-              }
-            }
-          )
-
-          if (bulletInner) {
-            gsap.fromTo(
-              bulletInner,
-              { backgroundColor: '#4b5563', scale: 1 },
-              {
-                backgroundColor: '#f59e0b',
-                scale: 1.25,
-                scrollTrigger: {
-                  trigger: item,
-                  start: 'top 60%',
-                  end: 'bottom 45%',
-                  scrub: true,
-                }
-              }
-            )
-          }
-        }
-      })
-    }, rootRef)
-
-    return () => ctx.revert()
-  }, [])
-
   return (
-    <section
-      ref={rootRef}
-      id="how-it-works"
-      className="relative bg-[#050505] border-t border-white/[0.06] py-24 sm:py-32 overflow-hidden"
-    >
-      <div className="mx-auto max-w-3xl px-6">
+    <section id="how-it-works" className="relative bg-[#050505] py-24 sm:py-32 overflow-hidden">
+      <div className="relative z-10 mx-auto max-w-3xl px-6">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-28 space-y-4">
-          <span className="text-xs font-mono uppercase tracking-widest text-amber-500">
-            Fluxo de Execução
+        <div className="mb-16 text-center sm:mb-20">
+          <span className="mb-4 inline-block font-mono text-[11px] tracking-[0.25em] text-amber-500 uppercase">
+            Fluxo
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] text-white">
-            Do comando ao recibo,
-            <br className="hidden sm:block" /> em milissegundos.
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">
+            Do comando ao recibo em segundos.
           </h2>
-          <p className="text-base sm:text-lg text-neutral-400 font-light leading-relaxed">
-            Três etapas. Classificação neural, governança de risco e auditoria
-            criptográfica — tudo automático, tudo local.
-          </p>
         </div>
 
-        {/* Timeline */}
+        {/* Timeline container */}
         <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-6 top-3 bottom-3 w-[2px] bg-white/[0.03] origin-top pointer-events-none rounded-full">
-            <div
-              ref={lineRef}
-              className="w-full h-full bg-gradient-to-b from-amber-500 via-fuchsia-500 to-cyan-500 origin-top scale-y-0 rounded-full"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.4))' }}
-            />
+          {/* Timeline vertical line — desktop: centered, mobile: left */}
+          <div className="timeline-line absolute top-0 bottom-0 left-5 w-[2px] md:left-1/2 md:-translate-x-1/2">
+            <div className="timeline-glow h-full w-full" />
           </div>
 
-          <div className="space-y-12">
-            {steps.map((step) => (
-              <div key={step.num} className="flow-step relative pl-16">
-                {/* Bullet */}
-                <div className="step-bullet absolute left-6 top-6 -translate-x-1/2 w-4.5 h-4.5 rounded-full bg-[#050505] border border-white/[0.08] flex items-center justify-center z-10 transition-all duration-300 shadow-md">
-                  <div className="step-bullet-inner w-1.5 h-1.5 rounded-full bg-neutral-600 transition-colors duration-300" />
-                </div>
+          {/* Steps */}
+          <div className="space-y-12 sm:space-y-16 md:space-y-20">
+            {steps.map((step, i) => {
+              const isLeft = i % 2 === 0
 
-                {/* Glassmorphic Step Bento Card */}
-                <div className="step-card rounded-2xl border border-white/[0.04] bg-[#0c0c0e]/30 p-6 sm:p-8 transition-all duration-500 shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
-                  <div className="space-y-3">
-                    <span className="font-mono text-xs text-amber-500 font-semibold tracking-wider">
-                      {step.num}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight tracking-tight">
-                      {step.title}
-                    </h3>
-                    <p className="text-neutral-400 text-sm sm:text-base leading-relaxed max-w-xl">
-                      {step.description}
-                    </p>
-                    
-                    {/* Simulated Command Box */}
-                    <div className="mt-5 rounded-xl border border-white/[0.05] bg-black/40 px-4 py-3 font-mono text-[12px] text-neutral-400 flex items-center justify-between shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span className="text-neutral-600 select-none">$</span>
-                        <span className="text-neutral-300 font-light truncate">{step.example}</span>
-                      </div>
-                      <span className="text-[9px] text-neutral-600 uppercase tracking-widest hidden sm:inline select-none">
-                        Output
+              return (
+                <div key={step.num} className="relative">
+                  {/* Timeline dot */}
+                  <div className="absolute left-5 top-6 z-10 -translate-x-1/2 md:left-1/2 md:top-8 md:-translate-x-1/2">
+                    <div className="relative flex h-4 w-4 items-center justify-center">
+                      <span className="absolute h-4 w-4 rounded-full bg-amber-500/20" />
+                      <span className="relative h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    </div>
+                  </div>
+
+                  {/* Card — mobile: always right of line, desktop: alternating */}
+                  <div
+                    className={`
+                      ml-12 md:ml-0 md:w-[calc(50%-2rem)]
+                      ${isLeft ? 'md:mr-auto md:pr-0' : 'md:ml-auto md:pl-0'}
+                    `}
+                  >
+                    <div className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-black/40 p-6 backdrop-blur-xl transition-all duration-300 hover:border-white/[0.1] hover:bg-black/50 sm:p-7">
+                      {/* Watermark number */}
+                      <span
+                        className={`pointer-events-none absolute top-3 font-mono text-6xl font-black leading-none text-white opacity-[0.04] select-none sm:text-7xl ${
+                          isLeft ? 'right-5' : 'right-5 md:left-5 md:right-auto'
+                        }`}
+                      >
+                        {step.num}
                       </span>
+
+                      {/* Icon */}
+                      <div className="relative mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20">
+                        <step.icon className="h-5 w-5 text-amber-500" strokeWidth={1.8} />
+                      </div>
+
+                      {/* Content */}
+                      <h3 className="mb-2 text-base font-semibold text-white sm:text-lg">
+                        {step.title}
+                      </h3>
+                      <p className="text-sm leading-relaxed text-neutral-400">
+                        {step.desc}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .timeline-glow {
+          background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(245, 158, 11, 0.25) 20%,
+            rgba(245, 158, 11, 0.4) 50%,
+            rgba(245, 158, 11, 0.25) 80%,
+            transparent 100%
+          );
+          position: relative;
+        }
+
+        .timeline-glow::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 6px;
+          height: 60px;
+          background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(245, 158, 11, 0.6),
+            transparent
+          );
+          border-radius: 999px;
+          filter: blur(3px);
+          animation: timelinePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes timelinePulse {
+          0% {
+            top: -10%;
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            top: 100%;
+            opacity: 0;
+          }
+        }
+      `}</style>
     </section>
   )
 }

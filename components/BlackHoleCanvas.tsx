@@ -136,7 +136,7 @@ export function BlackHoleCanvas() {
     let hasScrolled = false
     let activeScale = false
     let timeTracker = 0
-    let clock = new xa()
+    let lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     let currentPaletteIndex = 0
     let waveRadius = -999.0
 
@@ -156,7 +156,6 @@ export function BlackHoleCanvas() {
       renderer = new Hc({ 
         antialias: false, 
         alpha: true,
-        powerPreference: 'high-performance',
         failIfMajorPerformanceCaveat: false
       })
     } catch (err) {
@@ -166,7 +165,16 @@ export function BlackHoleCanvas() {
     const initWidth = container.clientWidth || window.innerWidth
     const initHeight = container.clientHeight || window.innerHeight
 
-    renderer.setSize(initWidth, initHeight)
+    // Ensure the canvas stretches to fill the container layout in CSS
+    renderer.domElement.style.width = '100%'
+    renderer.domElement.style.height = '100%'
+    renderer.domElement.style.display = 'block'
+    renderer.domElement.style.position = 'absolute'
+    renderer.domElement.style.top = '0'
+    renderer.domElement.style.left = '0'
+
+    // Set internal resolution without overriding the 100% CSS styling
+    renderer.setSize(initWidth, initHeight, false)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     container.appendChild(renderer.domElement)
 
@@ -654,8 +662,9 @@ export function BlackHoleCanvas() {
     materialRef.current = shaderMat
 
     pointsObject = new ui(particleGeometry, shaderMat)
-    // Initialize points scale to (0,0,0) to expand from center on load (based on gemini-hero)
-    pointsObject.scale.set(0, 0, 0)
+    // Initialize points scale to (1,1,1) to avoid collapsed bounding box frustum culling bugs.
+    pointsObject.scale.set(1, 1, 1)
+    pointsObject.frustumCulled = false
     pointsObject.position.y = 35 
     pointsObject.visible = true
     scene.add(pointsObject)
@@ -782,9 +791,11 @@ export function BlackHoleCanvas() {
       if (w === 0 || h === 0) return
       camera.aspect = w / h
       camera.updateProjectionMatrix()
-      renderer.setSize(w, h)
+      renderer.setSize(w, h, false) // pass false to preserve our 100% CSS styling
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-      shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2)
+      if (shaderMat && shaderMat.uniforms && shaderMat.uniforms.uPixelRatio) {
+        shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2)
+      }
     }
 
     const resizeObserver = new ResizeObserver(() => onResize())
@@ -815,13 +826,18 @@ export function BlackHoleCanvas() {
       }
 
       if (wasOffscreen) {
-        clock.getDelta() // reset clock delta to prevent jump
+        lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now() // reset time reference to prevent jump
         wasOffscreen = false
       }
 
       animationFrameId = requestAnimationFrame(animate)
 
-      let delta = clock.getDelta()
+      const currentTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
+      let delta = (currentTime - lastTime) / 1000
+      lastTime = currentTime
+
+      if (delta > 0.1) delta = 0.1
+      if (delta < 0) delta = 0
       
       // Increment timeTracker only when activeScale is true (after the entrance delay)
       if (activeScale) {
@@ -911,9 +927,6 @@ export function BlackHoleCanvas() {
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
         pointsObject.rotation.set(rotX, rotY, rotZ)
-        if (activeScale) {
-          pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
-        }
       }
 
       // Update uniforms

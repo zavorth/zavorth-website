@@ -27,79 +27,17 @@ export function InstallSection() {
     <>
       <section
         id="install"
-        className="relative bg-[#050505] py-32 sm:py-44 overflow-hidden"
+        className="relative bg-[#050505] py-16 sm:py-20 overflow-hidden"
       >
-        {/* ── Animated gradient orbs (CSS-only, ultra-lightweight) ── */}
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          {/* Primary orb — slow drift top-right */}
-          <div
-            className="absolute rounded-full blur-[120px] opacity-[0.07]"
-            style={{
-              width: '600px',
-              height: '600px',
-              top: '-10%',
-              right: '-5%',
-              background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)',
-              animation: 'installOrb1 18s ease-in-out infinite',
-            }}
-          />
-          {/* Secondary orb — slow drift bottom-left */}
-          <div
-            className="absolute rounded-full blur-[100px] opacity-[0.05]"
-            style={{
-              width: '500px',
-              height: '500px',
-              bottom: '-15%',
-              left: '-8%',
-              background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)',
-              animation: 'installOrb2 22s ease-in-out infinite',
-            }}
-          />
-          {/* Tertiary accent — subtle amber warmth at center */}
-          <div
-            className="absolute rounded-full blur-[140px] opacity-[0.04]"
-            style={{
-              width: '400px',
-              height: '400px',
-              top: '40%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)',
-              animation: 'installOrb3 15s ease-in-out infinite',
-            }}
-          />
-        </div>
-
-        {/* ── Subtle grid pattern ── */}
-        <div
-          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.025]"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)
-            `,
-            backgroundSize: '60px 60px',
-          }}
-        />
-
-        {/* ── Radial vignette ── */}
-        <div
-          className="pointer-events-none absolute inset-0 z-[2]"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 30%, rgba(5,5,5,0.8) 100%)',
-          }}
-        />
-
-        {/* ── Content ── */}
-        <div className="relative z-20 mx-auto max-w-4xl px-6 text-center">
+        <div className="mx-auto max-w-4xl px-6 relative z-10 text-center">
+          
           {/* Giant ZAVORTH watermark */}
-          <div className="relative flex select-none items-center justify-center -mb-8 sm:-mb-14 pb-8">
+          <div className="relative flex select-none items-center justify-center mb-2">
             <h2
               className="pointer-events-none whitespace-nowrap text-center font-extrabold leading-[0.8] tracking-[-0.06em]"
               style={{
-                fontSize: 'clamp(4.5rem, 15vw, 11rem)',
-                background: 'linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.08) 40%, rgba(30,30,30,0) 80%)',
+                fontSize: 'clamp(3rem, 10vw, 8rem)',
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, rgba(30,30,30,0) 80%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
@@ -111,59 +49,100 @@ export function InstallSection() {
           </div>
 
           {/* Heading */}
-          <h3 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
-            Instale no seu terminal.
+          <h3 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Pronto para rodar localmente?
           </h3>
 
           {/* Subtitle */}
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/45 sm:text-lg">
-            Instale o runtime local do Zavorth em segundos e coloque agentes
-            autônomos sob o controle da sua máquina — sem dependências em nuvem.
+          <p className="mx-auto mt-2 max-w-xl text-xs sm:text-sm leading-relaxed text-neutral-400 font-light">
+            Instale o CLI do Zavorth globalmente via npm e configure o runtime local em menos de um minuto.
           </p>
 
-          {/* Install Pill with border-beam */}
-          <div className="mt-10 flex justify-center">
-            <div className="border-beam-wrapper">
-              <div
-                className="group flex cursor-pointer items-center gap-3 rounded-full border border-white/10 bg-zinc-950 px-4 py-3 shadow-xl ring-1 ring-inset ring-white/5 transition-[border-color,box-shadow] hover:border-white/20 hover:ring-white/10"
-                onClick={handleCopy}
-                role="button"
-                tabIndex={0}
-                aria-label="Copiar comando de instalação"
-              >
-                <code className="whitespace-nowrap font-mono text-sm text-white sm:text-base">
-                  <span className="text-[#CCC]">npm install -g </span>
-                  <span className="text-amber-500">zavorth@latest</span>
-                </code>
-
-                <div className="relative flex h-5 w-5 flex-shrink-0 items-center justify-center text-white/60">
-                  {copied ? (
-                    <Check size={16} className="text-emerald-400" />
-                  ) : (
-                    <Copy size={16} />
-                  )}
-                </div>
+          {/* Minimalist Command Pill with Border Beam animation */}
+          <div className="mt-8 max-w-[340px] mx-auto border-beam-wrapper rounded-full">
+            <div className="bg-[#07070a] py-1.5 pl-4 pr-1.5 flex items-center justify-between shadow-inner rounded-full w-full border border-white/[0.04]">
+              <div className="flex items-center gap-2 truncate font-mono text-xs text-neutral-200">
+                <span className="text-neutral-600 select-none">$</span>
+                <span className="font-light tracking-tight">{INSTALL_CMD}</span>
               </div>
+              
+              <button 
+                onClick={handleCopy}
+                className="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-white/[0.05] transition-all shrink-0"
+                aria-label="Copiar comando"
+              >
+                {copied ? (
+                  <Check size={13} className="text-emerald-400" />
+                ) : (
+                  <Copy size={13} />
+                )}
+              </button>
             </div>
           </div>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[11px] font-mono text-neutral-500 uppercase tracking-wider">
+            <span>Requisitos: Node.js 18+</span>
+            <span>&middot;</span>
+            <span>Compatível: macOS, Linux, Windows</span>
+          </div>
+
         </div>
       </section>
 
-      {/* Keyframe animations for the gradient orbs */}
+      {/* Styled JSX for Border Beam effect */}
       <style jsx>{`
-        @keyframes installOrb1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-40px, 30px) scale(1.1); }
-          66% { transform: translate(20px, -20px) scale(0.95); }
+        @property --angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
         }
-        @keyframes installOrb2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -25px) scale(1.08); }
-          66% { transform: translate(-25px, 15px) scale(0.92); }
+
+        @keyframes border-beam-rotate {
+          from {
+            --angle: 0deg;
+          }
+          to {
+            --angle: 360deg;
+          }
         }
-        @keyframes installOrb3 {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.04; }
-          50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.06; }
+
+        .border-beam-wrapper {
+          position: relative;
+          padding: 1px;
+          background: transparent;
+          border-radius: 9999px;
+        }
+
+        .border-beam-wrapper::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: conic-gradient(
+            from var(--angle),
+            transparent 50%,
+            #f59e0b 65%,
+            #fbbf24 75%,
+            transparent 90%
+          );
+          animation: border-beam-rotate 4s linear infinite;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        .border-beam-wrapper::after {
+          content: "";
+          position: absolute;
+          inset: 1px;
+          border-radius: inherit;
+          background: #050507;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .border-beam-wrapper > * {
+          position: relative;
+          z-index: 2;
         }
       `}</style>
     </>

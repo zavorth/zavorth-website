@@ -27,6 +27,7 @@ export function Navbar() {
   const [isProductOpen, setIsProductOpen] = useState(false)
   const [isMobileProductOpen, setIsMobileProductOpen] = useState(false)
   const [entranceCompleted, setEntranceCompleted] = useState(false)
+  const [entranceTriggered, setEntranceTriggered] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const productTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -35,6 +36,7 @@ export function Navbar() {
       const scrolled = window.scrollY > 10
       setIsScrolled(scrolled)
       if (scrolled) {
+        setEntranceTriggered(true)
         setEntranceCompleted(true)
       }
 
@@ -52,13 +54,18 @@ export function Navbar() {
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
 
-    const timer = setTimeout(() => {
-      setEntranceCompleted(true)
-    }, 2200) // 1400ms delay + 800ms animation duration
+    const handleHeroTyped = () => {
+      setEntranceTriggered(true)
+      setTimeout(() => {
+        setEntranceCompleted(true)
+      }, 800)
+    }
+
+    window.addEventListener('hero-title-typed', handleHeroTyped)
 
     return () => {
       window.removeEventListener('scroll', handleScroll)
-      clearTimeout(timer)
+      window.removeEventListener('hero-title-typed', handleHeroTyped)
     }
   }, [])
 
@@ -113,10 +120,12 @@ export function Navbar() {
             transform: translate(-50%, 0);
           }
         }
-        .navbar-animate-entrance {
+        .navbar-initial-hidden {
           opacity: 0;
           transform: translate(-50%, -24px);
-          animation: navbarSlideDown 800ms cubic-bezier(0.16, 1, 0.3, 1) 1400ms forwards;
+        }
+        .navbar-animate-now {
+          animation: navbarSlideDown 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
       <div
@@ -127,7 +136,9 @@ export function Navbar() {
         } ${
           entranceCompleted
             ? 'opacity-100 translate-y-0'
-            : 'navbar-animate-entrance pointer-events-none'
+            : entranceTriggered
+              ? 'navbar-animate-now'
+              : 'navbar-initial-hidden pointer-events-none'
         }`}
         style={{
           transitionDuration: !isScrolled ? '800ms' : '500ms',

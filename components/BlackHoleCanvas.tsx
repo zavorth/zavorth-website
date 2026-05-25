@@ -583,10 +583,10 @@ export function BlackHoleCanvas() {
             float brightnessMultiplier = 1.0;
             
             if (doppler > 0.0) {
-                finalCol = mix(thermalCol, vec3(0.88, 0.98, 1.0) * entranceScale * scrollFade, doppler * 0.95);
+                finalCol = mix(thermalCol, c3 * entranceScale * scrollFade, doppler * 0.95);
                 brightnessMultiplier = 1.0 + doppler * 0.85;
             } else if (doppler < 0.0) {
-                finalCol = mix(thermalCol, vec3(0.92, 0.18, 0.45) * entranceScale * scrollFade, -doppler * 0.95);
+                finalCol = mix(thermalCol, c2 * entranceScale * scrollFade, -doppler * 0.95);
                 brightnessMultiplier = 1.0 + doppler * 0.45;
             }
             

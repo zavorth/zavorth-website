@@ -37,7 +37,7 @@ export function InstallSection() {
               className="pointer-events-none whitespace-nowrap text-center font-extrabold leading-[0.8] tracking-[-0.06em]"
               style={{
                 fontSize: 'clamp(3rem, 10vw, 8rem)',
-                background: 'linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, rgba(30,30,30,0) 80%)',
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.01) 90%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',

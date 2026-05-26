@@ -18,8 +18,12 @@ export function Hero() {
   const textLayerRef = useRef<HTMLDivElement>(null)
   const textParallaxRef = useRef<HTMLDivElement>(null)
   const scrollIndicatorRef = useRef<HTMLDivElement>(null)
+  const titleContainerRef = useRef<HTMLDivElement>(null)
 
   const [titleTyped, setTitleTyped] = useState(false)
+
+  const line1Text = "Uma IA que trabalha"
+  const line2Text = "com você — não por trás."
 
   // Direct DOM scroll tracking for buttery smooth performance (zero React renders)
   useEffect(() => {
@@ -95,47 +99,109 @@ export function Hero() {
     return () => cleanup()
   }, [])
 
-  // Simple, robust text slide up animation
+  // Dynamic Typing animation with neon lightsaber Keystroke Pulse
   useEffect(() => {
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setTitleTyped(true)
-        window.dispatchEvent(new CustomEvent('hero-title-typed'))
-      }
-    })
+    if (!titleContainerRef.current) return
 
-    // Canvas handles its own fade internally
+    const container = titleContainerRef.current
+    const cursorContainer = container.querySelector('.cursor-container') as HTMLDivElement
+    const bar = container.querySelector('.blinking-cursor') as HTMLDivElement
 
-    // Slide up Line 1
-    tl.fromTo('.hero-line-1',
-      { opacity: 0, y: 35 },
-      { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', delay: 0.1 }
-    )
+    const chars = Array.from(container.querySelectorAll('.char')) as HTMLSpanElement[]
+    if (chars.length === 0) return
 
-    // Slide up Line 2
-    tl.fromTo('.hero-line-2',
-      { opacity: 0, y: 35 },
-      { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' },
-      '-=0.6'
-    )
-
-    // Slide up CTA
-    tl.fromTo(ctaWrapRef.current,
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
-      '-=0.4'
-    )
-
-    // Fade in scroll indicator
-    tl.fromTo(scrollIndicatorRef.current,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.8, ease: 'power2.out' },
-      '-=0.3'
-    )
-
-    return () => {
-      tl.kill()
+    const updateBlinkingCursor = (x: number, y: number) => {
+      container.style.setProperty('--cursor-pos-x', `${x}px`)
+      container.style.setProperty('--cursor-pos-y', `${y}px`)
     }
+
+    // Set initial position of the cursor
+    const first = chars[0]
+    const charRect = first.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    updateBlinkingCursor(
+      charRect.left - containerRect.left,
+      charRect.top - containerRect.top
+    )
+
+    if (cursorContainer) {
+      cursorContainer.style.opacity = '1'
+    }
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setTitleTyped(true)
+          if (cursorContainer) {
+            cursorContainer.style.opacity = '0'
+          }
+          window.dispatchEvent(new CustomEvent('hero-title-typed'))
+        }
+      })
+
+      let cumulativeTime = 0.1 // small initial delay
+
+      chars.forEach((char, i) => {
+        const charText = char.textContent || ''
+        let charDelay = 0.018 // Base typing speed
+
+        if (charText === '\u00A0' || charText === ' ') {
+          charDelay = 0.035
+        } else if (/[.,?!;:-—]/.test(charText)) {
+          charDelay = 0.1 // Pause slightly at punctuation
+        }
+        
+        charDelay = charDelay * (0.9 + Math.random() * 0.2)
+
+        tl.to(char, {
+          opacity: 1,
+          duration: 0.01,
+          onStart: () => {
+            // Position cursor right after the newly typed character
+            const charRect = char.getBoundingClientRect()
+            const containerRect = container.getBoundingClientRect()
+            updateBlinkingCursor(
+              (charRect.left - containerRect.left) + charRect.width + 4,
+              charRect.top - containerRect.top
+            )
+
+            // Trigger neon lightsaber pulse on cursor bar
+            if (bar) {
+              gsap.fromTo(bar,
+                {
+                  boxShadow: '0 0 18px rgba(245, 158, 11, 1), 0 0 35px rgba(256, 256, 256, 1)',
+                  scale: 1.2
+                },
+                {
+                  boxShadow: '0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(236, 72, 153, 0.4), 0 0 24px rgba(59, 130, 246, 0.3)',
+                  scale: 1.0,
+                  duration: 0.08,
+                  ease: 'power2.out'
+                }
+              )
+            }
+          }
+        }, cumulativeTime)
+
+        cumulativeTime += charDelay
+      })
+
+      // Fade in the CTA and scroll indicator after typing finishes
+      tl.fromTo(ctaWrapRef.current,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
+        cumulativeTime
+      )
+
+      tl.fromTo(scrollIndicatorRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.8, ease: 'power2.out' },
+        cumulativeTime + 0.2
+      )
+
+    }, container)
+
+    return () => ctx.revert()
   }, [])
 
   const scrollToSection = useCallback((e: React.MouseEvent) => {
@@ -176,10 +242,44 @@ export function Hero() {
             ref={textParallaxRef}
             className="w-full flex flex-col items-center justify-center"
           >
-            {/* Title */}
+            {/* Title — animated with custom character typing cursor */}
             <h1 className="text-[36px] sm:text-[56px] lg:text-[72px] xl:text-[80px] font-black leading-[1.05] tracking-[-0.04em] text-white zavorth-display select-none pointer-events-none">
-              <div className="hero-line-1 opacity-0">Uma IA que trabalha</div>
-              <div className="hero-line-2 text-amber-500 opacity-0 mt-1">com você — não por trás.</div>
+              <div ref={titleContainerRef} className="typed-container select-none">
+                <div className="cursor-container">
+                  <div className="blinking-cursor" />
+                </div>
+                <span className="typed-content">
+                  {line1Text.split(' ').map((word, wordIdx) => (
+                    <span key={`w1-${wordIdx}`} className="inline-block relative">
+                      {word.split('').map((char, charIdx) => (
+                        <span
+                          key={`c1-${charIdx}`}
+                          className="char inline-block relative opacity-0"
+                        >
+                          {char}
+                        </span>
+                      ))}
+                      {wordIdx < line1Text.split(' ').length - 1 && '\u00A0'}
+                    </span>
+                  ))}
+                  <br />
+                  <span className="text-amber-500 drop-shadow-md">
+                    {line2Text.split(' ').map((word, wordIdx) => (
+                      <span key={`w2-${wordIdx}`} className="inline-block relative">
+                        {word.split('').map((char, charIdx) => (
+                          <span
+                            key={`c2-${charIdx}`}
+                            className="char inline-block relative opacity-0"
+                          >
+                            {char}
+                          </span>
+                        ))}
+                        {wordIdx < line2Text.split(' ').length - 1 && '\u00A0'}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              </div>
             </h1>
 
             {/* CTA */}

@@ -135,6 +135,7 @@ export function BlackHoleCanvas() {
     let isUserDragging = false
     let hasScrolled = false
     let activeScale = false
+    let elapsedTime = 0
     let timeTracker = 0
     let lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
     let currentPaletteIndex = 0
@@ -662,8 +663,9 @@ export function BlackHoleCanvas() {
     materialRef.current = shaderMat
 
     pointsObject = new ui(particleGeometry, shaderMat)
-    // Initialize points scale to (1,1,1) to avoid collapsed bounding box frustum culling bugs.
-    pointsObject.scale.set(1, 1, 1)
+    // Initialize points scale to (0,0,0) to expand from center on load (inspired by gemini-hero).
+    // Set frustumCulled to false to avoid collapsed bounding box frustum culling bugs.
+    pointsObject.scale.set(0, 0, 0)
     pointsObject.frustumCulled = false
     pointsObject.position.y = 35 
     pointsObject.visible = true
@@ -671,7 +673,6 @@ export function BlackHoleCanvas() {
 
     if (eventHorizonMesh) eventHorizonMesh.visible = true
     if (glowSprite) glowSprite.visible = true
-    activeScale = true
 
     const onPointerMove = (e: PointerEvent) => {
       // Raycasting target tracking is updated, but pointer attraction has been removed as per mouse movement tilt policy
@@ -838,6 +839,13 @@ export function BlackHoleCanvas() {
 
       if (delta > 0.1) delta = 0.1
       if (delta < 0) delta = 0
+
+      // Increment elapsed time tracker in the loop
+      elapsedTime += delta
+
+      if (elapsedTime > fl.entranceDelayMs / 1000) {
+        activeScale = true
+      }
       
       // Increment timeTracker only when activeScale is true (after the entrance delay)
       if (activeScale) {
@@ -927,6 +935,9 @@ export function BlackHoleCanvas() {
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
         pointsObject.rotation.set(rotX, rotY, rotZ)
+        if (activeScale) {
+          pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
+        }
       }
 
       // Update uniforms

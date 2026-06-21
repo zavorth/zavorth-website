@@ -1,13 +1,8 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
-import dynamic from 'next/dynamic'
+import React, { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-
-const BlackHoleCanvas = dynamic(
-  () => import('./BlackHoleCanvas').then((mod) => mod.BlackHoleCanvas),
-  { ssr: false }
-)
+import { BlackHoleCanvas } from './BlackHoleCanvas'
 
 const lineOne = 'A IA que trabalha no seu computador.'
 const lineTwo = 'Com voce decidindo o que importa.'
@@ -17,6 +12,12 @@ export function Hero() {
   const canvasWrapRef = useRef<HTMLDivElement>(null)
   const textLayerRef = useRef<HTMLDivElement>(null)
   const titleContainerRef = useRef<HTMLDivElement>(null)
+  const [canvasReady, setCanvasReady] = useState(false)
+
+  // Client-only mount flag for the black hole canvas
+  useEffect(() => {
+    setCanvasReady(true)
+  }, [])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -128,7 +129,14 @@ export function Hero() {
       elapsed += delay
     })
 
+    // Fallback: if GSAP timeline fails or is killed, show all text after 3s
+    const fallbackTimer = setTimeout(() => {
+      chars.forEach((c) => { c.style.opacity = '1' })
+      if (cursorContainer) cursorContainer.style.opacity = '0'
+    }, 3500)
+
     return () => {
+      clearTimeout(fallbackTimer)
       timeline.kill()
     }
   }, [])
@@ -154,7 +162,15 @@ export function Hero() {
           ref={canvasWrapRef}
           className="absolute inset-0 origin-center"
         >
-          <BlackHoleCanvas />
+          {canvasReady ? <BlackHoleCanvas /> : (
+            <div className="relative w-full h-full select-none">
+              <div
+                data-black-hole-placeholder
+                className="absolute inset-0 z-0 h-[120%] w-full pointer-events-auto -translate-y-[15%] sm:-translate-y-[18%]"
+                style={{ background: 'transparent' }}
+              />
+            </div>
+          )}
         </div>
 
         <div

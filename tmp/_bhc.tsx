@@ -16,45 +16,85 @@ const J = THREE.Vector3
 const Ei = THREE.ShaderMaterial
 const ui = THREE.Points
 const xa = THREE.Clock
+const va = THREE.Raycaster
+const q = THREE.Vector2
+const ei = THREE.Plane
 
 // Configuration defaults representing our Relativistic Black Hole
 const DEFAULTS = {
-  particleCount: 46000,
-  mobileParticleCount: 17000,
-  colorSaturation: 1.16,
+  particleCount: 38000,
+  colorSaturation: 1.1,
   scatterTop: 1.0,
   scatterBottom: 0.15,
-  shrinkSpeed: 10.0,
-  entranceDelayMs: 800,
+  shrinkSpeed: 12.0,
+  entranceDelayMs: 1000,
   entranceGrowSpeed: 0.8,
-  entranceLingerSeconds: 1.5,
+  entranceLingerSeconds: 1.0,
   eventHorizonRadius: 32.0,
   accretionDiskRadius: 140.0,
   gravityLensing: 1.45,
   dopplerIntensity: 1.3,
   orbitalSpeed: 0.9,
-  coreGreenColor: '#f59e0b', // Accretion disk amber
-  coreYellowColor: '#ffd166', // Core accretion gold
-  coreRedColor: '#ff6b00', // Redshifted warm gas
-  coreBlueColor: '#fff4dc', // White-hot warm core
+  coreGreenColor: '#8b5cf6', // Accretion Disk (Zavorth Deep Violet)
+  coreYellowColor: '#06b6d4', // Core Accretion Dust (Zavorth Cyan Glow)
+  coreRedColor: '#ec4899', // Redshifted Gas (Zavorth Electric Fuchsia)
+  coreBlueColor: '#e2f8ff', // Blueshifted Gas (Zavorth Ice White-Hot)
   autoReturnToFront: false,
   autoReturnForce: 0.15,
   autoReturnForceDecay: 0.02
 }
 
-function resolveParticleCount(baseCount: number, mobileCount: number, renderer: THREE.WebGLRenderer) {
-  if (typeof window === 'undefined') return baseCount
-  const narrowViewport = Math.min(window.innerWidth, window.innerHeight) < 760
-  const coarsePointer = typeof window.matchMedia === 'function'
-    && window.matchMedia('(pointer: coarse)').matches
-  const reducedMotion = typeof window.matchMedia === 'function'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const lowWebGlTier = !renderer.capabilities.isWebGL2 || renderer.capabilities.maxTextureSize < 4096
-
-  return narrowViewport || coarsePointer || reducedMotion || lowWebGlTier
-    ? Math.min(baseCount, mobileCount)
-    : baseCount
-}
+// Preset color palettes for click cycle
+const PALETTES = [
+  {
+    coreGreenColor: '#8b5cf6',
+    coreYellowColor: '#06b6d4',
+    coreRedColor: '#ec4899',
+    coreBlueColor: '#e2f8ff'
+  },
+  {
+    coreGreenColor: '#06b6d4',
+    coreYellowColor: '#ec4899',
+    coreRedColor: '#8b5cf6',
+    coreBlueColor: '#ffffff'
+  },
+  {
+    coreGreenColor: '#a78bfa',
+    coreYellowColor: '#22d3ee',
+    coreRedColor: '#f472b6',
+    coreBlueColor: '#e0f7fa'
+  },
+  {
+    coreGreenColor: '#00f0ff',
+    coreYellowColor: '#ff0055',
+    coreRedColor: '#8b5cf6',
+    coreBlueColor: '#fff5ea'
+  },
+  {
+    coreGreenColor: '#ff5500',
+    coreYellowColor: '#ffcc00',
+    coreRedColor: '#bb2200',
+    coreBlueColor: '#fff5ea'
+  },
+  {
+    coreGreenColor: '#ff3300',
+    coreYellowColor: '#ffff00',
+    coreRedColor: '#ff00ff',
+    coreBlueColor: '#ffaa00'
+  },
+  {
+    coreGreenColor: '#0011bb',
+    coreYellowColor: '#00ffcc',
+    coreRedColor: '#9900ff',
+    coreBlueColor: '#00ff55'
+  },
+  {
+    coreGreenColor: '#0c0024',
+    coreYellowColor: '#ff0055',
+    coreRedColor: '#ff3300',
+    coreBlueColor: '#00f0ff'
+  }
+]
 
 export function BlackHoleCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -82,56 +122,6 @@ export function BlackHoleCanvas() {
       return `#${f(0)}${f(8)}${f(4)}`
     }
 
-    function hueDistance(a: number, b: number) {
-      const diff = Math.abs(a - b) % 360
-      return Math.min(diff, 360 - diff)
-    }
-
-    function buildRandomPalette(previousHue: number) {
-      let baseHue = Math.floor(Math.random() * 360)
-      let attempts = 0
-      while (hueDistance(baseHue, previousHue) < 42 && attempts < 8) {
-        baseHue = Math.floor(Math.random() * 360)
-        attempts += 1
-      }
-
-      const harmonyType = Math.floor(Math.random() * 5)
-      const saturation = 76 + Math.floor(Math.random() * 20)
-      const baseLightness = 45 + Math.floor(Math.random() * 16)
-      const wideOffset = 128 + Math.floor(Math.random() * 78)
-      const softOffset = 24 + Math.floor(Math.random() * 44)
-
-      let h0 = baseHue
-      let h1 = (baseHue + softOffset) % 360
-      let h2 = (baseHue + wideOffset) % 360
-
-      if (harmonyType === 1) {
-        h1 = (baseHue + 118 + Math.floor(Math.random() * 22)) % 360
-        h2 = (baseHue + 238 + Math.floor(Math.random() * 22)) % 360
-      } else if (harmonyType === 2) {
-        h1 = (baseHue + 180 + Math.floor(Math.random() * 28) - 14 + 360) % 360
-        h2 = (baseHue + 54 + Math.floor(Math.random() * 64)) % 360
-      } else if (harmonyType === 3) {
-        h1 = (baseHue + 72 + Math.floor(Math.random() * 36)) % 360
-        h2 = (baseHue + 216 + Math.floor(Math.random() * 52)) % 360
-      } else if (harmonyType === 4) {
-        h1 = (baseHue - softOffset + 360) % 360
-        h2 = (baseHue + 150 + Math.floor(Math.random() * 74)) % 360
-      }
-
-      const h3 = (baseHue + Math.floor(Math.random() * 90) - 45 + 360) % 360
-
-      return {
-        baseHue,
-        colors: {
-          coreGreenColor: hslToHex(h0, saturation, baseLightness),
-          coreYellowColor: hslToHex(h1, Math.min(96, saturation + 8), Math.min(88, baseLightness + 12)),
-          coreRedColor: hslToHex(h2, Math.max(58, saturation - 10), Math.max(30, baseLightness - 9)),
-          coreBlueColor: hslToHex(h3, 22 + Math.floor(Math.random() * 26), 90 + Math.floor(Math.random() * 8))
-        }
-      }
-    }
-
     // Global simulation variables
     let scene: THREE.Scene,
       camera: THREE.PerspectiveCamera,
@@ -148,8 +138,7 @@ export function BlackHoleCanvas() {
     let elapsedTime = 0
     let timeTracker = 0
     let lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    let previousPaletteHue = 38
-    let colorWaveProgress = 2.0
+    let currentPaletteIndex = 0
     let waveRadius = -999.0
 
     // Physically opaque event horizon mesh
@@ -171,7 +160,7 @@ export function BlackHoleCanvas() {
         failIfMajorPerformanceCaveat: false
       })
     } catch (err) {
-      console.warn('WebGL context creation failed — black hole disabled:', err)
+      console.warn('WebGL context creation failed â€” black hole disabled:', err)
       return
     }
     const initWidth = container.clientWidth || window.innerWidth
@@ -189,7 +178,6 @@ export function BlackHoleCanvas() {
     renderer.setSize(initWidth, initHeight, false)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     container.appendChild(renderer.domElement)
-    fl.particleCount = resolveParticleCount(fl.particleCount, fl.mobileParticleCount, renderer)
 
     // 3. Camera
     camera = new $i(75, initWidth / initHeight, 0.1, 2000)
@@ -230,10 +218,10 @@ export function BlackHoleCanvas() {
     const gradient = gctx.createRadialGradient(256, 256, 60, 256, 256, 256)
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)')     
     gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.0)')   
-    gradient.addColorStop(0.38, 'rgba(255, 246, 224, 0.26)')
-    gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.42)')
-    gradient.addColorStop(0.62, 'rgba(255, 255, 255, 0.18)')
-    gradient.addColorStop(0.78, 'rgba(245, 158, 11, 0.12)')
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.25)')   
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)')   
+    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.2)')     
+    gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0.1)')   
     gradient.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)')    
     gctx.fillStyle = gradient
     gctx.fillRect(0, 0, 512, 512)
@@ -243,41 +231,14 @@ export function BlackHoleCanvas() {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      opacity: 0.9,
+      opacity: 0.85,
       color: new THREE.Color(fl.coreGreenColor)
     })
     const glowSprite = new THREE.Sprite(glowSpriteMat)
-    glowSprite.scale.set(fl.eventHorizonRadius * 6.4, fl.eventHorizonRadius * 6.4, 1)
+    glowSprite.scale.set(fl.eventHorizonRadius * 5.5, fl.eventHorizonRadius * 5.5, 1)
     glowSprite.position.y = 35
     glowSprite.visible = false
     scene.add(glowSprite)
-
-    const coronaCanvas = document.createElement('canvas')
-    coronaCanvas.width = 512
-    coronaCanvas.height = 512
-    const coronaCtx = coronaCanvas.getContext('2d')!
-    const coronaGradient = coronaCtx.createRadialGradient(256, 256, 38, 256, 256, 256)
-    coronaGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
-    coronaGradient.addColorStop(0.22, 'rgba(255, 244, 220, 0.06)')
-    coronaGradient.addColorStop(0.42, 'rgba(245, 158, 11, 0.2)')
-    coronaGradient.addColorStop(0.66, 'rgba(180, 83, 9, 0.11)')
-    coronaGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
-    coronaCtx.fillStyle = coronaGradient
-    coronaCtx.fillRect(0, 0, 512, 512)
-    const coronaTexture = new THREE.CanvasTexture(coronaCanvas)
-    const coronaSpriteMat = new THREE.SpriteMaterial({
-      map: coronaTexture,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      opacity: 0.24,
-      color: new THREE.Color(fl.coreYellowColor)
-    })
-    const coronaSprite = new THREE.Sprite(coronaSpriteMat)
-    coronaSprite.scale.set(fl.eventHorizonRadius * 10.5, fl.eventHorizonRadius * 10.5, 1)
-    coronaSprite.position.y = 35
-    coronaSprite.visible = false
-    scene.add(coronaSprite)
 
     // 6. Particles definition
     let u = { count: fl.particleCount }
@@ -287,8 +248,8 @@ export function BlackHoleCanvas() {
     const staticRandoms = new Float32Array(u.count * 3) // x: sizeScale, y: radScatter, z: depthSeed
     const staticIndices = new Float32Array(u.count) 
 
-    let photonRingCount = Math.floor(u.count * 0.18)
-    let bgCount = Math.floor(u.count * 0.16)
+    let photonRingCount = Math.floor(u.count * 0.16)
+    let bgCount = Math.floor(u.count * 0.12)
     let diskStartIdx = photonRingCount + bgCount
 
     for (let e = 0; e < u.count; e++) {
@@ -303,13 +264,13 @@ export function BlackHoleCanvas() {
         thetaVal = Math.random() * Math.PI * 2
         rVal = fl.eventHorizonRadius * 1.005 + Math.random() * 2.5
         zVal = (Math.random() - 0.5) * 0.2
-        sizeVal = 0.72 + Math.random() * 0.86
+        sizeVal = 0.6 + Math.random() * 0.8
       } else if (e < diskStartIdx) {
         // Background stars
-        rVal = 165.0 + Math.random() * 190.0
+        rVal = 180.0 + Math.random() * 150.0
         thetaVal = Math.random() * Math.PI * 2
         zVal = Math.acos(2.0 * Math.random() - 1.0)
-        sizeVal = 0.22 + Math.random() * 0.7
+        sizeVal = 0.25 + Math.random() * 0.5
       } else {
         // Accretion Disk - continuous circular distribution (no spiral arms!)
         let normRadius = Math.pow(Math.random(), 1.8)
@@ -319,9 +280,9 @@ export function BlackHoleCanvas() {
         thetaVal = Math.random() * Math.PI * 2
         
         // Flared thickness: disk is thin near the horizon and gets thicker at the outer edge
-        zVal = (Math.random() + Math.random() - 1.0) * (0.65 + normRadius * 7.2)
+        zVal = (Math.random() + Math.random() - 1.0) * (0.8 + normRadius * 6.0)
         
-        sizeVal = 0.58 + Math.random() * 1.05
+        sizeVal = 0.5 + Math.random() * 1.0
       }
 
       staticPositions[e * 3] = rVal
@@ -371,10 +332,8 @@ export function BlackHoleCanvas() {
       uNewColors: { value: [targetColors[0], targetColors[1], targetColors[2], targetColors[3]] },
       uWaveRadius: { value: -999.0 },
       uWaveWidth: { value: 45.0 },
-      uColorWaveProgress: { value: colorWaveProgress },
-      uColorWaveSoftness: { value: 0.085 },
-      uParticleCount: { value: Number(u.count) },
-      uScrollShrinkSpeed: { value: fl.shrinkSpeed }
+      uWaveOrigin: { value: new J(0, 0, 0) },
+      uParticleCount: { value: Number(u.count) }
     }
 
     // Custom depth shader - ALL physics, filaments, waves, and VIEW-SPACE lensing executed on the GPU!
@@ -392,10 +351,8 @@ export function BlackHoleCanvas() {
         uniform vec3 uNewColors[4];
         uniform float uWaveRadius;
         uniform float uWaveWidth;
-        uniform float uColorWaveProgress;
-        uniform float uColorWaveSoftness;
+        uniform vec3 uWaveOrigin;
         uniform float uParticleCount;
-        uniform float uScrollShrinkSpeed;
 
         attribute vec3 aRandoms; // x: sizeScale, y: radScatter, z: depthSeed
         attribute float aIndex;
@@ -428,8 +385,8 @@ export function BlackHoleCanvas() {
             float py = 0.0;
             float pz = 0.0;
             
-            float shrinkRatio = min(1.0, uScrollProgress * uScrollShrinkSpeed);
-            float P = 1.0 - (1.0 - 0.15) * shrinkRatio;
+            float shrinkRatio = min(1.0, uScrollProgress * 2.0); 
+            float P = 1.0 - (1.0 - 0.15) * shrinkRatio; 
             
             float inclination = 0.28 * P;
             float cosIncl = cos(inclination);
@@ -572,20 +529,14 @@ export function BlackHoleCanvas() {
                 }
             }
 
-            // Elegant entrance fade on load. Keep a faint whole-object floor once revealed
-            // so the black hole never appears as a collapsed vertical sliver.
-            float entranceScale = smoothstep(0.0, 1.2, max(uTime, 0.18));
+            // Elegant entrance fade on load (no position scaling to avoid clumping)
+            float entranceScale = smoothstep(0.0, 2.5, uTime);
             
-            // Whole-object color traversal. The click starts one global sweep, but each particle
-            // has a stable coordinate so the new palette appears to travel through the full shape.
-            float radialNorm = clamp((baseRadius - eventHorizonRadius) / (accretionDiskRadius + 150.0 - eventHorizonRadius), 0.0, 1.0);
-            float angularNorm = (angleOffset + PI) / (2.0 * PI);
-            float indexNorm = particleIdx / max(uParticleCount - 1.0, 1.0);
-            float layerOffset = isPhotonRing * 0.03 + isBg * 0.14;
-            float colorSweepCoord = clamp(radialNorm * 0.68 + angularNorm * 0.18 + indexNorm * 0.08 + layerOffset, 0.0, 1.0);
-            float blendT = 1.0;
-            if (uColorWaveProgress < 1.5) {
-                blendT = smoothstep(colorSweepCoord - uColorWaveSoftness, colorSweepCoord + uColorWaveSoftness, uColorWaveProgress);
+            // Compute mouse click color transition wave
+            float dist = length(vec3(px, py, pz) - uWaveOrigin);
+            float blendT = 0.0;
+            if (uWaveRadius >= 0.0) {
+                blendT = clamp((uWaveRadius - dist) / uWaveWidth + 0.5, 0.0, 1.0);
             }
 
             vec3 c0 = mix(uColors[0], uNewColors[0], blendT);
@@ -633,7 +584,7 @@ export function BlackHoleCanvas() {
             
             // Soft size fade-in on load, and soft fade-out on scroll
             float sizeFlash = smoothstep(0.0, 1.0, entranceScale);
-            float scrollFade = 1.0 - uScrollProgress * 0.62;
+            float scrollFade = 1.0 - uScrollProgress * 0.85;
             
             float currentSize = finalSize * sizeFlash * scrollFade * uPixelRatio * (245.0 / -mvPosition.z);
             gl_PointSize = max(0.5, currentSize);
@@ -670,8 +621,7 @@ export function BlackHoleCanvas() {
             // Click wave boost
             float waveGlowBoost = 0.0;
             if (uWaveRadius >= 0.0) {
-                float centerDist = length(vec3(px, py, pz));
-                float wDist = abs(centerDist - uWaveRadius);
+                float wDist = abs(dist - uWaveRadius);
                 if (wDist < uWaveWidth) {
                     waveGlowBoost = 1.0 - wDist / uWaveWidth;
                 }
@@ -699,10 +649,10 @@ export function BlackHoleCanvas() {
             
             float alpha = (glow + core) * borderFade;
             // Dissolve opacity on scroll
-            alpha *= (1.0 - uScrollProgress * 0.62);
+            alpha *= (1.0 - uScrollProgress * 0.85);
             
-            vec3 boostedColor = vColor * 1.7 + vec3(0.12, 0.055, 0.01);
-            gl_FragColor = vec4(boostedColor, alpha * 0.96);
+            vec3 boostedColor = vColor * 1.35 + vec3(0.04, 0.01, 0.06);
+            gl_FragColor = vec4(boostedColor, alpha * 0.9);
         }
       `,
       transparent: true,
@@ -713,8 +663,9 @@ export function BlackHoleCanvas() {
     materialRef.current = shaderMat
 
     pointsObject = new ui(particleGeometry, shaderMat)
+    // Initialize points scale to (0,0,0) to expand from center on load (inspired by gemini-hero).
     // Set frustumCulled to false to avoid collapsed bounding box frustum culling bugs.
-    pointsObject.scale.set(0.32, 0.32, 0.32)
+    pointsObject.scale.set(0, 0, 0)
     pointsObject.frustumCulled = false
     pointsObject.position.y = 35 
     pointsObject.visible = true
@@ -722,7 +673,6 @@ export function BlackHoleCanvas() {
 
     if (eventHorizonMesh) eventHorizonMesh.visible = true
     if (glowSprite) glowSprite.visible = true
-    if (coronaSprite) coronaSprite.visible = true
 
     const onPointerMove = (e: PointerEvent) => {
       // Raycasting target tracking is updated, but pointer attraction has been removed as per mouse movement tilt policy
@@ -753,16 +703,69 @@ export function BlackHoleCanvas() {
         }
       }
 
-      // Reset and trigger a centered glow plus the full-object color sweep.
+      // Reset and trigger propagating wave
       waveRadius = 0.0
-      colorWaveProgress = -0.08
 
-      const nextPalette = buildRandomPalette(previousPaletteHue)
-      previousPaletteHue = nextPalette.baseHue
-      fl = {
-        ...fl,
-        ...nextPalette.colors
+      // Raycast click position onto the accretion disk plane to set uWaveOrigin
+      const rect = renderer.domElement.getBoundingClientRect()
+      const mX = ((evt.clientX - rect.left) / rect.width) * 2 - 1
+      const mY = -((evt.clientY - rect.top) / rect.height) * 2 + 1
+      
+      const clickMouse = new q(mX, mY)
+      const raycaster = new va()
+      raycaster.setFromCamera(clickMouse, camera)
+      
+      const targetIntersection = new J()
+      const currentInclination = 0.28 * (1.0 - Math.min(1.0, scrollRatioCurrent * 2.0))
+      const cosI = Math.cos(currentInclination)
+      const sinI = Math.sin(currentInclination)
+      
+      // Accretion disk plane: normal is normalWorld (0, cosI, -sinI)
+      // Since the center of the black hole is at (0, centerVec.y, 0)
+      const normalWorld = new J(0, cosI, -sinI)
+      const diskPlane = new ei(normalWorld, -normalWorld.dot(new J(0, centerVec.y, 0)))
+      
+      if (raycaster.ray.intersectPlane(diskPlane, targetIntersection)) {
+        // Convert to local coordinates relative to the black hole's local center (0, centerVec.y, 0)
+        const localClick = targetIntersection.clone().sub(new J(0, centerVec.y, 0))
+        // Rotate the click position inversely by the pointsObject's rotation to align it in local particle space!
+        localClick.applyEuler(new THREE.Euler(-pointsObject.rotation.x, -pointsObject.rotation.y, -pointsObject.rotation.z))
+        uniforms.uWaveOrigin.value.copy(localClick)
+      } else {
+        uniforms.uWaveOrigin.value.set(0, 0, 0)
       }
+
+      // Generate a semantic random cosmic color palette
+      // Harmonious options: 0 = Analogous, 1 = Split-Complementary, 2 = Triadic
+      const harmonyType = Math.floor(Math.random() * 3)
+      const baseHue = Math.floor(Math.random() * 360)
+      const saturation = 90 + Math.floor(Math.random() * 10) // 90-100%
+      const baseLightness = 45 + Math.floor(Math.random() * 15) // 45-60%
+
+      let h0 = baseHue
+      let h1 = baseHue
+      let h2 = baseHue
+      let h3 = baseHue // White-hot core tint
+
+      if (harmonyType === 0) {
+        // Analogous (harmonious single gas cloud)
+        h1 = (baseHue + 30) % 360
+        h2 = (baseHue - 30 + 360) % 360
+      } else if (harmonyType === 1) {
+        // Split-Complementary (energetic contrast)
+        h1 = (baseHue + 30) % 360
+        h2 = (baseHue + 150) % 360
+      } else {
+        // Triadic (vibrant multi-element nebula)
+        h1 = (baseHue + 120) % 360
+        h2 = (baseHue + 240) % 360
+      }
+
+      fl.coreGreenColor = hslToHex(h0, saturation, baseLightness)
+      fl.coreYellowColor = hslToHex(h1, saturation, baseLightness + 5)
+      fl.coreRedColor = hslToHex(h2, saturation - 10, baseLightness - 5)
+      // Icy white with a soft tint of the base hue
+      fl.coreBlueColor = hslToHex(h3, 30, 95)
 
       const parseCol = (col: string) =>
         col.startsWith('#') || col.startsWith('rgb') ? col : '#' + col
@@ -815,11 +818,7 @@ export function BlackHoleCanvas() {
     const animate = () => {
       const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
       const height = typeof window !== 'undefined' ? window.innerHeight : 800
-      const heroSection = container.closest('#hero') as HTMLElement | null
-      const heroRect = heroSection?.getBoundingClientRect()
-      const isOffscreen = heroRect
-        ? heroRect.bottom < -height * 0.08 || heroRect.top > height * 1.12
-        : scrollY > height * 1.5
+      const isOffscreen = scrollY > height * 1.5
 
       if (isOffscreen) {
         wasOffscreen = true
@@ -853,37 +852,28 @@ export function BlackHoleCanvas() {
         timeTracker += delta
       }
 
-      // Update color traversal independently from the glow pulse. The palette only commits
-      // after the global sweep has crossed every particle coordinate.
-      if (colorWaveProgress < 1.5) {
-        colorWaveProgress += delta * 0.68
-        if (colorWaveProgress >= 1.16) {
-          colorWaveProgress = 2.0
+      if (glowSpriteMat) {
+        // Smoothly transition glow halo color to the target color
+        glowSpriteMat.color.lerp(targetColors[0], delta * 4.0)
+      }
+
+      // Update wave propagation
+      if (waveRadius >= 0.0) {
+        waveRadius += delta * 550.0 // propagate outwards
+        if (waveRadius > 500.0) {
+          waveRadius = -999.0
+          // Finalize palette copy to base colors
           for (let k = 0; k < 4; k++) {
             b[k].copy(targetColors[k])
           }
         }
       } else {
+        // No active wave, base colors can gently lerp
         for (let k = 0; k < 4; k++) {
           if (b[k] && targetColors[k]) {
             b[k].lerp(targetColors[k], delta * 4.0)
           }
         }
-      }
-
-      if (waveRadius >= 0.0) {
-        waveRadius += delta * 750.0
-        if (waveRadius > 1500.0) {
-          waveRadius = -999.0
-        }
-      }
-
-      if (glowSpriteMat && b[0] && targetColors[0] && targetColors[1]) {
-        const haloBlend = Math.min(1, Math.max(0, colorWaveProgress))
-        const haloWaveColor = b[0].clone().lerp(targetColors[0], haloBlend)
-        haloWaveColor.lerp(targetColors[1], 0.18 + 0.08 * Math.sin(timeTracker * 1.7))
-        glowSpriteMat.color.copy(haloWaveColor)
-        coronaSpriteMat.color.copy(haloWaveColor)
       }
 
       // Force Three.js to re-upload uniforms to GPU for smooth color transitions
@@ -894,23 +884,16 @@ export function BlackHoleCanvas() {
         uniforms.uNewColors.value = [targetColors[0], targetColors[1], targetColors[2], targetColors[3]]
       }
       uniforms.uWaveRadius.value = waveRadius
-      uniforms.uColorWaveProgress.value = colorWaveProgress
 
-      // Smooth scroll tracking directly in RAF loop, using the hero section like the reference animation.
-      let targetProgress = 0
-      if (heroRect && heroRect.top < 0) {
-        const scrollableHeight = Math.max(1, heroRect.height)
-        targetProgress = Math.min(1.0, Math.max(0.0, -heroRect.top / scrollableHeight))
-      } else if (!heroRect) {
-        const scrollableHeight = height * 1.65
-        targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
-      }
+      // Smooth scroll tracking directly in RAF loop
+      const scrollableHeight = height * 0.3
+      let targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
 
-      // Smooth scroll interpolation — responsive but smooth
+      // Smooth scroll interpolation (damping: 0.15 scroll down, 0.25 scroll up)
       const damping = targetProgress < scrollRatioCurrent ? 0.25 : 0.15
       scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * damping
 
-      // Dynamic, constant 3D tilting wobble and rotation.
+      // Dynamic, constant 3D tilting wobble and rotation (similar to gemini-hero)
       // Decreases as user scrolls down (P gets smaller)
       const shrinkRatio = Math.min(1.0, scrollRatioCurrent * fl.shrinkSpeed)
       const P = 1.0 - (1.0 - 0.15) * shrinkRatio
@@ -925,10 +908,7 @@ export function BlackHoleCanvas() {
       centerVec.y = currentY
 
       // Calculate entrance scale for event horizon mesh and halo glow
-      // Grows smoothly from zero over 2.5 seconds for a beautiful entrance animation
-      let entranceScale = activeScale
-        ? Math.min(1.0, timeTracker / 2.5)
-        : 0.0
+      let entranceScale = Math.min(1.0, timeTracker / 2.5)
 
       if (eventHorizonMesh) {
         let targetScale = (1.0 - scrollRatioCurrent * 0.3) * entranceScale
@@ -940,29 +920,16 @@ export function BlackHoleCanvas() {
 
       if (glowSprite && glowSpriteMat && b[0]) {
         let glowBreathe = Math.sin(timeTracker * 1.5) * 0.12 + 0.88
-        let glowOpacity = (0.52 + 0.12 * Math.sin(timeTracker * 2.2)) * (1.0 - scrollRatioCurrent * 0.62) * entranceScale
-        let currentScrollScale = (1.08 - scrollRatioCurrent * 0.6) * entranceScale
+        let glowOpacity = (0.45 + 0.1 * Math.sin(timeTracker * 2.2)) * (1.0 - scrollRatioCurrent * 0.8) * entranceScale
+        let currentScrollScale = (1.0 - scrollRatioCurrent * 0.6) * entranceScale
         glowSprite.scale.set(
-          fl.eventHorizonRadius * 6.4 * glowBreathe * currentScrollScale,
-          fl.eventHorizonRadius * 6.4 * glowBreathe * currentScrollScale,
+          fl.eventHorizonRadius * 5.5 * glowBreathe * currentScrollScale,
+          fl.eventHorizonRadius * 5.5 * glowBreathe * currentScrollScale,
           1
         )
         glowSpriteMat.opacity = glowOpacity
         glowSprite.position.set(0, currentY, 0)
         glowSpriteMat.rotation = rotY
-      }
-
-      if (coronaSprite && coronaSpriteMat) {
-        const coronaBreathe = Math.sin(timeTracker * 0.85) * 0.08 + 0.94
-        const coronaScale = (1.08 - scrollRatioCurrent * 0.58) * entranceScale * coronaBreathe
-        coronaSprite.scale.set(
-          fl.eventHorizonRadius * 10.5 * coronaScale,
-          fl.eventHorizonRadius * 10.5 * coronaScale,
-          1
-        )
-        coronaSpriteMat.opacity = (0.18 + 0.05 * Math.sin(timeTracker * 1.35)) * (1.0 - scrollRatioCurrent * 0.68) * entranceScale
-        coronaSprite.position.set(0, currentY, 0)
-        coronaSpriteMat.rotation = -rotY * 0.6
       }
 
       if (pointsObject) {
@@ -1037,8 +1004,6 @@ export function BlackHoleCanvas() {
 
       glowTexture.dispose()
       glowSpriteMat.dispose()
-      coronaTexture.dispose()
-      coronaSpriteMat.dispose()
       particleGeometry.dispose()
       shaderMat.dispose()
 
@@ -1056,7 +1021,6 @@ export function BlackHoleCanvas() {
     <div className="relative w-full h-full select-none">
       <div
         ref={containerRef}
-        data-black-hole-canvas
         className="absolute inset-0 z-0 h-[120%] w-full pointer-events-auto -translate-y-[15%] sm:-translate-y-[18%]"
         style={{ background: 'transparent' }}
       />

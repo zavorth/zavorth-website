@@ -37,19 +37,20 @@ export function Hero() {
 
     const update = () => {
       if (!active) return
-      const damping = targetProgress > currentProgress ? 0.22 : 0.3
+      const damping = targetProgress > currentProgress ? 0.18 : 0.28
       currentProgress += (targetProgress - currentProgress) * damping
 
       if (textLayer) {
-        const textOpacity = Math.max(0, 1 - currentProgress * 1.45)
+        const textOpacity = Math.max(0, 1 - currentProgress * 1.5)
         textLayer.style.opacity = `${textOpacity}`
-        textLayer.style.transform = `translateY(${currentProgress * -18}px) scale(${1 - currentProgress * 0.36})`
+        textLayer.style.transform = `translateY(${currentProgress * -40}px) scale(${1 - currentProgress * 0.4})`
       }
 
       if (canvasWrap) {
-        const exitProgress = Math.max(0, (currentProgress - 0.78) / 0.22)
-        canvasWrap.style.opacity = `${Math.max(0.28, 1 - exitProgress)}`
-        canvasWrap.style.transform = `scale(${1 - currentProgress * 0.06})`
+        // Smooth, gradual fade starting at 30% scroll progress
+        const canvasOpacity = Math.max(0, 1 - currentProgress * 1.2)
+        canvasWrap.style.opacity = `${canvasOpacity}`
+        canvasWrap.style.transform = `scale(${1 - currentProgress * 0.15})`
       }
 
       requestAnimationFrame(update)

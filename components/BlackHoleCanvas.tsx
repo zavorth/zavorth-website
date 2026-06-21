@@ -25,9 +25,9 @@ const DEFAULTS = {
   scatterTop: 1.0,
   scatterBottom: 0.15,
   shrinkSpeed: 10.0,
-  entranceDelayMs: 800,
+  entranceDelayMs: 600,
   entranceGrowSpeed: 0.8,
-  entranceLingerSeconds: 1.5,
+  entranceLingerSeconds: 1.2,
   eventHorizonRadius: 32.0,
   accretionDiskRadius: 140.0,
   gravityLensing: 1.45,
@@ -843,14 +843,12 @@ export function BlackHoleCanvas() {
 
       // Increment elapsed time tracker in the loop
       elapsedTime += delta
+      
+      // timeTracker always increments — the entrance scale grows smoothly from frame 0
+      timeTracker += delta
 
       if (elapsedTime > fl.entranceDelayMs / 1000) {
         activeScale = true
-      }
-      
-      // Increment timeTracker only when activeScale is true (after the entrance delay)
-      if (activeScale) {
-        timeTracker += delta
       }
 
       // Update color traversal independently from the glow pulse. The palette only commits
@@ -926,9 +924,7 @@ export function BlackHoleCanvas() {
 
       // Calculate entrance scale for event horizon mesh and halo glow
       // Grows smoothly from zero over 2.5 seconds for a beautiful entrance animation
-      let entranceScale = activeScale
-        ? Math.min(1.0, timeTracker / 2.5)
-        : 0.0
+      let entranceScale = Math.min(1.0, timeTracker / 2.5)
 
       if (eventHorizonMesh) {
         let targetScale = (1.0 - scrollRatioCurrent * 0.3) * entranceScale

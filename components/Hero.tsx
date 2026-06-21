@@ -72,7 +72,10 @@ export function Hero() {
     const cursorContainer = container.querySelector('.cursor-container') as HTMLDivElement | null
     const bar = container.querySelector('.blinking-cursor') as HTMLDivElement | null
 
-    if (chars.length === 0) return
+    if (chars.length === 0 || !cursorContainer || !bar) return
+
+    let cancelled = false
+    let timeouts: ReturnType<typeof setTimeout>[] = []
 
     const updateTypingCursor = (target: HTMLSpanElement, side: 'before' | 'after' = 'after') => {
       if (!cursorContainer || !bar) return
@@ -87,27 +90,28 @@ export function Hero() {
       bar.style.height = `${cursorHeight}px`
     }
 
-    updateTypingCursor(chars[0], 'before')
-    if (cursorContainer) cursorContainer.style.opacity = '1'
+    // Wait for layout to stabilize before positioning cursor
+    const startTyping = () => {
+      if (cancelled) return
 
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        if (cursorContainer) cursorContainer.style.opacity = '0'
-        window.dispatchEvent(new CustomEvent('hero-title-typed'))
-      },
-    })
+      // Show cursor at start position
+      cursorContainer.style.opacity = '1'
+      updateTypingCursor(chars[0], 'before')
 
-    let elapsed = 0.3
-    chars.forEach((char) => {
-      const value = char.textContent || ''
-      let delay = 0.082
-      if (/[.,?!;:]/.test(value)) delay = 0.28
-      delay = delay * (0.9 + Math.random() * 0.16)
+      let elapsed = 300 // ms
 
-      timeline.call(() => {
-        char.style.opacity = '1'
-        updateTypingCursor(char, 'after')
-        if (bar) {
+      chars.forEach((char, index) => {
+        const value = char.textContent || ''
+        let delay = 82
+        if (/[.,?!;:]/.test(value)) delay = 280
+        delay = Math.round(delay * (0.9 + Math.random() * 0.16))
+
+        const timeout = setTimeout(() => {
+          if (cancelled) return
+          char.style.opacity = '1'
+          updateTypingCursor(char, 'after')
+
+          // Pulse cursor with GSAP
           gsap.fromTo(
             bar,
             {
@@ -123,21 +127,30 @@ export function Hero() {
               ease: 'power2.out',
             }
           )
-        }
-      }, undefined, elapsed)
+        }, elapsed)
+        timeouts.push(timeout)
 
-      elapsed += delay
+        elapsed += delay
+      })
+
+      // Hide cursor after typing completes
+      const completeTimeout = setTimeout(() => {
+        if (cancelled) return
+        cursorContainer.style.opacity = '0'
+        window.dispatchEvent(new CustomEvent('hero-title-typed'))
+      }, elapsed + 200)
+      timeouts.push(completeTimeout)
+    }
+
+    // Start after layout is ready
+    const raf = requestAnimationFrame(() => {
+      startTyping()
     })
 
-    // Fallback: if GSAP timeline fails or is killed, show all text after 3s
-    const fallbackTimer = setTimeout(() => {
-      chars.forEach((c) => { c.style.opacity = '1' })
-      if (cursorContainer) cursorContainer.style.opacity = '0'
-    }, 3500)
-
     return () => {
-      clearTimeout(fallbackTimer)
-      timeline.kill()
+      cancelled = true
+      cancelAnimationFrame(raf)
+      timeouts.forEach(clearTimeout)
     }
   }, [])
 

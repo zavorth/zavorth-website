@@ -1,9 +1,15 @@
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ─── Design Tokens ─── */
 :root {
+  --font-sans:              'Satoshi', sans-serif;
+  --font-display:           'Clash Display', sans-serif;
+  --font-mono:              'Geist Mono', monospace;
+
   --color-surface:          #030303;
   --color-surface-deep:     #050505;
   --color-surface-green:    #060807;
@@ -49,45 +55,18 @@
 
 html {
   scroll-behavior: smooth;
-  background: var(--color-surface);
+  background: #000000;
 }
 
 body {
   min-width: 320px;
   overflow-x: hidden;
-  background: var(--color-surface);
+  background: #000000;
   color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Ambient glow — futuristic indigo/cyan/violet aurora */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 60% 40% at 50% -10%, rgba(136, 0, 255, 0.14), transparent 45rem),
-    radial-gradient(ellipse 50% 30% at 15% 10%, rgba(0, 240, 255, 0.08), transparent 35rem),
-    radial-gradient(ellipse 45% 25% at 85% 15%, rgba(255, 0, 85, 0.05), transparent 30rem);
-  opacity: 0.95;
-}
-
-/* Noise / grain overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.028;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
 }
 
 /* ─── Links & Interactions ─── */
@@ -102,6 +81,30 @@ button, a {
 
 main, section, footer, nav {
   position: relative;
+}
+
+main {
+  z-index: 1;
+}
+
+.landing-surface {
+  background:
+    linear-gradient(180deg, rgba(5, 5, 5, 0.66), rgba(5, 5, 5, 0.5)),
+    radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.035), transparent 34rem);
+  backdrop-filter: blur(0.5px);
+}
+
+.landing-surface-soft {
+  background:
+    linear-gradient(180deg, rgba(8, 8, 8, 0.72), rgba(4, 4, 4, 0.54)),
+    radial-gradient(circle at 85% 18%, rgba(245, 158, 11, 0.045), transparent 28rem);
+  backdrop-filter: blur(0.5px);
+}
+
+.landing-final-surface {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(245, 158, 11, 0.085), transparent 32rem),
+    linear-gradient(180deg, rgba(2, 2, 2, 0.72), #010101 72%);
 }
 
 /* ─── Custom Scrollbar ─── */
@@ -191,6 +194,31 @@ main, section, footer, nav {
   border-radius: 999px;
   background: var(--color-amber);
   box-shadow: 0 0 14px var(--color-amber-glow);
+}
+
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.52rem;
+  padding: 0.38rem 0.68rem;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.section-kicker::before {
+  content: '';
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.95);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.28);
 }
 
 /* ─── Section Title ─── */
@@ -555,7 +583,7 @@ main, section, footer, nav {
   background: rgba(10, 10, 10, 0.65);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: 
+  box-shadow:
     0 4px 30px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
@@ -565,7 +593,7 @@ main, section, footer, nav {
   background: rgba(13, 13, 13, 0.7);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  box-shadow: 
+  box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -979,14 +1007,14 @@ main, section, footer, nav {
   border-radius: 99px;
   background: linear-gradient(180deg, #F59E0B, #EC4899, #3B82F6, #10B981, #F59E0B);
   background-size: 100% 400%;
-  box-shadow: 
+  box-shadow:
     0 0 8px rgba(245, 158, 11, 0.6),
     0 0 16px rgba(236, 72, 153, 0.4),
     0 0 24px rgba(59, 130, 246, 0.3);
   display: inline-block;
   vertical-align: middle;
   margin-top: -0.1em;
-  animation: 
+  animation:
     ag-blink .5s infinite,
     ag-cursor-flow 3s linear infinite;
 }
@@ -1109,7 +1137,7 @@ main, section, footer, nav {
   border: 1.5px solid rgba(255, 255, 255, 0.25);
   border-radius: 99px;
   position: relative;
-  box-shadow: 
+  box-shadow:
     0 0 10px rgba(255, 255, 255, 0.05),
     inset 0 0 6px rgba(255, 255, 255, 0.02);
 }

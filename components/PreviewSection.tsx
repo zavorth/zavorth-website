@@ -136,7 +136,7 @@ export function PreviewSection() {
         {/* Header */}
         <div data-prev-reveal className="mb-10 max-w-3xl">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-amber-500 mb-3">Mecanismo de Transparência</p>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight mb-4">
+          <h2 className="font-mono text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight mb-4">
             Planejamento visível antes da ação.
             <br />
             <span className="text-neutral-500">Sem surpresas operacionais.</span>

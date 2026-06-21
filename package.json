@@ -9,6 +9,10 @@
     "lint": "next lint",
     "website:build": "node scripts/website-build.mjs",
     "website:public": "node scripts/website-public-check.mjs",
+    "website:language-polish": "node scripts/public-language-polish-check.mjs",
+    "website:hero-theme": "node scripts/hero-visual-theme-check.mjs",
+    "website:black-hole-wave": "node scripts/black-hole-color-wave-check.mjs",
+    "website:landing-composition": "node scripts/landing-composition-check.mjs",
     "public-demo": "node scripts/public-demo-check.mjs",
     "first-run": "node scripts/first-run-check.mjs",
     "external-docs": "node scripts/external-docs-check.mjs",
@@ -23,7 +27,11 @@
     "qa:release-bundle": "npm run website:build && node scripts/release-bundle-check.mjs --require-pass",
     "qa:feedback-loop": "npm run website:build && node scripts/feedback-loop-check.mjs --require-pass",
     "qa:integration-showcase": "npm run website:build && node scripts/integration-showcase-check.mjs --require-pass",
-    "qa:website-public": "npm run website:build && node scripts/website-public-check.mjs --require-pass"
+    "qa:website-public": "npm run website:build && node scripts/website-public-check.mjs --require-pass",
+    "qa:language-polish": "node scripts/public-language-polish-check.mjs --require-pass",
+    "qa:hero-theme": "node scripts/hero-visual-theme-check.mjs --require-pass",
+    "qa:black-hole-wave": "node scripts/black-hole-color-wave-check.mjs --require-pass",
+    "qa:landing-composition": "node scripts/landing-composition-check.mjs --require-pass"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

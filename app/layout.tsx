@@ -42,25 +42,28 @@ const playfair = Playfair_Display({
   display: 'swap',
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3002'
+
 export const metadata: Metadata = {
-  title: 'Zavorth — IA em ação com você no controle',
+  metadataBase: new URL(siteUrl),
+  title: 'Zavorth - IA em acao com voce no controle',
   description:
-    'Zavorth é um painel de controle para usar IA no mundo real: peça tarefas, veja o plano, aprove ações importantes e acompanhe tudo com clareza.',
+    'Zavorth e um painel para usar IA no mundo real: peca tarefas, veja o plano, aprove acoes importantes e acompanhe tudo com clareza.',
   keywords: [
     'Zavorth',
     'IA',
-    'inteligência artificial',
+    'inteligencia artificial',
     'painel de controle',
-    'automação segura',
+    'automacao segura',
     'agentes de IA',
     'controle',
-    'aprovação',
+    'aprovacao',
   ],
   authors: [{ name: 'Zavorth' }],
   openGraph: {
-    title: 'Zavorth — IA em ação com você no controle',
+    title: 'Zavorth - IA em acao com voce no controle',
     description:
-      'Zavorth é um painel de controle para usar IA no mundo real: peça tarefas, veja o plano, aprove ações importantes e acompanhe tudo com clareza.',
+      'Zavorth e um painel para usar IA no mundo real: peca tarefas, veja o plano, aprove acoes importantes e acompanhe tudo com clareza.',
     siteName: 'Zavorth',
     locale: 'pt_BR',
     type: 'website',
@@ -78,7 +81,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
-      <body suppressHydrationWarning className="min-h-screen bg-surface font-sans antialiased">
+      <body suppressHydrationWarning className="relative min-h-screen font-sans antialiased">
         {children}
       </body>
     </html>

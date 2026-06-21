@@ -1,312 +1,197 @@
 'use client'
 
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import gsap from 'gsap'
+import React, { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { initMagnetic } from './motion'
+import gsap from 'gsap'
 
 const BlackHoleCanvas = dynamic(
   () => import('./BlackHoleCanvas').then((mod) => mod.BlackHoleCanvas),
   { ssr: false }
 )
 
+const lineOne = 'A IA que trabalha no seu computador.'
+const lineTwo = 'Com voce decidindo o que importa.'
+
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
-  const ctaWrapRef = useRef<HTMLDivElement>(null)
-  const ctaBtnRef = useRef<HTMLAnchorElement>(null)
   const canvasWrapRef = useRef<HTMLDivElement>(null)
   const textLayerRef = useRef<HTMLDivElement>(null)
-  const textParallaxRef = useRef<HTMLDivElement>(null)
-  const scrollIndicatorRef = useRef<HTMLDivElement>(null)
   const titleContainerRef = useRef<HTMLDivElement>(null)
 
-  const [titleTyped, setTitleTyped] = useState(false)
-
-  const line1Text = "Uma IA que trabalha"
-  const line2Text = "com você — não por trás."
-
-  // Direct DOM scroll tracking for buttery smooth performance (zero React renders)
   useEffect(() => {
     const section = sectionRef.current
     const canvasWrap = canvasWrapRef.current
     const textLayer = textLayerRef.current
-    const scrollIndicator = scrollIndicatorRef.current
-
     if (!section) return
 
     let targetProgress = 0
     let currentProgress = 0
-    let isLoopActive = true
+    let active = true
 
     const handleScroll = () => {
       const rect = section.getBoundingClientRect()
-      let progress = 0
-      if (rect.top < 0) {
-        const scrollableHeight = rect.height - window.innerHeight
-        progress = scrollableHeight > 0 ? Math.min(1, -rect.top / scrollableHeight) : 1
-      }
-      targetProgress = progress
+      const scrollableHeight = Math.max(1, rect.height)
+      targetProgress = rect.top < 0 ? Math.min(1, -rect.top / scrollableHeight) : 0
     }
 
-    const updateLoop = () => {
-      if (!isLoopActive) return
-
-      const damping = targetProgress < currentProgress ? 0.25 : 0.15
+    const update = () => {
+      if (!active) return
+      const damping = targetProgress > currentProgress ? 0.22 : 0.3
       currentProgress += (targetProgress - currentProgress) * damping
 
-      const titleScale = 1 - currentProgress * 0.4
-      const titleOpacity = Math.max(0, 1 - currentProgress * 1.5)
-      const titleY = 40 - currentProgress * 40
-
-      const canvasOpacity = Math.max(0, 1 - (currentProgress / 0.85))
-      const canvasScale = 1 - currentProgress * 0.15
-
       if (textLayer) {
-        textLayer.style.transform = `translateY(${titleY}px) scale(${titleScale})`
-        textLayer.style.opacity = `${titleOpacity}`
+        const textOpacity = Math.max(0, 1 - currentProgress * 1.45)
+        textLayer.style.opacity = `${textOpacity}`
+        textLayer.style.transform = `translateY(${currentProgress * -18}px) scale(${1 - currentProgress * 0.36})`
       }
 
       if (canvasWrap) {
-        const innerCanvas = canvasWrap.querySelector('.inner-canvas') as HTMLDivElement
-        if (innerCanvas) {
-          innerCanvas.style.opacity = `${canvasOpacity}`
-          innerCanvas.style.transform = `scale(${canvasScale})`
-        }
+        const exitProgress = Math.max(0, (currentProgress - 0.78) / 0.22)
+        canvasWrap.style.opacity = `${Math.max(0.28, 1 - exitProgress)}`
+        canvasWrap.style.transform = `scale(${1 - currentProgress * 0.06})`
       }
 
-      const indicatorOpacity = Math.max(0, 1 - (currentProgress / 0.15))
-      const innerIndicator = scrollIndicator?.querySelector('.scroll-indicator-inner') as HTMLDivElement
-      if (innerIndicator) {
-        innerIndicator.style.opacity = `${indicatorOpacity}`
-      }
-
-      requestAnimationFrame(updateLoop)
+      requestAnimationFrame(update)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    requestAnimationFrame(updateLoop)
+    requestAnimationFrame(update)
 
     return () => {
-      isLoopActive = false
+      active = false
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
 
-  // Magnetic button effect
   useEffect(() => {
-    if (!ctaBtnRef.current) return
-    const cleanup = initMagnetic(ctaBtnRef.current, 0.4)
-    return () => cleanup()
-  }, [])
-
-  // Dynamic Typing animation with neon lightsaber Keystroke Pulse
-  useEffect(() => {
-    if (!titleContainerRef.current) return
-
     const container = titleContainerRef.current
-    const cursorContainer = container.querySelector('.cursor-container') as HTMLDivElement
-    const bar = container.querySelector('.blinking-cursor') as HTMLDivElement
+    if (!container) return
 
     const chars = Array.from(container.querySelectorAll('.char')) as HTMLSpanElement[]
+    const cursorContainer = container.querySelector('.cursor-container') as HTMLDivElement | null
+    const bar = container.querySelector('.blinking-cursor') as HTMLDivElement | null
+
     if (chars.length === 0) return
 
-    const updateBlinkingCursor = (x: number, y: number) => {
-      container.style.setProperty('--cursor-pos-x', `${x}px`)
-      container.style.setProperty('--cursor-pos-y', `${y}px`)
+    const updateTypingCursor = (target: HTMLSpanElement, side: 'before' | 'after' = 'after') => {
+      if (!cursorContainer || !bar) return
+      const targetRect = target.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      const targetX = side === 'before'
+        ? targetRect.left - containerRect.left - 2
+        : targetRect.left - containerRect.left + targetRect.width + 7
+      const targetY = targetRect.top - containerRect.top
+      const cursorHeight = Math.max(28, targetRect.height * 0.92)
+      cursorContainer.style.transform = `translate3d(${targetX}px, ${targetY}px, 0)`
+      bar.style.height = `${cursorHeight}px`
     }
 
-    // Set initial position of the cursor
-    const first = chars[0]
-    const charRect = first.getBoundingClientRect()
-    const containerRect = container.getBoundingClientRect()
-    updateBlinkingCursor(
-      charRect.left - containerRect.left,
-      charRect.top - containerRect.top
-    )
+    updateTypingCursor(chars[0], 'before')
+    if (cursorContainer) cursorContainer.style.opacity = '1'
 
-    if (cursorContainer) {
-      cursorContainer.style.opacity = '1'
-    }
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        if (cursorContainer) cursorContainer.style.opacity = '0'
+        window.dispatchEvent(new CustomEvent('hero-title-typed'))
+      },
+    })
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        onComplete: () => {
-          setTitleTyped(true)
-          if (cursorContainer) {
-            cursorContainer.style.opacity = '0'
-          }
-          window.dispatchEvent(new CustomEvent('hero-title-typed'))
-        }
-      })
+    let elapsed = 0.3
+    chars.forEach((char) => {
+      const value = char.textContent || ''
+      let delay = 0.082
+      if (/[.,?!;:]/.test(value)) delay = 0.28
+      delay = delay * (0.9 + Math.random() * 0.16)
 
-      let cumulativeTime = 0.1 // small initial delay
-
-      chars.forEach((char, i) => {
-        const charText = char.textContent || ''
-        let charDelay = 0.018 // Base typing speed
-
-        if (charText === '\u00A0' || charText === ' ') {
-          charDelay = 0.035
-        } else if (/[.,?!;:-—]/.test(charText)) {
-          charDelay = 0.1 // Pause slightly at punctuation
-        }
-        
-        charDelay = charDelay * (0.9 + Math.random() * 0.2)
-
-        tl.to(char, {
-          opacity: 1,
-          duration: 0.01,
-          onStart: () => {
-            // Position cursor right after the newly typed character
-            const charRect = char.getBoundingClientRect()
-            const containerRect = container.getBoundingClientRect()
-            updateBlinkingCursor(
-              (charRect.left - containerRect.left) + charRect.width + 4,
-              charRect.top - containerRect.top
-            )
-
-            // Trigger neon lightsaber pulse on cursor bar
-            if (bar) {
-              gsap.fromTo(bar,
-                {
-                  boxShadow: '0 0 18px rgba(245, 158, 11, 1), 0 0 35px rgba(256, 256, 256, 1)',
-                  scale: 1.2
-                },
-                {
-                  boxShadow: '0 0 8px rgba(245, 158, 11, 0.6), 0 0 16px rgba(236, 72, 153, 0.4), 0 0 24px rgba(59, 130, 246, 0.3)',
-                  scale: 1.0,
-                  duration: 0.08,
-                  ease: 'power2.out'
-                }
-              )
+      timeline.call(() => {
+        char.style.opacity = '1'
+        updateTypingCursor(char, 'after')
+        if (bar) {
+          gsap.fromTo(
+            bar,
+            {
+              scaleY: 1.18,
+              boxShadow:
+                '0 0 22px rgba(245,158,11,0.95), 0 0 38px rgba(255,255,255,0.52), 0 0 52px rgba(236,72,153,0.28)',
+            },
+            {
+              scaleY: 1,
+              boxShadow:
+                '0 0 14px rgba(245,158,11,0.72), 0 0 28px rgba(236,72,153,0.28), 0 0 36px rgba(59,130,246,0.22)',
+              duration: 0.18,
+              ease: 'power2.out',
             }
-          }
-        }, cumulativeTime)
+          )
+        }
+      }, undefined, elapsed)
 
-        cumulativeTime += charDelay
-      })
+      elapsed += delay
+    })
 
-      // Fade in the CTA and scroll indicator after typing finishes
-      tl.fromTo(ctaWrapRef.current,
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
-        cumulativeTime
-      )
-
-      tl.fromTo(scrollIndicatorRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.8, ease: 'power2.out' },
-        cumulativeTime + 0.2
-      )
-
-    }, container)
-
-    return () => ctx.revert()
+    return () => {
+      timeline.kill()
+    }
   }, [])
 
-  const scrollToSection = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    const target = document.getElementById('overview')
-    if (target) target.scrollIntoView({ behavior: 'smooth' })
-  }, [])
+  const renderLine = (text: string, key: string) =>
+    text.split(' ').map((word, wordIndex, words) => (
+      <React.Fragment key={`${key}-word-${wordIndex}`}>
+        <span className="inline-block">
+          {word.split('').map((char, charIndex) => (
+            <span key={`${key}-${wordIndex}-${charIndex}`} className="char inline-block" style={{ opacity: 0 }}>
+              {char}
+            </span>
+          ))}
+        </span>
+        {wordIndex < words.length - 1 ? <span aria-hidden="true"> </span> : null}
+      </React.Fragment>
+    ))
 
   return (
-    <section
-      ref={sectionRef}
-      id="hero"
-      className="relative h-[120vh] bg-[#020204]"
-    >
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center z-0">
-        
-        {/* Canvas Animation Layer */}
+    <section ref={sectionRef} id="hero" className="relative h-[165vh] bg-black">
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
         <div
           ref={canvasWrapRef}
-          className="absolute inset-0 z-0"
+          className="absolute inset-0 origin-center"
         >
-          <div className="inner-canvas w-full h-full" style={{ transformOrigin: 'center center' }}>
-            <BlackHoleCanvas />
-          </div>
+          <BlackHoleCanvas />
         </div>
 
-        {/* Text Content Layer */}
-        <div 
+        <div
           ref={textLayerRef}
-          className="relative z-10 pointer-events-none mx-auto flex w-full max-w-5xl flex-col items-center text-center select-none px-5"
-          style={{
-            transform: 'translateY(40px) scale(1)',
-            opacity: 1,
-            transformOrigin: 'center center',
-          }}
+          className="relative z-10 mx-auto w-full max-w-6xl px-5 text-center pointer-events-none"
         >
-          <div
-            ref={textParallaxRef}
-            className="w-full flex flex-col items-center justify-center"
-          >
-            {/* Title — animated with custom character typing cursor */}
-            <h1 className="text-[36px] sm:text-[56px] lg:text-[72px] xl:text-[80px] font-black leading-[1.05] tracking-[-0.04em] text-white zavorth-display select-none pointer-events-none">
-              <div ref={titleContainerRef} className="typed-container select-none">
-                <div className="cursor-container">
-                  <div className="blinking-cursor" />
-                </div>
-                <span className="typed-content">
-                  {line1Text.split(' ').map((word, wordIdx) => (
-                    <span key={`w1-${wordIdx}`} className="inline-block relative">
-                      {word.split('').map((char, charIdx) => (
-                        <span
-                          key={`c1-${charIdx}`}
-                          className="char inline-block relative opacity-0"
-                        >
-                          {char}
-                        </span>
-                      ))}
-                      {wordIdx < line1Text.split(' ').length - 1 && '\u00A0'}
-                    </span>
-                  ))}
-                  <br />
-                  <span className="text-amber-500 drop-shadow-md">
-                    {line2Text.split(' ').map((word, wordIdx) => (
-                      <span key={`w2-${wordIdx}`} className="inline-block relative">
-                        {word.split('').map((char, charIdx) => (
-                          <span
-                            key={`c2-${charIdx}`}
-                            className="char inline-block relative opacity-0"
-                          >
-                            {char}
-                          </span>
-                        ))}
-                        {wordIdx < line2Text.split(' ').length - 1 && '\u00A0'}
-                      </span>
-                    ))}
-                  </span>
-                </span>
-              </div>
-            </h1>
-
-            {/* CTA */}
-            <div ref={ctaWrapRef} className="mt-12 pointer-events-auto opacity-0">
-              <a
-                ref={ctaBtnRef}
-                href="#overview"
-                onClick={scrollToSection}
-                className="inline-flex items-center gap-2 rounded-full bg-white/[0.08] border border-white/[0.1] backdrop-blur-md px-8 py-3.5 text-[14px] font-semibold text-white transition-all hover:bg-white/[0.14] hover:border-white/[0.2] hover:scale-[1.03] active:scale-[0.97]"
-              >
-                Começar agora
-              </a>
-            </div>
-          </div>
+          <h1 className="mx-auto max-w-[92vw] select-none text-[32px] font-medium leading-[1.08] tracking-normal text-white/95 sm:text-[50px] lg:text-[68px]">
+            <span ref={titleContainerRef} className="relative inline-block max-w-full">
+              <span className="cursor-container pointer-events-none absolute left-0 top-0 z-20" style={{ opacity: 0 }}>
+                <span className="blinking-cursor block w-[5px] rounded-full" style={{ height: '56px' }} />
+              </span>
+              <span className="block">{renderLine(lineOne, 'line-one')}</span>
+              <span className="block text-amber-400">{renderLine(lineTwo, 'line-two')}</span>
+            </span>
+          </h1>
         </div>
-
-        {/* Scroll Indicator */}
-        <div 
-          ref={scrollIndicatorRef}
-          className="absolute bottom-8 sm:bottom-12 left-1/2 -translate-x-1/2 z-10 pointer-events-none opacity-0"
-        >
-          <div className="scroll-indicator-inner flex flex-col items-center gap-3 transition-opacity duration-300">
-            <span className="scroll-indicator-text text-[10px] tracking-wider text-neutral-500 uppercase">Role para continuar</span>
-          </div>
-        </div>
-
       </div>
+      <style jsx>{`
+        .cursor-container {
+          will-change: transform, opacity;
+        }
+
+        .blinking-cursor {
+          background: linear-gradient(180deg, #ffffff 0%, #fbbf24 32%, #f59e0b 56%, #ec4899 78%, #3b82f6 100%);
+          box-shadow:
+            0 0 14px rgba(245, 158, 11, 0.72),
+            0 0 28px rgba(236, 72, 153, 0.28),
+            0 0 36px rgba(59, 130, 246, 0.22);
+          animation: heroCursorBlink 1080ms steps(2, end) infinite;
+          transform-origin: center;
+        }
+
+        @keyframes heroCursorBlink {
+          0%, 78% { opacity: 1; }
+          79%, 100% { opacity: 0.32; }
+        }
+      `}</style>
     </section>
   )
 }

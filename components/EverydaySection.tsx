@@ -196,7 +196,7 @@ export function EverydaySection() {
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500 mb-3">
             Zavorth na Prática
           </p>
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white leading-[1.2] mb-3">
+          <h2 className="font-mono text-2xl sm:text-3xl font-semibold tracking-tight text-white leading-[1.2] mb-3">
             Poderoso. Invisível. Para você.
           </h2>
           <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed font-light">

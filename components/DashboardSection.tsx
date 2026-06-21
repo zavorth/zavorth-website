@@ -6,7 +6,7 @@ export function DashboardSection() {
   const [budget, setBudget] = useState(1.4245)
   const [agents, setAgents] = useState([
     { name: 'File Classifier', task: 'fs.scan("/downloads")', status: 'active' },
-    { name: 'Security Broker', task: 'policy.evaluate()', status: 'active' },
+    { name: 'Readiness Helper', task: 'review.ready()', status: 'active' },
     { name: 'Slack Reporter', task: 'idle', status: 'idle' }
   ])
 
@@ -16,7 +16,7 @@ export function DashboardSection() {
       setBudget(prev => prev + Math.random() * 0.0003)
       setAgents(prev => prev.map((agent, i) => {
         if (i === 0) return { ...agent, task: Math.random() > 0.5 ? 'fs.classify(pdf)' : 'fs.scan("/downloads")' }
-        if (i === 1) return { ...agent, task: Math.random() > 0.5 ? 'policy.verify()' : 'policy.evaluate()' }
+        if (i === 1) return { ...agent, task: Math.random() > 0.5 ? 'review.setup()' : 'review.ready()' }
         return agent
       }))
     }, 2000)
@@ -34,26 +34,26 @@ export function DashboardSection() {
           {/* Left Column: Direct message */}
           <div className="space-y-4">
             <span className="text-xs font-mono uppercase tracking-[0.2em] text-amber-500 font-semibold block">
-              Governança Remota
+              Controle remoto simples
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-tight">
-              Controle total das ações na sua máquina.
+            <h2 className="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white leading-tight">
+              Acompanhe a IA trabalhando na sua maquina.
             </h2>
             <p className="text-sm text-neutral-400 font-light leading-relaxed">
-              O Zavorth segue a filosofia de zero-trust local. Ele pausa a execução automaticamente ao identificar riscos e envia uma notificação instantânea para o seu dispositivo antes de qualquer ação sensível.
+              Veja o que esta rodando, o que precisa da sua decisao e quais canais estao prontos. Se uma acao merecer cuidado, Zavorth pausa e mostra uma previa objetiva.
             </p>
             <ul className="space-y-2.5 text-xs text-neutral-300 font-light">
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-mono">✓</span>
-                <span><strong>Assinatura Local:</strong> Suas chaves criptográficas resolvem em runtime e nunca saem do hardware.</span>
+                <span><strong>Chaves locais:</strong> Credenciais ficam no seu ambiente e aparecem para o agente como referencias seguras.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-mono">✓</span>
-                <span><strong>Permissões Granulares:</strong> Autorizações temporárias que expiram automaticamente ao fim da tarefa.</span>
+                <span><strong>Acessos temporarios:</strong> Permissoes expiram junto com a tarefa.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-mono">✓</span>
-                <span><strong>Aprovação Rápida:</strong> Responda via chat criptografado no celular para liberar ou bloquear execuções.</span>
+                <span><strong>Aprovacao rapida:</strong> Responda pelo celular para liberar, negar ou pedir uma previa melhor.</span>
               </li>
             </ul>
           </div>

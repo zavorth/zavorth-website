@@ -72,14 +72,11 @@ function checkRequiredFiles() {
     'app/privacy/page.tsx',
     'app/terms/page.tsx',
     'components/Hero.tsx',
-    'components/ValuePropositionSection.tsx',
-    'components/CapabilitiesSection.tsx',
-    'components/HowItWorksSection.tsx',
-    'components/SecuritySection.tsx',
-    'components/ExperienceSection.tsx',
-    'components/TechnicalSection.tsx',
+    'components/ProductIntroSection.tsx',
+    'components/UseCasesSection.tsx',
+    'components/ConnectionsSection.tsx',
+    'components/InstallSection.tsx',
     'components/ContentPageShell.tsx',
-    'components/CTASection.tsx',
   ];
   const missing = required.filter((file) => !fs.existsSync(path.join(root, file)));
   return check(
@@ -105,9 +102,8 @@ function checkRequiredSourceLinks() {
     '/terms',
     '#overview',
     '#capabilities',
-    '#security',
-    '#how-it-works',
-    '#get-started',
+    '#connections',
+    '#install',
   ];
   const missing = required.filter((link) => !source.includes(link));
   return check(
@@ -190,15 +186,13 @@ function readSources() {
     'app/privacy/page.tsx',
     'app/terms/page.tsx',
     'components/Hero.tsx',
-    'components/ValuePropositionSection.tsx',
-    'components/CapabilitiesSection.tsx',
-    'components/HowItWorksSection.tsx',
-    'components/SecuritySection.tsx',
-    'components/ExperienceSection.tsx',
-    'components/TechnicalSection.tsx',
+    'components/ProductIntroSection.tsx',
+    'components/UseCasesSection.tsx',
+    'components/ConnectionsSection.tsx',
+    'components/InstallSection.tsx',
     'components/Navbar.tsx',
-    'components/CTASection.tsx',
     'components/Footer.tsx',
+    'lib/constants.ts',
   ].map(readText).join('\n');
 }
 

@@ -915,9 +915,8 @@ export function BlackHoleCanvas() {
       let currentY = 35 + scrollRatioCurrent * 45 + driftY
       centerVec.y = currentY
 
-      // Calculate entrance scale for event horizon mesh and halo glow
-      // Grows smoothly from zero over 2.5 seconds for a beautiful entrance animation
-      let entranceScale = Math.min(1.0, timeTracker / 2.5)
+      // Calculate entrance scale — all parts grow together from 0 in ~1 second
+      let entranceScale = Math.min(1.0, timeTracker / 0.8)
 
       if (eventHorizonMesh) {
         let targetScale = (1.0 - scrollRatioCurrent * 0.3) * entranceScale
@@ -957,7 +956,9 @@ export function BlackHoleCanvas() {
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
         pointsObject.rotation.set(rotX, rotY, rotZ)
-        pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
+        // Grow particles together with entrance scale for synchronized entrance animation
+        let currentScale = Math.max(0.001, entranceScale)
+        pointsObject.scale.set(currentScale, currentScale, currentScale)
       }
 
       // Update uniforms

@@ -25,7 +25,7 @@ const DEFAULTS = {
   scatterTop: 1.0,
   scatterBottom: 0.15,
   shrinkSpeed: 10.0,
-  entranceDelayMs: 600,
+  entranceDelayMs: 0,
   entranceGrowSpeed: 0.8,
   entranceLingerSeconds: 1.2,
   eventHorizonRadius: 32.0,
@@ -144,7 +144,7 @@ export function BlackHoleCanvas() {
     let autoReturnTimer = 0.15
     let isUserDragging = false
     let hasScrolled = false
-    let activeScale = false
+    let activeScale = true
     let elapsedTime = 0
     let timeTracker = 0
     let lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
@@ -714,7 +714,7 @@ export function BlackHoleCanvas() {
 
     pointsObject = new ui(particleGeometry, shaderMat)
     // Set frustumCulled to false to avoid collapsed bounding box frustum culling bugs.
-    pointsObject.scale.set(0.32, 0.32, 0.32)
+    pointsObject.scale.set(0, 0, 0)
     pointsObject.frustumCulled = false
     pointsObject.position.y = 35 
     pointsObject.visible = true
@@ -841,15 +841,8 @@ export function BlackHoleCanvas() {
       if (delta > 0.1) delta = 0.1
       if (delta < 0) delta = 0
 
-      // Increment elapsed time tracker in the loop
-      elapsedTime += delta
-      
-      // timeTracker always increments — the entrance scale grows smoothly from frame 0
+      // Increment time tracker — entrance scale grows smoothly from frame 0
       timeTracker += delta
-
-      if (elapsedTime > fl.entranceDelayMs / 1000) {
-        activeScale = true
-      }
 
       // Update color traversal independently from the glow pulse. The palette only commits
       // after the global sweep has crossed every particle coordinate.
@@ -964,9 +957,7 @@ export function BlackHoleCanvas() {
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
         pointsObject.rotation.set(rotX, rotY, rotZ)
-        if (activeScale) {
-          pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
-        }
+        pointsObject.scale.lerp(new J(1, 1, 1), delta * fl.entranceGrowSpeed)
       }
 
       // Update uniforms

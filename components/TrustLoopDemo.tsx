@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CheckCircle2,
   FileText,
@@ -49,25 +49,54 @@ function makeReceiptId(seq: number) {
   return `rcpt-web-demo-${String(seq).padStart(4, '0')}`
 }
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 export function TrustLoopDemo() {
   const [step, setStep] = useState<TrustLoopStep>('idle')
   const [seq, setSeq] = useState(1)
   const [receipt, setReceipt] = useState<{ id: string; time: string; status: string } | null>(
     null,
   )
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const planTimerRef = useRef<number | null>(null)
 
   const active = useMemo(() => stepIndex(step), [step])
 
+  useEffect(() => {
+    return () => {
+      if (planTimerRef.current != null) {
+        window.clearTimeout(planTimerRef.current)
+      }
+    }
+  }, [])
+
+  const clearPlanTimer = () => {
+    if (planTimerRef.current != null) {
+      window.clearTimeout(planTimerRef.current)
+      planTimerRef.current = null
+    }
+  }
+
   const start = () => {
+    clearPlanTimer()
     setReceipt(null)
-    // Brief plan state for data-trust-loop-step, then open the approval gate.
+    if (prefersReducedMotion()) {
+      // Skip intermediate plan flash for reduced-motion users.
+      setStep('awaiting_approval')
+      return
+    }
     setStep('plan')
-    window.setTimeout(() => {
+    planTimerRef.current = window.setTimeout(() => {
       setStep((current) => (current === 'plan' ? 'awaiting_approval' : current))
+      planTimerRef.current = null
     }, 280)
   }
 
   const approve = () => {
+    if (step === 'plan') return
     const nextSeq = seq
     setSeq((value) => value + 1)
     setReceipt({
@@ -79,19 +108,59 @@ export function TrustLoopDemo() {
   }
 
   const reset = () => {
+    clearPlanTimer()
     setReceipt(null)
     setStep('idle')
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement | null
+    if (
+      target &&
+      (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+    ) {
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      if (step === 'idle') {
+        event.preventDefault()
+        start()
+      } else if (step === 'awaiting_approval') {
+        event.preventDefault()
+        approve()
+      }
+      return
+    }
+
+    if (event.key === 'a' || event.key === 'A') {
+      if (step === 'awaiting_approval') {
+        event.preventDefault()
+        approve()
+      }
+      return
+    }
+
+    if (event.key === 'Escape' || event.key === 'r' || event.key === 'R') {
+      if (step === 'plan' || step === 'awaiting_approval' || step === 'receipt') {
+        event.preventDefault()
+        reset()
+      }
+    }
   }
 
   const showPlan = step === 'plan' || step === 'awaiting_approval' || step === 'receipt'
 
   return (
     <section
+      ref={sectionRef}
       id="trust-loop"
       data-trust-loop-demo
       data-trust-loop-step={step}
       className="rounded-2xl border border-accent/25 bg-gradient-to-b from-accent/[0.07] to-white/[0.018] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-6"
       aria-label="Loop interativo de confiança: pedido, plano, aprovação e receipt"
+      tabIndex={0}
+      onKeyDown={onKeyDown}
     >
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
@@ -225,6 +294,7 @@ export function TrustLoopDemo() {
             type="button"
             onClick={start}
             className="btn-sheen inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[13px] font-semibold text-surface"
+            aria-keyshortcuts="Enter Space"
           >
             <Play size={14} />
             Iniciar
@@ -238,6 +308,7 @@ export function TrustLoopDemo() {
               onClick={approve}
               disabled={step === 'plan'}
               className="btn-sheen inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[13px] font-semibold text-surface disabled:cursor-wait disabled:opacity-60"
+              aria-keyshortcuts="Enter Space a"
             >
               <ShieldCheck size={14} />
               Aprovar
@@ -246,6 +317,7 @@ export function TrustLoopDemo() {
               type="button"
               onClick={reset}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-2.5 text-[13px] font-medium text-neutral-300 transition-colors hover:text-neutral-100"
+              aria-keyshortcuts="Escape r"
             >
               <RotateCcw size={14} />
               Reset
@@ -258,6 +330,7 @@ export function TrustLoopDemo() {
             type="button"
             onClick={reset}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-2.5 text-[13px] font-medium text-neutral-300 transition-colors hover:text-neutral-100"
+            aria-keyshortcuts="Escape r"
           >
             <RotateCcw size={14} />
             Reset
@@ -267,7 +340,8 @@ export function TrustLoopDemo() {
 
       <p className="mt-4 border-t border-white/[0.06] pt-4 text-[11px] leading-relaxed text-neutral-600">
         Disclaimer: demo de produto estática. Não há runtime de agente ao vivo, secrets ou rede
-        externa. Receipts e ids são fixture para explicar o Proof OS.
+        externa. Receipts e ids são fixture para explicar o Proof OS. Teclado: Enter/Espaço
+        inicia ou aprova; A aprova; Esc/R reseta.
       </p>
     </section>
   )

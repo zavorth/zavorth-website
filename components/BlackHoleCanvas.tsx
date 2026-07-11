@@ -890,15 +890,15 @@ export function BlackHoleCanvas() {
       // Smooth scroll tracking directly in RAF loop, using the hero section like the reference animation.
       let targetProgress = 0
       if (heroRect && heroRect.top < 0) {
-        const scrollableHeight = Math.max(1, heroRect.height)
+        const scrollableHeight = Math.max(1, heroRect.height - height)
         targetProgress = Math.min(1.0, Math.max(0.0, -heroRect.top / scrollableHeight))
       } else if (!heroRect) {
-        const scrollableHeight = height * 1.65
+        const scrollableHeight = height * 0.65
         targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
       }
 
       // Smooth scroll interpolation — responsive but smooth
-      const damping = targetProgress < scrollRatioCurrent ? 0.25 : 0.15
+      const damping = targetProgress < scrollRatioCurrent ? 0.45 : 0.35
       scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * damping
 
       // Dynamic, constant 3D tilting wobble and rotation.

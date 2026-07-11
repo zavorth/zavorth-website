@@ -1,80 +1,100 @@
 'use client'
 
-import React from 'react'
-import { ShieldAlert, KeyRound, Network, ClipboardList } from 'lucide-react'
+import React, { useState } from 'react'
+import Image from 'next/image'
 
-const features = [
+const proofs = [
   {
-    title: 'Políticas de Risco',
-    description: 'Estabeleça orçamentos rígidos de tokens, regras de execução de comandos em sandbox e restrições de rede locais.',
-    icon: ShieldAlert
+    id: 'control',
+    tabName: 'Zavorth Control',
+    src: '/product/zavorth-control-overview.png',
+    alt: 'Zavorth Control — visão geral do painel',
+    caption: 'Zavorth Control — acompanhe tarefas em execução, logs de auditoria e gerencie aprovações em tempo real.',
+    chrome: 'Zavorth Control App v1.2.4',
+    aspect: 'aspect-[16/9] sm:aspect-[21/10]'
   },
   {
-    title: 'Memória Local Criptografada',
-    description: 'Bancos vetoriais persistidos na sua máquina, garantindo que o contexto do agente continue privado e sob seu controle.',
-    icon: KeyRound
-  },
-  {
-    title: 'Planejamento Swarm',
-    description: 'Decompõe tarefas complexas e delega para sub-agentes isolados com checagens redundantes de qualidade e conformidade.',
-    icon: Network
-  },
-  {
-    title: 'Auditoria de Ações',
-    description: 'Geração de logs legíveis por humanos e assinaturas de transação salvas localmente para que você revise cada passo.',
-    icon: ClipboardList
+    id: 'command',
+    tabName: 'Command Center',
+    src: '/product/zavorth-command-center.png',
+    alt: 'Zavorth — central de comando',
+    caption: 'Central de Comando — verifique os nós ativos, orçamentos de contexto consumidos e canais conectados no seu ambiente local.',
+    chrome: 'Zavorth Command Center',
+    aspect: 'aspect-[16/10]'
   }
 ] as const
 
 export function FeaturesSection() {
+  const [activeProof, setActiveProof] = useState<string>('control')
+  const currentProof = proofs.find((p) => p.id === activeProof) || proofs[0]
+
   return (
-    <section id="features" className="relative bg-[#000000] border-t border-white/[0.06] py-24 sm:py-32 overflow-hidden">
-      {/* Background soft glow */}
-      <div className="absolute top-0 right-1/3 w-[400px] h-[400px] bg-amber-500/[0.01] blur-[130px] rounded-full pointer-events-none" />
+    <section
+      id="trust"
+      data-proof-section
+      className="landing-surface relative scroll-mt-20 border-t border-white/[0.06] py-24 sm:py-32"
+    >
+      <div className="relative z-10 mx-auto max-w-6xl px-6">
+        <div className="mb-12 max-w-2xl">
+          <span className="section-kicker">Interface do Sistema</span>
+          <h2 className="mt-6 font-display text-4xl font-semibold leading-none tracking-tight text-white sm:text-5xl">
+            O produto, <span className="text-emerald-400">de verdade</span>
+          </h2>
+          <p className="mt-5 text-lg font-light leading-relaxed text-neutral-400">
+            Nenhuma simulação conceitual ou mockup abstrato. Esta é a interface de controle do Zavorth rodando no seu desktop.
+          </p>
+        </div>
 
-      <div className="mx-auto max-w-4xl px-6 relative z-10">
-        
-        <div className="flex flex-col gap-6 md:flex-row md:gap-12 mb-16 md:items-start">
-          <div className="w-full md:w-1/3">
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-amber-500 font-semibold block mb-3">
-              04 // FUNCIONALIDADES
+        {/* Dynamic Image Swapper Tab Selector */}
+        <div className="flex gap-2 border-b border-white/[0.06] pb-3 mb-8">
+          {proofs.map((proof) => (
+            <button
+              key={proof.id}
+              onClick={() => setActiveProof(proof.id)}
+              className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider transition-all border-b-2 -mb-[14px] ${
+                proof.id === activeProof
+                  ? 'border-emerald-400 text-white font-bold'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              }`}
+            >
+              {proof.tabName}
+            </button>
+          ))}
+        </div>
+
+        {/* Chrome Container */}
+        <figure
+          data-zavorth-proof
+          className="overflow-hidden rounded-xl border border-white/[0.1] bg-[#060807] shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
+        >
+          {/* Chrome titlebar */}
+          <div className="flex items-center gap-2 border-b border-white/[0.07] bg-white/[0.03] px-4 py-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+            <span className="ml-3 font-mono text-[9px] uppercase tracking-wider text-neutral-500 select-none">
+              {currentProof.chrome}
             </span>
-            <h2 className="font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl leading-none">
-              Recursos <br />
-              <span className="text-amber-500">Premium</span>
-            </h2>
           </div>
-          <div className="w-full md:w-2/3">
-            <p className="text-lg leading-relaxed text-neutral-300 font-light">
-              Construído para fornecer a camada mais segura e robusta de automação local com inteligência artificial.
-            </p>
+
+          {/* Screenshot Display Area */}
+          <div className={`relative w-full bg-[#050807] ${currentProof.aspect}`}>
+            <Image
+              src={currentProof.src}
+              alt={currentProof.alt}
+              fill
+              className="object-contain object-center p-2 sm:p-4 select-none"
+              sizes="100vw"
+              priority
+            />
           </div>
-        </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          {features.map((feature) => {
-            const Icon = feature.icon
-            return (
-              <div
-                key={feature.title}
-                className="group relative p-8 rounded-2xl border border-white/[0.06] bg-white/[0.01] backdrop-blur-md transition-all duration-300 hover:border-amber-500/30 hover:scale-[1.01] hover:shadow-[0_12px_40px_rgba(245,158,11,0.06)]"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl border border-white/[0.08] bg-white/[0.02] text-amber-500 group-hover:border-amber-500/30 group-hover:text-amber-400 transition-colors">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-display text-lg font-semibold text-white">
-                    {feature.title}
-                  </h3>
-                </div>
-                <p className="text-sm leading-relaxed text-neutral-400 font-light group-hover:text-neutral-300 transition-colors">
-                  {feature.description}
-                </p>
-              </div>
-            )
-          })}
-        </div>
-
+          {/* Caption */}
+          <figcaption className="border-t border-white/[0.06] px-5 py-4 text-xs font-mono leading-relaxed text-neutral-500">
+            <span className="text-emerald-400 mr-2">//</span>
+            {currentProof.caption}
+          </figcaption>
+        </figure>
       </div>
     </section>
   )

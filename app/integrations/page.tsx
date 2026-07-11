@@ -71,7 +71,7 @@ export default function IntegrationsPage() {
               href="/docs#integration-showcase"
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.025] px-5 py-3 text-[14px] font-medium text-neutral-300 transition-colors hover:text-neutral-100"
             >
-              Ler contrato publico
+              Ler contrato público
             </a>
           </div>
         </div>
@@ -83,12 +83,12 @@ export default function IntegrationsPage() {
             <div>
               <p className="eyebrow mb-4">Showcase</p>
               <h2 className="section-title-display text-heading text-neutral-50">
-                Vendor real, dependencia opcional.
+                Vendor real, dependência opcional.
               </h2>
             </div>
             <p className="text-body leading-relaxed text-neutral-500">
-              Cada integracao lista capacidade, requisito, modo fixture e
-              degradacao segura. Credencial real fica separada do caminho local.
+              Cada integração lista capacidade, requisito, modo fixture e
+              degradação segura. Credencial real fica separada do caminho local.
             </p>
           </div>
 
@@ -157,7 +157,7 @@ export default function IntegrationsPage() {
                       <strong className="font-semibold text-neutral-300">Fixture:</strong> {item.fixture}
                     </p>
                     <p className="rounded-lg border border-white/[0.06] bg-black/20 p-3 text-[12px] leading-relaxed text-neutral-500">
-                      <strong className="font-semibold text-neutral-300">Degradacao segura:</strong> {item.degradation}
+                      <strong className="font-semibold text-neutral-300">Degradação segura:</strong> {item.degradation}
                     </p>
                   </div>
                 </article>
@@ -175,14 +175,14 @@ export default function IntegrationsPage() {
                 <ShieldCheck size={18} />
               </div>
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">
-                Trust Plane
+                Controles de confiança
               </p>
               <h2 className="mt-2 text-[18px] font-semibold text-neutral-100">
                 Controle aparece antes da credencial.
               </h2>
               <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
-                Approval, policy, budget e audit trail ficam visiveis no showcase,
-                nao escondidos como detalhe interno.
+                Approval, policy, budget e audit trail ficam visíveis no showcase,
+                não escondidos como detalhe interno.
               </p>
             </article>
 
@@ -203,9 +203,9 @@ export default function IntegrationsPage() {
       <section id="partner-surface" className="section-rhythm">
         <div className="max-w-8xl mx-auto px-6">
           <div className="mb-8">
-            <p className="eyebrow mb-4">Partner surface auditavel</p>
+            <p className="eyebrow mb-4">Superfície de parceiro auditável</p>
             <h2 className="section-title-display text-heading text-neutral-50">
-              Compatibilidade publica sem inflar claim.
+              Compatibilidade pública sem inflar claim.
             </h2>
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
@@ -215,8 +215,8 @@ export default function IntegrationsPage() {
                 Credenciais sob demanda
               </h3>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
-                Tokens reais entram apenas em operacao aprovada e nunca sao
-                requisito para entender a integracao.
+                Tokens reais entram apenas em operação aprovada e nunca são
+                requisito para entender a integração.
               </p>
             </article>
             <article className="rounded-lg border border-white/[0.08] bg-white/[0.018] p-5">
@@ -235,8 +235,8 @@ export default function IntegrationsPage() {
                 Sem parceria formal prometida
               </h3>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
-                O copy publico fala de compatibilidade tecnica, fixture e API
-                publica. Parceria formal exige registro auditavel.
+                O copy público fala de compatibilidade técnica, fixture e API
+                pública. Parceria formal exige registro auditável.
               </p>
             </article>
           </div>

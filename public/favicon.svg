@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#09090b"/>
-  <rect x="4" y="4" width="24" height="24" rx="4" fill="#18181b"/>
-  <text x="16" y="22" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="600" font-size="16" fill="#e5a44c">B</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Zavorth">
+  <rect width="64" height="64" rx="18" fill="#060809"/>
+  <rect x="7" y="7" width="50" height="50" rx="15" fill="#00e88f" opacity=".12"/>
+  <path d="M19 19h28L24 45h28" fill="none" stroke="#00e88f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="46" cy="18" r="4" fill="#00e88f"/>
 </svg>

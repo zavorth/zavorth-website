@@ -46,9 +46,9 @@ export default function ExamplesPage() {
             Exemplos externos por caso de uso
           </h1>
           <p className="mt-5 max-w-3xl text-body-lg leading-relaxed text-neutral-500">
-            Casos publicos para engenharia, release e artifacts/replay. Cada
+            Casos públicos para engenharia, release e artifacts/replay. Cada
             exemplo aponta comando, resultado esperado e guardrail antes de
-            qualquer automacao real.
+            qualquer automação real.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <a
@@ -68,7 +68,7 @@ export default function ExamplesPage() {
               href="/editions"
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.025] px-5 py-3 text-[14px] font-medium text-neutral-300 transition-colors hover:text-neutral-100"
             >
-              Ver edicoes
+              Ver edições
             </a>
             <a
               href="/release"

@@ -118,9 +118,9 @@ export default function PublicDemoPage() {
               </h2>
             </div>
             <p className="text-body leading-relaxed text-neutral-500">
-              A demo mostra objetivo, plano, approval, execucao, artifact, replay
+              A demo mostra objetivo, plano, approval, execução, artifact, replay
               e resumo. Tudo parte de fixture local e pode ser reproduzido sem
-              servico externo obrigatorio.
+              serviço externo obrigatório.
             </p>
           </div>
 

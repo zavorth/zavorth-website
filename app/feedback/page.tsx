@@ -88,7 +88,7 @@ export default function FeedbackPage() {
               </h2>
             </div>
             <p className="text-body leading-relaxed text-neutral-500">
-              O loop publico protege soberania local: nada sai por padrao,
+              O loop público protege soberania local: nada sai por padrão,
               preview vem antes do envio, redaction acontece localmente e o
               ledger continua util mesmo offline.
             </p>

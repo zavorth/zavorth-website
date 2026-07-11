@@ -84,7 +84,7 @@ function shouldSkipBuildCopy(name) {
     'out',
     'tmp',
     'artifacts',
-  ].includes(name) || name.startsWith('.next-dev-') || name === '.codex-next-3002.log';
+  ].includes(name) || name.startsWith('.next-dev-') || name === '.zavorth-next-3002.log';
 }
 
 function shouldSkipNestedBuildCopy(relativePath) {

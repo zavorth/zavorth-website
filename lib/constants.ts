@@ -1,14 +1,14 @@
 export const NAV_LINKS = [
-  { id: 'overview', href: '#overview', label: 'O que e' },
-  { id: 'capabilities', href: '#capabilities', label: 'O que faz' },
-  { id: 'connections', href: '#connections', label: 'Como conecta' },
-  { id: 'install', href: '#install', label: 'Instalar' },
+  { id: 'overview', href: '#overview', label: 'O que é' },
+  { id: 'how-it-works', href: '#how-it-works', label: 'Como funciona' },
+  { id: 'connections', href: '#connections', label: 'Onde usa' },
+  { id: 'install', href: '#install', label: 'Começar' },
 ]
 
 export const HERO_MESSAGES = [
   { role: 'user' as const, text: 'Zavorth, organize meus arquivos de trabalho e me avise no Telegram.' },
   { role: 'zavorth' as const, text: 'Encontrei 42 arquivos que podem ser organizados.' },
-  { role: 'zavorth' as const, text: 'Criei uma previa segura. Nenhum arquivo foi alterado ainda.' },
+  { role: 'zavorth' as const, text: 'Criei uma prévia segura. Nenhum arquivo foi alterado ainda.' },
 ]
 
 export const CONNECTIONS = [

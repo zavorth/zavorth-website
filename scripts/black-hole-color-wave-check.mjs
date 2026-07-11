@@ -45,7 +45,7 @@ if (/float\s+colorSweepCoord\s*=\s*fract\(/.test(source)) {
 }
 
 if (!source.includes('uColorWaveSoftness: { value: 0.085 }')) {
-  findings.push('BlackHoleCanvas color wave should use a tighter Gemini-like moving edge');
+  findings.push('BlackHoleCanvas color wave should use a tighter moving edge');
 }
 
 if (!source.includes('haloWaveColor') || !source.includes('glowSpriteMat.color.copy(haloWaveColor)')) {

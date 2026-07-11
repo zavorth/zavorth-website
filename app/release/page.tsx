@@ -80,11 +80,11 @@ export default function ReleasePage() {
             <div>
               <p className="eyebrow mb-4">Bundle</p>
               <h2 className="section-title-display text-heading text-neutral-50">
-                Artefato verificavel antes de instalacao.
+                Artefato verificável antes de instalação.
               </h2>
             </div>
             <p className="text-body leading-relaxed text-neutral-500">
-              O pacote publico precisa ser legivel como produto: versao, canal,
+              O pacote público precisa ser legível como produto: versão, canal,
               digest, conteudo, exclusoes e smoke aparecem antes de qualquer
               install real.
             </p>
@@ -214,7 +214,7 @@ export default function ReleasePage() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="rounded-lg border border-white/[0.08] bg-black/25 p-5">
             <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-600">
-              changelog publico
+              changelog público
             </p>
             <ul className="space-y-3">
               {releaseBundle.changelog.map((item) => (
@@ -276,7 +276,7 @@ export default function ReleasePage() {
                 {releaseBundle.releaseTrain.patchLane}
               </h3>
               <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
-                Hotfix pequeno, changelog publico, release candidate e rollback
+                Hotfix pequeno, changelog público, release candidate e rollback
                 preview antes de publicar.
               </p>
             </article>

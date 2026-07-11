@@ -16,7 +16,7 @@ export const releaseBundle = {
   version: 'v0.1 Public Preview',
   channel: 'preview',
   promise:
-    'Um caminho publico para baixar, verificar, instalar em preview, rodar smoke local e desfazer o setup sem depender de cloud obrigatoria.',
+    'Um caminho público para baixar, verificar, instalar em preview, rodar smoke local e desfazer o setup sem depender de cloud obrigatória.',
   bundle: {
     id: 'zavorth-v0.1-public-preview-bundle',
     fileName: 'zavorth-v0.1-preview.zip',
@@ -25,7 +25,7 @@ export const releaseBundle = {
     size: 'artifact fixture',
     contents: [
       'runtime local-first',
-      'CLI publica',
+      'CLI pública',
       'docs externas',
       'fixtures de demo e first-run',
       'manifesto de release',
@@ -34,7 +34,7 @@ export const releaseBundle = {
       'secrets',
       'caches pessoais',
       'paths locais',
-      'logs sensiveis',
+      'logs sensíveis',
       'watchers persistentes',
     ],
   },
@@ -42,34 +42,37 @@ export const releaseBundle = {
     {
       id: 'preview',
       label: 'Installer preview',
-      detail: 'Mostra pasta alvo, arquivos planejados, scripts que seriam criados e rollback antes de alterar o ambiente.',
+      detail:
+        'Mostra pasta alvo, arquivos planejados, scripts que seriam criados e rollback antes de alterar o ambiente.',
     },
     {
       id: 'confirm',
-      label: 'Aprovacao explicita',
-      detail: 'A instalacao real so acontece depois de o usuario revisar o preview e confirmar o escopo.',
+      label: 'Aprovação explícita',
+      detail:
+        'A instalação real só acontece depois de o usuário revisar o preview e confirmar o escopo.',
     },
     {
       id: 'local-first',
-      label: 'Sem cloud obrigatoria',
-      detail: 'O bundle inicia em modo local e usa feedback, telemetry ou sync remoto apenas com opt-in posterior.',
+      label: 'Sem cloud obrigatória',
+      detail:
+        'O bundle inicia em modo local e usa feedback, telemetria ou sync remoto apenas com opt-in posterior.',
     },
   ] satisfies ReleaseBundleStep[],
   smokePlan: [
     {
       label: 'Status de release',
       command: 'npm run release:status:fast',
-      reason: 'Confirma canal, risco e proximo passo sem publicar automaticamente.',
+      reason: 'Confirma canal, risco e próximo passo sem publicar automaticamente.',
     },
     {
       label: 'Doctor local',
       command: 'npm run doctor:fast',
-      reason: 'Valida requisitos locais e falhas acionaveis sem rede externa obrigatoria.',
+      reason: 'Valida requisitos locais e falhas acionáveis sem rede externa obrigatória.',
     },
     {
       label: 'Changelog',
       command: 'npm run release:changelog',
-      reason: 'Gera notas publicas com versao, risco e rollback.',
+      reason: 'Gera notas públicas com versão, risco e rollback.',
     },
   ] satisfies ReleaseBundleCommand[],
   rollbackPlan: [
@@ -86,12 +89,12 @@ export const releaseBundle = {
     {
       id: 'offline-safe',
       label: 'Smoke offline',
-      detail: 'O smoke do pacote usa fixtures locais e nao exige rede externa para provar o caminho basico.',
+      detail: 'O smoke do pacote usa fixtures locais e não exige rede externa para provar o caminho básico.',
     },
   ] satisfies ReleaseBundleStep[],
   changelog: [
-    'Zavorth v0.1 Public Preview publica a productizacao publica com bundle verificavel e digest sha256.',
-    'Installer opera preview-first com aprovacao explicita.',
+    'Zavorth v0.1 Public Preview publica o caminho público com bundle verificável e digest sha256.',
+    'Installer opera preview-first com aprovação explícita.',
     'Rollback/cleanup ficam limitados ao escopo instalado.',
   ],
   releaseTrain: {
@@ -100,12 +103,12 @@ export const releaseBundle = {
     patchLane: 'v1.0.x',
     minorLane: 'v1.1.0',
     policy:
-      'Release train v1.x mantem v1.0.0 como baseline estavel, v1.0.x para hotfix estreito e v1.1.0 para novo ciclo aprovado com smoke local e rollback claro.',
+      'Release train v1.x mantém v1.0.0 como baseline estável, v1.0.x para hotfix estreito e v1.1.0 para novo ciclo aprovado com smoke local e rollback claro.',
     cadence: [
       'release candidate sob demanda, sem processo sempre ligado',
-      'tag e GitHub Releases so entram quando o canal stable for aprovado',
-      'hotfix sai de baseline/tag estavel e volta com changelog publico',
-      'LTS fica fora do preview e exige politica propria antes de ser prometido',
+      'tag e GitHub Releases só entram quando o canal stable for aprovado',
+      'hotfix sai de baseline/tag estável e volta com changelog público',
+      'LTS fica fora do preview e exige política própria antes de ser prometido',
     ],
     checklist: [
       'qa:release-train',

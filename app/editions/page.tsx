@@ -91,8 +91,8 @@ export default function EditionsPage() {
               </h2>
             </div>
             <p className="text-body leading-relaxed text-neutral-500">
-              As edicoes abaixo nao bloqueiam o runtime local. Elas explicam
-              maturidade, publico, escopo e limites antes de qualquer bundle,
+              As edições abaixo não bloqueiam o runtime local. Elas explicam
+              maturidade, público, escopo e limites antes de qualquer bundle,
               cloud ou distribuicao comercial.
             </p>
           </div>

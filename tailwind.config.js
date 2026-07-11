@@ -31,12 +31,20 @@ module.exports = {
           muted:   'rgba(245, 158, 11, 0.06)',
         },
         accent: {
-          DEFAULT: '#F59E0B',
-          light:   '#FBBF24',
-          bright:  '#FCD34D',
-          dim:     'rgba(245, 158, 11, 0.10)',
-          muted:   'rgba(245, 158, 11, 0.06)',
-          glow:    'rgba(245, 158, 11, 0.22)',
+          DEFAULT: '#00e88f',
+          light:   '#3ff0ad',
+          bright:  '#7af7c8',
+          dim:     'rgba(0, 232, 143, 0.12)',
+          muted:   'rgba(0, 232, 143, 0.06)',
+          glow:    'rgba(0, 232, 143, 0.24)',
+        },
+        brand: {
+          DEFAULT: '#00e88f',
+          dark:    '#00c478',
+          deep:    '#00a866',
+          dim:     'rgba(0, 232, 143, 0.12)',
+          muted:   'rgba(0, 232, 143, 0.06)',
+          glow:    'rgba(0, 232, 143, 0.24)',
         },
         success: {
           DEFAULT: '#22C55E',
@@ -73,11 +81,12 @@ module.exports = {
           solid:    '#1f1f26',
           strong:   '#2a2a34',
           amber:    'rgba(245, 158, 11, 0.20)',
+          brand:    'rgba(0, 232, 143, 0.22)',
         },
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['var(--font-display)', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'Menlo', 'monospace'],
       },
       fontSize: {
@@ -116,8 +125,11 @@ module.exports = {
         'glow-amber-sm': '0 0 10px rgba(245, 158, 11, 0.10)',
         'glow-amber':    '0 0 20px rgba(245, 158, 11, 0.16)',
         'glow-amber-lg': '0 0 40px rgba(245, 158, 11, 0.20)',
-        'glow-green-sm': '0 0 10px rgba(34, 197, 94, 0.10)',
-        'glow-green':    '0 0 20px rgba(34, 197, 94, 0.16)',
+        'glow-brand-sm': '0 0 10px rgba(0, 232, 143, 0.12)',
+        'glow-brand':    '0 0 20px rgba(0, 232, 143, 0.18)',
+        'glow-brand-lg': '0 0 40px rgba(0, 232, 143, 0.24)',
+        'glow-green-sm': '0 0 10px rgba(0, 232, 143, 0.12)',
+        'glow-green':    '0 0 20px rgba(0, 232, 143, 0.18)',
         'inner-light':   'inset 0 1px 0 rgba(255, 255, 255, 0.04)',
       },
       animation: {
@@ -125,6 +137,7 @@ module.exports = {
         'fade-in-up':  'fadeInUp 0.6s ease-out forwards',
         'pulse-soft':  'pulseSoft 3s ease-in-out infinite',
         'pulse-amber': 'pulseAmber 2.5s ease-in-out infinite',
+        'pulse-brand': 'pulseBrand 2.5s ease-in-out infinite',
         'scan':        'scan 2s linear infinite',
       },
       keyframes: {
@@ -141,6 +154,10 @@ module.exports = {
           '50%':      { opacity: '0.7' },
         },
         pulseAmber: {
+          '0%, 100%': { opacity: '0.6' },
+          '50%':      { opacity: '1' },
+        },
+        pulseBrand: {
           '0%, 100%': { opacity: '0.6' },
           '50%':      { opacity: '1' },
         },

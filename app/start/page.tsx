@@ -114,13 +114,13 @@ export default function StartPage() {
             <div>
               <p className="eyebrow mb-4">Checklist</p>
               <h2 className="section-title-display text-heading text-neutral-50">
-                Setup previsivel antes de qualquer mutacao.
+                Setup previsível antes de qualquer mutação.
               </h2>
             </div>
             <p className="text-body leading-relaxed text-neutral-500">
-              O onboarding publico mostra detector de requisitos, preview de
-              setup, comando de primeira execucao, health check e cleanup. A
-              primeira sessao nao exige credenciais externas.
+              O onboarding público mostra detector de requisitos, preview de
+              setup, comando de primeira execução, health check e cleanup. A
+              primeira sessão não exige credenciais externas.
             </p>
           </div>
 

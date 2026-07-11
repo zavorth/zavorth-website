@@ -12,6 +12,7 @@ const checks = [
   checkRequiredFiles(),
   checkRequiredSourceLinks(),
   checkForbiddenPublicCopy(),
+  checkBrandSurface(),
   checkExportedRoutes(),
 ];
 
@@ -73,7 +74,8 @@ function checkRequiredFiles() {
     'app/terms/page.tsx',
     'components/Hero.tsx',
     'components/ProductIntroSection.tsx',
-    'components/UseCasesSection.tsx',
+    'components/WhatItDoesSection.tsx',
+    'components/FeaturesSection.tsx',
     'components/ConnectionsSection.tsx',
     'components/InstallSection.tsx',
     'components/ContentPageShell.tsx',
@@ -101,7 +103,7 @@ function checkRequiredSourceLinks() {
     '/privacy',
     '/terms',
     '#overview',
-    '#capabilities',
+    '#how-it-works',
     '#connections',
     '#install',
   ];
@@ -142,6 +144,88 @@ function checkForbiddenPublicCopy() {
   );
 }
 
+function checkBrandSurface() {
+  const globals = readText('app/globals.css');
+  const layout = readText('app/layout.tsx');
+  const favicon = readText('public/favicon.svg');
+  const hero = readText('components/Hero.tsx');
+  const hard = [];
+  const soft = [];
+
+  if (/fontshare/i.test(globals) || /api\.fontshare\.com/i.test(globals)) {
+    hard.push('app/globals.css must not import Fontshare');
+  }
+  if (/Playfair/i.test(layout) || /fonts\.google.*Playfair/i.test(layout)) {
+    hard.push('app/layout.tsx must not import Playfair');
+  }
+  if (/Satoshi|Clash Display|Clash_Display/i.test(`${globals}\n${layout}`)) {
+    hard.push('typography stack must not reintroduce Satoshi/Clash Display');
+  }
+  if (!favicon.includes('#00e88f')) {
+    hard.push('public/favicon.svg must use brand green #00e88f');
+  }
+
+  const publicDir = path.join(root, 'public');
+  if (fs.existsSync(publicDir)) {
+    const publicNames = listFilesRecursive(publicDir).map((file) =>
+      path.relative(publicDir, file).split(path.sep).join('/').toLowerCase(),
+    );
+    const banned = publicNames.filter(
+      (name) =>
+        name.includes('antigravity') ||
+        name.includes('zavorth-motion.html') ||
+        name.includes('gemini-hero') ||
+        name.includes('runtime-approvals') ||
+        name.includes('runtime-connected') ||
+        name.includes('basilisk'),
+    );
+    if (banned.length > 0) {
+      hard.push(`public/ must not ship banned brand demos: ${banned.join(', ')}`);
+    }
+
+    const productProofs = [
+      'product/zavorth-control-overview.png',
+      'product/zavorth-command-center.png',
+    ];
+    for (const proof of productProofs) {
+      if (!publicNames.includes(proof)) {
+        hard.push(`public/${proof} missing — landing proof must use real Zavorth Control assets`);
+      }
+    }
+  }
+
+  const hasReducedMotion =
+    /prefers-reduced-motion/i.test(hero) ||
+    (/matchMedia\s*\(/.test(hero) && /reduce/i.test(hero));
+  if (!hasReducedMotion) {
+    soft.push('components/Hero.tsx should honor prefers-reduced-motion / matchMedia reduce on title typing');
+  }
+
+  if (hard.length > 0) {
+    return check(
+      'brand-surface',
+      'fail',
+      'superficie de marca publica saiu do contrato (tipografia/favicon/assets).',
+      undefined,
+      hard,
+    );
+  }
+  if (soft.length > 0) {
+    return check(
+      'brand-surface',
+      'warn',
+      'brand surface ok com avisos suaves (reduced-motion ainda opcional ate o hero agent aterrissar).',
+      undefined,
+      soft,
+    );
+  }
+  return check(
+    'brand-surface',
+    'pass',
+    'tipografia local (sem Fontshare/Playfair), favicon #00e88f, public limpo e hero com reduced-motion.',
+  );
+}
+
 function checkExportedRoutes() {
   const outRoot = path.join(root, 'out');
   if (!fs.existsSync(outRoot)) {
@@ -163,6 +247,16 @@ function checkExportedRoutes() {
     'out',
     missing,
   );
+}
+
+function listFilesRecursive(dir) {
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...listFilesRecursive(full));
+    else out.push(full);
+  }
+  return out;
 }
 
 function findExportedHtml(outRoot, route) {
@@ -187,7 +281,8 @@ function readSources() {
     'app/terms/page.tsx',
     'components/Hero.tsx',
     'components/ProductIntroSection.tsx',
-    'components/UseCasesSection.tsx',
+    'components/WhatItDoesSection.tsx',
+    'components/FeaturesSection.tsx',
     'components/ConnectionsSection.tsx',
     'components/InstallSection.tsx',
     'components/Navbar.tsx',

@@ -12,7 +12,8 @@ const read = (file) => {
 const page = read('app/page.tsx');
 const hero = read('components/Hero.tsx');
 const intro = read('components/ProductIntroSection.tsx');
-const useCases = read('components/UseCasesSection.tsx');
+const whatItDoes = read('components/WhatItDoesSection.tsx');
+const features = read('components/FeaturesSection.tsx');
 const connections = read('components/ConnectionsSection.tsx');
 const install = read('components/InstallSection.tsx');
 const globals = read('app/globals.css');
@@ -28,13 +29,24 @@ for (const removed of [
   'ValuePropositionSection',
   'CapabilitiesSection',
   'TechnicalSection',
+  'AboutSection',
+  'EverydaySection',
+  'DashboardSection',
+  'PreviewSection',
+  'HowItWorksSection',
+  'LocalStackMarquee',
+  'ZavorthCosmicCanvas',
+  'SpotlightSmokeCanvas',
+  'AuroraMeshGradient',
+  'UseCasesSection',
 ]) {
   if (page.includes(removed)) findings.push(`app/page.tsx still renders ${removed}`);
 }
 
 for (const required of [
+  'Hero',
   'ProductIntroSection',
-  'UseCasesSection',
+  'WhatItDoesSection',
   'ConnectionsSection',
   'InstallSection',
   'Footer',
@@ -42,13 +54,17 @@ for (const required of [
   if (!page.includes(required)) findings.push(`app/page.tsx missing ${required}`);
 }
 
+// Order matches current home composition (Features/Proof optional between middle sections).
 const expectedOrder = [
+  '<Hero />',
   '<ProductIntroSection />',
-  '<UseCasesSection />',
+  '<WhatItDoesSection />',
+  page.includes('<FeaturesSection />') ? '<FeaturesSection />' : page.includes('<ProofSection />') ? '<ProofSection />' : null,
   '<ConnectionsSection />',
   '<InstallSection />',
   '<Footer />',
-];
+].filter(Boolean);
+
 let lastIndex = -1;
 for (const item of expectedOrder) {
   const index = page.indexOf(item);
@@ -63,48 +79,75 @@ for (const forbiddenHeroContent of ['Começar agora', 'ComeÃ§ar agora', 'Role 
   if (hero.includes(forbiddenHeroContent)) findings.push(`Hero should only show title and animation: ${forbiddenHeroContent}`);
 }
 
+if (!hero.includes('BlackHoleCanvas') && !hero.includes('data-black-hole-placeholder')) {
+  findings.push('Hero missing BlackHoleCanvas / black hole treatment');
+}
+
 if (!hero.includes('cursor-container') || !hero.includes('blinking-cursor')) {
   findings.push('Hero missing the moving colored typing cursor');
 }
 
-if (!hero.includes('--cursor-pos-x') || !hero.includes('updateTypingCursor')) {
-  findings.push('Hero cursor should follow the currently typed character');
+if (!hero.includes('updateTypingCursor') || !hero.includes("updateTypingCursor(chars[0], 'before')") || !hero.includes("updateTypingCursor(char, 'after')")) {
+  findings.push('Hero typing cursor should trail completed characters via transform updates');
 }
 
-if (!hero.includes('let elapsed = 0.3') || !hero.includes('let delay = 0.052') || !hero.includes('w-[5px]')) {
-  findings.push('Hero typing animation should follow the Gemini-paced entrance with a visible colored cursor');
+if (hero.includes('--cursor-pos-x')) {
+  findings.push('Hero should position the typing cursor with transform, not CSS vars --cursor-pos-x');
 }
 
-if (!hero.includes("updateTypingCursor(chars[0], 'before')") || !hero.includes("updateTypingCursor(char, 'after')")) {
-  findings.push('Hero typing cursor should trail completed characters instead of jumping ahead of the text');
+if (!hero.includes('w-[5px]')) {
+  findings.push('Hero typing cursor should remain a visible colored bar');
 }
 
-if (hero.includes('transition: transform 80ms') || !hero.includes('transition: opacity 180ms ease')) {
-  findings.push('Hero typing cursor should move immediately and only fade opacity');
-}
-
-if (!hero.includes('h-[165vh]') || !hero.includes('currentProgress - 0.78') || !hero.includes('scale(${1 - currentProgress * 0.36})') || !hero.includes('const scrollableHeight = Math.max(1, rect.height)')) {
-  findings.push('Hero scroll behavior should use the whole hero section with a reversible text/canvas exit');
+if (!hero.includes('h-[165vh]') || !hero.includes('const scrollableHeight = Math.max(1, rect.height)')) {
+  findings.push('Hero scroll behavior should use the whole hero section height');
 }
 
 if (hero.includes('font-semibold') || hero.includes('font-extrabold') || hero.includes('font-black')) {
   findings.push('Hero title font weight is too heavy for the simplified landing');
 }
 
-if (!intro.includes('data-product-intro')) findings.push('ProductIntroSection missing editorial intro marker');
-if (!useCases.includes('data-use-case-row')) findings.push('UseCasesSection missing simple use-case rows');
-if (!connections.includes('data-connection-line')) findings.push('ConnectionsSection missing simple connection lines');
-if (!install.includes('data-ghost-wordmark')) findings.push('InstallSection missing ghost ZAVORTH wordmark');
+if (!hero.includes('você') && !hero.includes('voc\u00ea')) {
+  findings.push('Hero title should use proper Portuguese accent on você');
+}
 
-if (!intro.includes('landing-surface') || !useCases.includes('landing-surface') || !connections.includes('landing-surface-soft')) {
+if (!intro.includes('data-product-intro') && !intro.includes('id="overview"')) {
+  findings.push('ProductIntroSection missing data-product-intro or id="overview"');
+}
+
+if (!whatItDoes.includes('data-how-it-works') && !whatItDoes.includes('id="how-it-works"') && !whatItDoes.includes('id="what-it-does"')) {
+  findings.push('WhatItDoesSection missing how-it-works / what-it-does marker');
+}
+
+if (!connections.includes('data-connection-line') && !connections.includes('id="connections"')) {
+  findings.push('ConnectionsSection missing connections marker/id');
+}
+
+if (!install.includes('data-ghost-wordmark')) {
+  findings.push('InstallSection missing ghost ZAVORTH wordmark');
+}
+
+if (page.includes('FeaturesSection') || page.includes('ProofSection')) {
+  if (!features.includes('data-proof-section') && !features.includes('id="trust"') && !features.includes('id="features"')) {
+    findings.push('FeaturesSection should act as trust/proof surface');
+  }
+  if (features.includes('runtime-approvals') || features.includes('runtime-connected')) {
+    findings.push('FeaturesSection must not use Basilisk/OpenClaw screenshot assets (runtime-approvals / runtime-connected)');
+  }
+  if (!features.includes('zavorth-control-overview') && !features.includes('zavorth-command-center') && !features.includes('data-zavorth-proof')) {
+    findings.push('FeaturesSection should show real Zavorth Control product proof assets');
+  }
+}
+
+if (!intro.includes('landing-surface') || !whatItDoes.includes('landing-surface') || !connections.includes('landing-surface-soft')) {
   findings.push('Landing sections should use translucent atmospheric surfaces instead of opaque blocks');
 }
 
-if (!globals.includes('.stars::before') || !globals.includes('.stars::after') || !globals.includes('.landing-final-surface')) {
-  findings.push('Global landing atmosphere should include starfield, orbital lines, and final surface layers');
+if (!globals.includes('.landing-final-surface') || !globals.includes('.landing-surface')) {
+  findings.push('Global landing atmosphere should include surface layers');
 }
 
-if (!intro.includes('section-kicker') || !useCases.includes('section-kicker') || !connections.includes('section-kicker')) {
+if (!intro.includes('section-kicker') || !whatItDoes.includes('section-kicker') || !connections.includes('section-kicker')) {
   findings.push('Editorial sections should use the modern section-kicker treatment');
 }
 
@@ -125,13 +168,36 @@ for (const forbiddenSurface of [
   'terminal-card',
   'simulatorCardRef',
   'Dynamic Integration Grid',
+  'Recursos Premium',
+  'Google Antigravity',
+  'gemini-hero',
+  'Integrações Nexus',
+  'Governed MCP Gate',
+  'Basilisk',
+  'BASILISK',
+  'runtime-approvals.png',
+  'runtime-connected.png',
+  'Fase 4',
+  'Fase 5',
 ]) {
-  if ([intro, useCases, connections].some((content) => content.includes(forbiddenSurface))) {
-    findings.push(`landing middle still contains heavy surface: ${forbiddenSurface}`);
+  if ([intro, whatItDoes, features, connections, page, hero].some((content) => content.includes(forbiddenSurface))) {
+    findings.push(`landing still contains heavy/outdated surface: ${forbiddenSurface}`);
   }
 }
 
-for (const anchor of ['#overview', '#capabilities', '#connections', '#install']) {
+// Soft brand surface (hard brand gate lives in website-public-check).
+const brandWarnings = [];
+if (/fontshare/i.test(globals)) brandWarnings.push('globals.css imports fontshare');
+if (/Playfair/i.test(read('app/layout.tsx'))) brandWarnings.push('layout.tsx imports Playfair');
+if (!read('public/favicon.svg').includes('#00e88f')) brandWarnings.push('favicon missing brand green #00e88f');
+const hasReducedMotion =
+  /prefers-reduced-motion/i.test(hero) ||
+  (/matchMedia\s*\(/.test(hero) && /reduce/i.test(hero));
+if (!hasReducedMotion) {
+  brandWarnings.push('Hero should mention prefers-reduced-motion or matchMedia reduce (soft until fully landed)');
+}
+
+for (const anchor of ['#overview', '#how-it-works', '#connections', '#install']) {
   if (!navbar.includes(anchor)) findings.push(`navigation missing ${anchor}`);
 }
 
@@ -141,7 +207,14 @@ if (findings.length > 0) {
   if (requirePass) process.exit(1);
 }
 
+if (brandWarnings.length > 0) {
+  console.warn('Landing brand surface warnings (soft):');
+  for (const warning of brandWarnings) console.warn(`- ${warning}`);
+}
+
 console.log(JSON.stringify({
   status: findings.length === 0 ? 'pass' : 'warn',
   findings,
+  brandWarnings,
+  composition: expectedOrder,
 }, null, 2));

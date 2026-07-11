@@ -1,22 +1,27 @@
 import React from 'react'
 import { Navbar } from '../components/Navbar'
 import { Hero } from '../components/Hero'
-import { AboutSection } from '../components/AboutSection'
+import { ProductIntroSection } from '../components/ProductIntroSection'
 import { WhatItDoesSection } from '../components/WhatItDoesSection'
-import { ConnectionsSection } from '../components/ConnectionsSection'
 import { FeaturesSection } from '../components/FeaturesSection'
+import { ConnectionsSection } from '../components/ConnectionsSection'
 import { InstallSection } from '../components/InstallSection'
 import { Footer } from '../components/Footer'
 
+/**
+ * Landing composition (QA-locked order):
+ * Hero (full-bleed black hole) → product story → how it works → proofs → connections → install → footer
+ * No heavy editorial frame over the hero.
+ */
 export default function Home() {
   return (
-    <main className="min-h-screen bg-transparent text-white selection:bg-white/20">
+    <main className="min-h-screen bg-black text-white selection:bg-white/20">
       <Navbar />
       <Hero />
-      <AboutSection />
+      <ProductIntroSection />
       <WhatItDoesSection />
-      <ConnectionsSection />
       <FeaturesSection />
+      <ConnectionsSection />
       <InstallSection />
       <Footer />
     </main>

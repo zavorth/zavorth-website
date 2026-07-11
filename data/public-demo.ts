@@ -18,7 +18,7 @@ export const publicDemoStory = {
   slug: 'build-fix-governed-run',
   title: 'Build fix com aprovação e replay',
   objective:
-    'Corrigir uma falha de build em um workspace de exemplo, mostrar o plano, pedir aprovação antes de mutar, gerar receipt/artifact e deixar replay auditável — Proof OS, fixture offline, sem runtime ao vivo.',
+    'Corrigir uma falha de build em um workspace de exemplo, mostrar o plano, pedir aprovação antes de mutar, gerar receipt/artifact e deixar replay auditável — Trust Loop, fixture offline, sem runtime ao vivo.',
   workspace: 'fixture/zavorth-demo-workspace',
   command: 'zavorth run "corrija o build, rode testes e mostre o que mudou"',
   safety: [

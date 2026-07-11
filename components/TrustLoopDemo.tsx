@@ -165,7 +165,7 @@ export function TrustLoopDemo() {
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-accent">
-            Proof OS · trust loop
+            Trust Loop
           </p>
           <h2 className="text-[20px] font-semibold tracking-tight text-neutral-50 sm:text-[22px]">
             Pedido → prévia → aprovar → receipt
@@ -340,7 +340,7 @@ export function TrustLoopDemo() {
 
       <p className="mt-4 border-t border-white/[0.06] pt-4 text-[11px] leading-relaxed text-neutral-600">
         Disclaimer: demo de produto estática. Não há runtime de agente ao vivo, secrets ou rede
-        externa. Receipts e ids são fixture para explicar o Proof OS. Teclado: Enter/Espaço
+        externa. Receipts e ids são fixture para explicar o Trust Loop. Teclado: Enter/Espaço
         inicia ou aprova; A aprova; Esc/R reseta.
       </p>
     </section>

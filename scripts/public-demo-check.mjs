@@ -36,14 +36,18 @@ if (requirePass && failed > 0) {
 }
 
 function checkRequiredFiles() {
-  const required = ['app/demo/page.tsx', 'data/public-demo.ts'];
+  const required = [
+    'app/demo/page.tsx',
+    'data/public-demo.ts',
+    'components/TrustLoopDemo.tsx',
+  ];
   const missing = required.filter((file) => !fs.existsSync(path.join(root, file)));
   return check(
     'required-files',
     missing.length === 0 ? 'pass' : 'fail',
     missing.length === 0
-      ? 'rota /demo e fixture publica existem.'
-      : 'rota /demo ou fixture publica estao ausentes.',
+      ? 'rota /demo, trust loop e fixture publica existem.'
+      : 'rota /demo, trust loop ou fixture publica estao ausentes.',
     undefined,
     missing,
   );
@@ -57,18 +61,20 @@ function checkFixtureContract() {
     'artifact',
     'replay',
     'rollback',
+    'receipt',
     'Success',
     'Error',
     'Approval',
     'Rollback',
-    'sem rede externa obrigatoria',
+    'sem rede externa obrigat',
+    'live runtime',
   ];
   const missing = required.filter((phrase) => !fixture.includes(phrase));
   return check(
     'fixture-contract',
     missing.length === 0 ? 'pass' : 'fail',
     missing.length === 0
-      ? 'fixture cobre objetivo, approval, artifact, replay, erro e rollback.'
+      ? 'fixture cobre objetivo, approval, receipt, artifact, replay, erro e rollback.'
       : 'fixture da demo perdeu parte do contrato publico.',
     'data/public-demo.ts',
     missing,
@@ -76,7 +82,11 @@ function checkFixtureContract() {
 }
 
 function checkDemoRouteCopy() {
-  const route = `${readText('app/demo/page.tsx')}\n${readText('data/public-demo.ts')}`;
+  const route = [
+    readText('app/demo/page.tsx'),
+    readText('data/public-demo.ts'),
+    readText('components/TrustLoopDemo.tsx'),
+  ].join('\n');
   const required = [
     'Public demo',
     'Guided story',
@@ -85,13 +95,19 @@ function checkDemoRouteCopy() {
     'Chat comum',
     'Zavorth',
     'Ver run guiado',
+    'TrustLoopDemo',
+    'data-trust-loop-demo',
+    'data-trust-loop-step',
+    'Aprovar',
+    'Reset',
+    'not live runtime',
   ];
   const missing = required.filter((phrase) => !route.includes(phrase));
   return check(
     'route-copy',
     missing.length === 0 ? 'pass' : 'fail',
     missing.length === 0
-      ? 'rota /demo apresenta historia guiada e comparacao publica.'
+      ? 'rota /demo apresenta trust loop, historia guiada e comparacao publica.'
       : 'rota /demo perdeu texto ou blocos publicos obrigatorios.',
     'app/demo/page.tsx',
     missing,
@@ -170,8 +186,15 @@ function checkExportedDemo() {
     );
   }
   const html = fs.readFileSync(exported, 'utf8');
+  // Accent-tolerant match: export may use "aprovação" while older checks used "aprovacao".
+  const normalize = (value) =>
+    String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  const htmlNorm = normalize(html);
   const required = ['Build fix com aprovacao e replay', 'Chat comum', 'artifact'];
-  const missing = required.filter((phrase) => !html.includes(phrase));
+  const missing = required.filter((phrase) => !htmlNorm.includes(normalize(phrase)));
   return check(
     'exported-demo',
     missing.length === 0 ? 'pass' : 'fail',

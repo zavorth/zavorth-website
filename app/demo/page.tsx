@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { BrandMark } from '../../components/BrandMark'
 import { Footer } from '../../components/Footer'
+import { TrustLoopDemo } from '../../components/TrustLoopDemo'
 import { publicDemoStory } from '../../data/public-demo'
 
 const stateIcon = {
@@ -65,8 +66,15 @@ export default function PublicDemoPage() {
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <a
-                href="/demo#demo-run"
+                href="/demo#trust-loop"
                 className="btn-sheen inline-flex items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-3 text-[14px] font-semibold text-surface"
+              >
+                Loop aprovar → receipt
+                <ShieldCheck size={15} />
+              </a>
+              <a
+                href="/demo#demo-run"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-6 py-3 text-[14px] font-medium text-neutral-300 transition-colors hover:text-neutral-100"
               >
                 Ver run guiado
                 <Play size={15} />
@@ -105,6 +113,12 @@ export default function PublicDemoPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-white/[0.06] bg-white/[0.01] py-12">
+        <div className="max-w-8xl mx-auto px-6">
+          <TrustLoopDemo />
         </div>
       </section>
 

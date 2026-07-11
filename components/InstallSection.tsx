@@ -231,6 +231,13 @@ export function InstallSection() {
             <span>OS: macOS / Linux / Windows</span>
           </div>
 
+          <a
+            href="/demo#trust-loop"
+            className="text-[12px] font-medium text-accent transition-colors hover:text-accent-light"
+          >
+            Ver loop aprovar → receipt (demo estática)
+          </a>
+
           {/* Styled Developer Keycaps */}
           <div className="flex items-center gap-1.5 mt-2 select-none">
             <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold border border-white/10 rounded bg-white/5 text-neutral-400 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">NPM</span>

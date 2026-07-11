@@ -18,7 +18,7 @@ export const publicDemoStory = {
   slug: 'build-fix-governed-run',
   title: 'Build fix com aprovação e replay',
   objective:
-    'Corrigir uma falha de build em um workspace de exemplo, mostrar o plano, pedir aprovação antes de mutar, gerar artifact e deixar replay auditável.',
+    'Corrigir uma falha de build em um workspace de exemplo, mostrar o plano, pedir aprovação antes de mutar, gerar receipt/artifact e deixar replay auditável — Proof OS, fixture offline, sem runtime ao vivo.',
   workspace: 'fixture/zavorth-demo-workspace',
   command: 'zavorth run "corrija o build, rode testes e mostre o que mudou"',
   safety: [
@@ -26,6 +26,7 @@ export const publicDemoStory = {
     'sem rede externa obrigatória',
     'preview antes de qualquer mutação',
     'rollback descrito antes de aplicar',
+    'não é live runtime — demo estática',
   ],
   steps: [
     {
@@ -58,10 +59,10 @@ export const publicDemoStory = {
     },
     {
       state: 'artifact',
-      label: 'Artifact',
-      title: 'Entrega revisável',
-      detail: 'Resumo, diff, logs e resultado ficam empacotados como artifact público.',
-      evidence: 'artifact demo-build-fix-report.md',
+      label: 'Receipt / Artifact',
+      title: 'Evidência revisável',
+      detail: 'Receipt com id/status, resumo, diff e logs empacotados como artifact público.',
+      evidence: 'receipt + artifact demo-build-fix-report.md',
     },
     {
       state: 'replay',
@@ -74,7 +75,7 @@ export const publicDemoStory = {
       state: 'summary',
       label: 'Resumo',
       title: 'Pronto para revisar',
-      detail: 'O operador recebe resultado, risco residual e próximo passo.',
+      detail: 'O operador recebe resultado, risco residual e próximo passo — sem claim de live agent.',
       evidence: 'build pass, 3 arquivos, rollback disponível',
     },
   ] satisfies PublicDemoStep[],
@@ -102,12 +103,13 @@ export const publicDemoStory = {
   ] satisfies PublicDemoStatus[],
   artifact: {
     id: 'demo-build-fix-report.md',
-    title: 'Artifact público',
+    title: 'Artifact / receipt público',
     lines: [
-      'Resumo: build corrigido em fixture local.',
+      'Resumo: build corrigido em fixture local (não live runtime).',
       'Arquivos: package.json, src/buildTarget.ts, tests/buildTarget.test.ts.',
       'Validação: npm test -- --runInBand.',
       'Risco residual: baixo; fixture isolada; rollback registrado.',
+      'Honesty: página e loop são estáticos; receipt ids são fixture.',
     ],
   },
   replay: {
@@ -120,6 +122,7 @@ export const publicDemoStory = {
       'patch.applied',
       'tests.completed',
       'artifact.written',
+      'receipt.returned',
       'summary.delivered',
     ],
   },
@@ -130,7 +133,7 @@ export const publicDemoStory = {
     },
     {
       label: 'Zavorth',
-      text: 'Planeja, pede sinal, executa, prova, registra artifact e deixa replay.',
+      text: 'Planeja, pede sinal, executa, prova com receipt, registra artifact e deixa replay.',
     },
   ],
 } as const

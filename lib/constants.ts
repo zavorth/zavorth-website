@@ -1,7 +1,7 @@
 export const NAV_LINKS = [
   { id: 'overview', href: '#overview', label: 'O que é' },
   { id: 'how-it-works', href: '#how-it-works', label: 'Como funciona' },
-  { id: 'connections', href: '#connections', label: 'Onde usa' },
+  { id: 'features', href: '#features', label: 'Painel' },
   { id: 'install', href: '#install', label: 'Começar' },
 ]
 

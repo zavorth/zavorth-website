@@ -17,7 +17,6 @@ const landingCandidates = [
   'components/BlackHoleCanvas.tsx',
   'components/ProductIntroSection.tsx',
   'components/WhatItDoesSection.tsx',
-  'components/ConnectionsSection.tsx',
   'components/FeaturesSection.tsx',
   'components/ProofSection.tsx',
   'components/InstallSection.tsx',
@@ -27,7 +26,6 @@ const landingCandidates = [
 const pageTokens = [
   ['ProductIntroSection', 'components/ProductIntroSection.tsx'],
   ['WhatItDoesSection', 'components/WhatItDoesSection.tsx'],
-  ['ConnectionsSection', 'components/ConnectionsSection.tsx'],
   ['FeaturesSection', 'components/FeaturesSection.tsx'],
   ['ProofSection', 'components/ProofSection.tsx'],
   ['InstallSection', 'components/InstallSection.tsx'],

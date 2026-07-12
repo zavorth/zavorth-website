@@ -1,6 +1,5 @@
 import React from 'react'
 import Image from 'next/image'
-import { BrandMark } from './BrandMark'
 
 const links = [
   ['Docs', '/docs'],
@@ -15,20 +14,18 @@ export function Footer() {
   return (
     <footer className="border-t border-white/[0.06] bg-black">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* One mascot only — no second BrandMark next to the name */}
           <Image
             src="/brand/zavorth-mascot.svg"
-            alt="Mascote Zavorth"
-            width={48}
-            height={48}
-            className="h-12 w-12 shrink-0 object-contain"
+            alt=""
+            width={40}
+            height={40}
+            className="h-10 w-10 shrink-0 object-contain"
             unoptimized
           />
           <div>
-            <div className="flex items-center gap-2">
-              <BrandMark className="h-4 w-4" animated={false} />
-              <span className="text-base font-semibold text-white">Zavorth</span>
-            </div>
+            <span className="text-base font-semibold text-white">Zavorth</span>
             <p className="mt-1 max-w-xs text-sm leading-relaxed text-neutral-500">
               Peça do seu jeito. Ele mostra o que vai fazer. Você decide.
             </p>

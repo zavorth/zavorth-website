@@ -76,7 +76,6 @@ function checkRequiredFiles() {
     'components/ProductIntroSection.tsx',
     'components/WhatItDoesSection.tsx',
     'components/FeaturesSection.tsx',
-    'components/ConnectionsSection.tsx',
     'components/InstallSection.tsx',
     'components/ContentPageShell.tsx',
   ];
@@ -104,7 +103,6 @@ function checkRequiredSourceLinks() {
     '/terms',
     '#overview',
     '#how-it-works',
-    '#connections',
     '#install',
   ];
   const missing = required.filter((link) => !source.includes(link));
@@ -183,14 +181,27 @@ function checkBrandSurface() {
       hard.push(`public/ must not ship banned brand demos: ${banned.join(', ')}`);
     }
 
+    // Real product UI only — current desktop/control shell, never legacy fox mocks.
     const productProofs = [
+      'product/zavorth-desktop-shell.png',
       'product/zavorth-control-overview.png',
-      'product/zavorth-command-center.png',
     ];
-    for (const proof of productProofs) {
-      if (!publicNames.includes(proof)) {
-        hard.push(`public/${proof} missing — landing proof must use real Zavorth Control assets`);
-      }
+    const hasAnyProof = productProofs.some((proof) => publicNames.includes(proof));
+    if (!hasAnyProof) {
+      hard.push(
+        `public/ missing product proof — need one of: ${productProofs.join(', ')}`,
+      );
+    }
+    const bannedLegacyBrand = publicNames.filter(
+      (name) =>
+        name.includes('zavorth-command-center') ||
+        name.includes('command-center.png') ||
+        (name.includes('fox') && name.endsWith('.png')),
+    );
+    if (bannedLegacyBrand.length > 0) {
+      hard.push(
+        `public/ must not ship abandoned brand assets (fox / old command-center mock): ${bannedLegacyBrand.join(', ')}`,
+      );
     }
   }
 
@@ -283,7 +294,6 @@ function readSources() {
     'components/ProductIntroSection.tsx',
     'components/WhatItDoesSection.tsx',
     'components/FeaturesSection.tsx',
-    'components/ConnectionsSection.tsx',
     'components/InstallSection.tsx',
     'components/Navbar.tsx',
     'components/Footer.tsx',

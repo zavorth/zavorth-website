@@ -110,7 +110,7 @@ Footer
 - **prefers-reduced-motion:** hero title typing and scroll treatment honor `prefers-reduced-motion` / `matchMedia('(prefers-reduced-motion: reduce)')` (instant title, milder scroll).
 - **Mascote oficial:** green pixel SVG from desktop — `public/brand/zavorth-mascot.svg` (same as `apps/zavorth-desktop/public/zavorth-mascot.svg`). Never the old snake (`zavorthmascote.png`) nor the cyber-head PNGs (removed). Place sparingly (intro + footer), never as a watermark over the black hole.
 - **Public language:** no internal phase numbers (`Fase N`), no heavy governance jargon, no “Recursos Premium” / “Integrações Nexus” marketing leftovers.
-- **Product proof:** landing screenshots must be real Zavorth Control / Command Center assets (`public/product/zavorth-control-overview.png`, `zavorth-command-center.png`). Never ship foreign UI demos as if they were Zavorth.
+- **Product proof:** landing screenshots must be the current Zavorth Control UI (`public/product/zavorth-control-overview.png`). Never ship the abandoned white-fox / old Command Center marketing mock.
 - Product first, not abstract AI myth.
 - Preview, approval, audit and budget as lightweight control planes.
 - Dark, focused, restrained UI with concrete runtime language.

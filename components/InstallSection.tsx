@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Check, Copy, Terminal as TermIcon, Play, RefreshCw } from 'lucide-react'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
@@ -105,25 +106,28 @@ export function InstallSection() {
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         
-        {/* Ghost Wordmark */}
+        {/* ZAVORTH (top) · mascot (middle) · AGENT (legs) — hero stack with pixel mascot */}
         <div
           data-ghost-wordmark
+          className="install-agent-mark pointer-events-none relative mx-auto mb-8 select-none"
           aria-hidden="true"
-          className="pointer-events-none relative mb-2 flex select-none items-center justify-center overflow-hidden"
         >
-          <h2
-            className="whitespace-nowrap text-center font-extrabold leading-[0.8] tracking-[-0.06em]"
-            style={{
-              fontSize: 'clamp(3rem, 10vw, 8rem)',
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 90%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            ZAVORTH
-          </h2>
+          <div className="install-agent-stage">
+            <p className="install-agent-text install-agent-back">ZAVORTH</p>
+            <div className="install-agent-mascot">
+              <span className="install-agent-glow" />
+              <Image
+                src="/brand/zavorth-mascot.svg"
+                alt=""
+                width={210}
+                height={210}
+                className="install-agent-mascot-img"
+                unoptimized
+                priority
+              />
+            </div>
+            <p className="install-agent-text install-agent-front">AGENT</p>
+          </div>
         </div>
 
         <h3 className="relative text-3xl font-semibold tracking-normal text-white sm:text-4xl">

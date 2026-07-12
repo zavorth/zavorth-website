@@ -1,7 +1,14 @@
 import type { Metadata } from 'next'
-import { JetBrains_Mono } from 'next/font/google'
+import { Anton, JetBrains_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
+
+const anton = Anton({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-display-agent',
+  display: 'swap',
+})
 
 const zavorthSans = localFont({
   src: [
@@ -70,7 +77,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={`${zavorthSans.variable} ${jbMono.variable}`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${zavorthSans.variable} ${jbMono.variable} ${anton.variable}`}>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>

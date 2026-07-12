@@ -12,7 +12,6 @@ const page = existsSync(join(root, 'app/page.tsx'))
 const warmSurfaceCandidates = [
   ['ProductIntroSection', 'components/ProductIntroSection.tsx'],
   ['WhatItDoesSection', 'components/WhatItDoesSection.tsx'],
-  ['ConnectionsSection', 'components/ConnectionsSection.tsx'],
   ['FeaturesSection', 'components/FeaturesSection.tsx'],
   ['ProofSection', 'components/ProofSection.tsx'],
   ['InstallSection', 'components/InstallSection.tsx'],

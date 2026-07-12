@@ -1,6 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Zavorth">
-  <rect width="64" height="64" rx="18" fill="#060809"/>
-  <rect x="7" y="7" width="50" height="50" rx="15" fill="#00e88f" opacity=".12"/>
-  <path d="M19 19h28L24 45h28" fill="none" stroke="#00e88f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="46" cy="18" r="4" fill="#00e88f"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Zavorth" shape-rendering="crispEdges">
+  <!-- Mascote pixel only — transparent background (no black plate) -->
+  <rect x="16" y="8" width="8" height="16" fill="#00e88f"/>
+  <rect x="40" y="8" width="8" height="16" fill="#00e88f"/>
+  <rect x="24" y="24" width="16" height="8" fill="#00e88f"/>
+  <rect x="8" y="24" width="48" height="16" fill="#00e88f"/>
+  <rect x="0" y="32" width="8" height="8" fill="#00e88f"/>
+  <rect x="56" y="32" width="8" height="8" fill="#00e88f"/>
+  <rect x="8" y="40" width="48" height="12" fill="#00e88f"/>
+  <rect x="16" y="52" width="12" height="8" fill="#00e88f"/>
+  <rect x="36" y="52" width="12" height="8" fill="#00e88f"/>
+  <rect x="20" y="30" width="4" height="8" fill="#000000"/>
+  <rect x="40" y="30" width="4" height="8" fill="#000000"/>
 </svg>

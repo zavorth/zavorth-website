@@ -1,203 +1,246 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Terminal, Shield, FileCheck, HelpCircle, Check, Play, AlertTriangle } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { Terminal, Cpu, Shield, FileCheck } from 'lucide-react'
+
+/**
+ * Trust loop — fast scroll scrub + refined UI.
+ * Middle ground: not heavy cards, not sparse rail — product-grade panel.
+ */
 
 const steps = [
   {
+    id: 'intent',
     num: '01',
-    title: 'Comando Natural',
-    description: 'Insira suas metas em linguagem humana livre pelo Dashboard, TUI ou canais integrados autorizados.'
+    kicker: 'Entrada',
+    title: 'Intenção',
+    description:
+      'Você descreve o objetivo em linguagem natural no dashboard, no CLI ou em um canal autorizado.',
+    icon: Terminal,
+    panel: {
+      badge: 'entrada',
+      headline: 'Comando capturado',
+      detail: 'Sem executar ainda — só a intenção e a origem.',
+      rows: [
+        { k: 'origem', v: 'dashboard · local' },
+        { k: 'pedido', v: 'organize invoices/ e avise no Telegram' },
+        { k: 'estado', v: 'intenção pronta' },
+      ],
+      accent: 'intent',
+    },
   },
   {
+    id: 'plan',
     num: '02',
-    title: 'Análise e Plano',
-    description: 'O compilador local analisa o objetivo, mapeia arquivos, reúne ferramentas e propõe um plano de execução.'
+    kicker: 'Análise',
+    title: 'Plano local',
+    description:
+      'O runtime indexa o workspace, monta o plano e lista ferramentas e riscos — sem rodar nada sensível.',
+    icon: Cpu,
+    panel: {
+      badge: 'plano',
+      headline: 'Plano montado',
+      detail: 'Arquivos, passos e risco visíveis antes do portão.',
+      rows: [
+        { k: 'arquivo', v: 'plan.md · 6 passos' },
+        { k: 'escopo', v: '42 caminhos mapeados' },
+        { k: 'risco', v: 'write · network · medium' },
+      ],
+      accent: 'plan',
+    },
   },
   {
+    id: 'gate',
     num: '03',
-    title: 'Portão de Decisão',
-    description: 'Ações que possam modificar arquivos ou acessar a rede geram uma prévia de risco e aguardam sua aprovação.'
+    kicker: 'Governança',
+    title: 'Portão de decisão',
+    description:
+      'Ações sensíveis ficam bloqueadas até você aprovar. Diff, destino e permissões legíveis.',
+    icon: Shield,
+    panel: {
+      badge: 'portão',
+      headline: 'Aguardando você',
+      detail: 'Nada sai do sandbox sem confirmação explícita.',
+      rows: [
+        { k: 'gate', v: 'awaiting operator' },
+        { k: 'diff', v: '+12 / −3 caminhos' },
+        { k: 'ações', v: 'aprovar · rejeitar · editar' },
+      ],
+      accent: 'gate',
+    },
   },
   {
+    id: 'receipt',
     num: '04',
-    title: 'Recibo Assinado',
-    description: 'Após a execução em sandbox local, o Zavorth salva um registro de auditoria criptografado e legível no disco.'
-  }
+    kicker: 'Auditoria',
+    title: 'Recibo assinado',
+    description:
+      'Sandbox executa e grava um recibo local — o que rodou, o que mudou, o que restou.',
+    icon: FileCheck,
+    panel: {
+      badge: 'recibo',
+      headline: 'Recibo gravado',
+      detail: 'Prova legível no disco, pronta para auditoria.',
+      rows: [
+        { k: 'sandbox', v: 'isolado · exit 0' },
+        { k: 'receipt', v: 'sha256 · data/runtime/' },
+        { k: 'próximo', v: 'notificar canal se autorizado' },
+      ],
+      accent: 'receipt',
+    },
+  },
 ] as const
 
+function progressFromSection(section: HTMLElement): number {
+  const rect = section.getBoundingClientRect()
+  const vh = window.innerHeight
+  const total = Math.max(1, rect.height - vh)
+  return Math.max(0, Math.min(1, -rect.top / total))
+}
+
+function stepFromProgress(p: number): number {
+  if (p >= 0.97) return 3
+  return Math.min(3, Math.floor(p * 4))
+}
+
 export function WhatItDoesSection() {
+  const sectionRef = useRef<HTMLElement>(null)
   const [activeStep, setActiveStep] = useState(0)
+  const [progress, setProgress] = useState(0)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const onScroll = () => {
+      const section = sectionRef.current
+      if (!section) return
+      const p = progressFromSection(section)
+      setProgress(p)
+      setActiveStep(stepFromProgress(p))
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [mounted])
+
+  const scrollToStep = (index: number) => {
+    const section = sectionRef.current
+    if (!section) return
+    const top = window.scrollY + section.getBoundingClientRect().top
+    const travel = Math.max(1, section.offsetHeight - window.innerHeight)
+    window.scrollTo({ top: top + ((index + 0.45) / 4) * travel, behavior: 'smooth' })
+  }
+
+  const current = steps[activeStep]
+  const Icon = current.icon
 
   return (
     <section
       id="how-it-works"
-      className="landing-surface relative border-t border-white/[0.06] py-24 sm:py-32 overflow-hidden scroll-mt-20"
+      ref={sectionRef}
+      className="how-section relative border-t border-white/[0.06] bg-black scroll-mt-20"
+      style={{ height: '240vh' }}
     >
-      <div className="pointer-events-none absolute bottom-0 right-1/4 h-[300px] w-[500px] rounded-full bg-emerald-500/[0.01] blur-[150px]" />
-
-      <div className="relative z-10 mx-auto max-w-6xl px-6">
-        
-        {/* Header Block */}
-        <div className="mb-16 flex flex-col gap-6 md:flex-row md:items-start md:gap-12 text-left">
-          <div className="w-full md:w-1/3">
-            <span className="section-kicker">Ciclo Operacional</span>
-            <h2 className="mt-6 font-display text-4xl font-semibold leading-none tracking-tight text-white sm:text-5xl">
-              Como o agente<br />
-              <span className="text-emerald-400">executa tarefas</span>
+      <div className="sticky top-0 flex min-h-[100svh] items-center py-14 sm:py-16">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <div className="max-w-2xl">
+            <span className="section-kicker">Como funciona</span>
+            <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              Loop de confiança, <span className="text-emerald-400">não de surpresa.</span>
             </h2>
-          </div>
-          <div className="w-full md:w-2/3">
-            <p className="text-lg leading-relaxed text-neutral-300 font-light">
-              O Zavorth segue um fluxo contínuo e governado localmente, garantindo que cada comando passe por planejamento, análise de segurança e confirmação manual do operador antes da execução. Passe o cursor sobre os passos para inspecionar o comportamento do terminal.
+            <p className="mt-4 max-w-lg text-sm leading-7 text-neutral-400 sm:text-base">
+              Role para ver intenção → plano → portão → recibo — o mesmo fluxo do runtime.
             </p>
           </div>
-        </div>
 
-        {/* 2-Column Layout */}
-        <div className="grid gap-8 lg:grid-cols-12 items-center">
-          
-          {/* Left Column: Interactive Steps List */}
-          <div className="lg:col-span-5 flex flex-col gap-4 text-left">
-            {steps.map((step, idx) => {
-              const isActive = idx === activeStep
-              return (
-                <div
-                  key={step.num}
-                  className={`flex gap-4 p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    isActive 
-                      ? 'border-emerald-500/20 bg-emerald-500/[0.02] shadow-[0_4px_20px_rgba(16,185,129,0.04)]' 
-                      : 'border-white/[0.04] bg-white/[0.01] hover:border-white/[0.08]'
-                  }`}
-                  onMouseEnter={() => setActiveStep(idx)}
-                  onClick={() => setActiveStep(idx)}
-                >
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all duration-300 ${
-                    isActive 
-                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' 
-                      : 'border-white/[0.06] bg-white/[0.02] text-neutral-400'
-                  }`}>
-                    <span className="font-mono text-xs font-bold">{step.num}</span>
-                  </div>
-                  <div>
-                    <h3 className={`font-display text-sm font-semibold transition-colors duration-300 ${
-                      isActive ? 'text-emerald-400' : 'text-white'
-                    }`}>
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-xs leading-relaxed text-neutral-400 font-light">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Right Column: Dynamic Terminal View */}
-          <div className="lg:col-span-7 h-[280px] flex flex-col rounded-xl border border-white/[0.08] bg-[#050608] shadow-[0_24px_50px_rgba(0,0,0,0.6)] overflow-hidden">
-            
-            {/* Terminal Top Bar */}
-            <div className="flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3 select-none">
-              <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
-              <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
-              <span className="h-2 w-2 rounded-full bg-[#28c840]" />
-              <span className="ml-2 font-mono text-[8px] uppercase tracking-wider text-neutral-500">
-                {activeStep === 0 && 'ZAVORTH INPUT GATE'}
-                {activeStep === 1 && 'ZAVORTH COMPILER PLANNER'}
-                {activeStep === 2 && 'ZAVORTH SECURITY WATCH'}
-                {activeStep === 3 && 'ZAVORTH AUDIT SIGNER'}
-              </span>
+          <div className="mt-12 grid gap-10 lg:grid-cols-12 lg:gap-12 lg:items-center">
+            {/* Left rail — refined, not empty, not heavy cards */}
+            <div className="lg:col-span-5">
+              <div className="how-steps">
+                {steps.map((step, index) => {
+                  const StepIcon = step.icon
+                  const active = index === activeStep
+                  const done = index < activeStep
+                  return (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => scrollToStep(index)}
+                      className={`how-step ${active ? 'is-active' : ''} ${done ? 'is-done' : ''}`}
+                    >
+                      <span className="how-step-index">
+                        <span className="how-step-num">{step.num}</span>
+                        <span className="how-step-track" aria-hidden />
+                      </span>
+                      <span className="how-step-content">
+                        <span className="how-step-kicker">{step.kicker}</span>
+                        <span className="how-step-title">
+                          <StepIcon size={15} className="how-step-icon" aria-hidden />
+                          {step.title}
+                        </span>
+                        <span className="how-step-desc">{step.description}</span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
-            {/* Terminal Window Content */}
-            <div className="p-6 flex-1 font-mono text-[10px] sm:text-[11px] leading-relaxed text-neutral-300 select-none text-left overflow-y-auto">
-              
-              {activeStep === 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5 text-white">
-                    <span className="text-emerald-400">❯</span>
-                    <span className="after:content-['_'] after:animate-ping">zavorth compile e deploy do microserviço</span>
-                  </div>
-                  <div className="text-neutral-500">// Parsing natural language intent...</div>
-                  <div className="text-neutral-400">
-                    Target identified: <span className="text-emerald-400">agendamento-service</span>
-                  </div>
-                  <div className="text-neutral-400">
-                    Intent mapped: <span className="text-emerald-400">COMPILE_AND_DEPLOY</span>
-                  </div>
-                  <div className="text-neutral-500">// Checking local environment variables...</div>
-                  <div className="text-emerald-400/90 font-bold">✓ Intent parsed successfully. Ready for planning.</div>
-                </div>
-              )}
+            {/* Right proof panel */}
+            <div className="lg:col-span-7">
+              <div className="how-surface">
+                <div className="how-surface-progress" style={{ width: `${Math.round(progress * 100)}%` }} />
 
-              {activeStep === 1 && (
-                <div className="space-y-3">
-                  <div className="text-blue-400 flex items-center gap-1.5 font-bold">
-                    <Play size={10} className="shrink-0" />
-                    <span>ESTRUTURA DE PASSOS GERADA:</span>
-                  </div>
-                  <div className="pl-3 text-neutral-300 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      <span>1. Mapear arquivos schema <span className="text-neutral-500">(prisma/schema.prisma)</span></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      <span>2. Validar tipos de rotas <span className="text-neutral-500">(src/app/api)</span></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      <span>3. Transpilar código compilado <span className="text-neutral-500">(dist/sandbox)</span></span>
-                    </div>
-                  </div>
-                  <div className="text-neutral-500">// Analyzing safety check metrics...</div>
-                  <div className="text-amber-400 font-semibold">Warning: 1 local write action detected. Triggering approval gate.</div>
+                <div className="how-surface-head">
+                  <span className="how-surface-badge">
+                    <span className="how-surface-badge-dot" />
+                    {current.panel.badge}
+                  </span>
+                  <span className="how-surface-count">
+                    {String(activeStep + 1).padStart(2, '0')}
+                    <span> / 04</span>
+                  </span>
                 </div>
-              )}
 
-              {activeStep === 2 && (
-                <div className="space-y-3">
-                  <div className="text-amber-500 flex items-center gap-1.5 font-bold">
-                    <AlertTriangle size={11} className="shrink-0 animate-pulse" />
-                    <span>PERMISSÃO DE ESCRITA SOLICITADA</span>
+                <div key={current.id} className="how-mock-fade">
+                  <div className="how-surface-icon">
+                    <Icon size={20} />
                   </div>
-                  <div className="p-2.5 rounded border border-amber-500/20 bg-amber-500/5 text-neutral-300 text-[10px] space-y-1">
-                    <div>Operação: <span className="text-amber-400 font-bold">write_file</span></div>
-                    <div>Caminho: <code className="text-neutral-400">/src/pages/api/booking.ts</code></div>
-                    <div>Risco: <span className="text-amber-400">Modificação de código fonte no repositório</span></div>
+                  <h3 className="how-surface-title">{current.panel.headline}</h3>
+                  <p className="how-surface-detail">{current.panel.detail}</p>
+
+                  <div className="how-surface-grid">
+                    {current.panel.rows.map((row) => (
+                      <div key={row.k} className="how-surface-row">
+                        <span className="how-surface-k">{row.k}</span>
+                        <span className="how-surface-v">{row.v}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex gap-2 pt-1">
-                    <button className="bg-amber-500/10 border border-amber-500/30 text-amber-500 px-3 py-1 rounded text-[8px] font-bold shadow-[0_0_10px_rgba(245,158,11,0.1)]">
-                      Shift+Tab Aceitar
-                    </button>
-                    <button className="bg-white/5 border border-white/10 text-neutral-400 px-3 py-1 rounded text-[8px]">
-                      Recusar
-                    </button>
+
+                  <div className="how-surface-foot">
+                    <span className="how-surface-check">✓</span>
+                    sem inventar provider · sem ação fora do portão
                   </div>
                 </div>
-              )}
 
-              {activeStep === 3 && (
-                <div className="space-y-3">
-                  <div className="text-emerald-400 flex items-center gap-1.5 font-bold">
-                    <Check size={11} className="shrink-0" />
-                    <span>LOG DE EXECUÇÃO ASSINADO E COMPILADO</span>
-                  </div>
-                  <div className="pl-3 text-[10px] text-neutral-400 space-y-1">
-                    <div>Hash do recibo: <span className="text-neutral-200 font-mono">sha256-b4a78c1c5e0e5a9f3b6c2d1e0f9a8b7c</span></div>
-                    <div>Caminho físico: <code className="text-neutral-200">~/.zavorth/logs/receipt-4402.json</code></div>
-                    <div>Garantia: <span className="text-emerald-400 font-semibold">Integridade garantida por assinatura local</span></div>
-                  </div>
-                  <div className="text-neutral-500">// Audit status: green. Sandbox successfully clean. PTY detached.</div>
+                <div className="how-surface-dots" aria-hidden>
+                  {steps.map((s, i) => (
+                    <span key={s.id} className={i <= activeStep ? 'on' : ''} />
+                  ))}
                 </div>
-              )}
-
+              </div>
             </div>
           </div>
-
         </div>
-
       </div>
     </section>
   )

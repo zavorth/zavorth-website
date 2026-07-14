@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -59,12 +59,37 @@ function resolveParticleCount(baseCount: number, mobileCount: number, renderer: 
 export function BlackHoleCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const materialRef = useRef<THREE.ShaderMaterial | null>(null)
+  const [touchHintVisible, setTouchHintVisible] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) return
 
     const container = containerRef.current
     let fl = { ...DEFAULTS }
+
+    // Mobile / coarse-pointer detection: drives touch-scroll fix, auto-rotate and the touch hint.
+    const isCoarsePointer = typeof window.matchMedia === 'function'
+      && window.matchMedia('(pointer: coarse)').matches
+    const prefersReducedMotion = typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    // Cap pixel ratio harder on mobile for performance.
+    const maxPixelRatio = isCoarsePointer ? 1.5 : 2
+
+    let hintDismissed = false
+    let hintAutoHideTimer: ReturnType<typeof setTimeout> | null = null
+    if (isCoarsePointer && !prefersReducedMotion) {
+      setTouchHintVisible(true)
+      hintAutoHideTimer = setTimeout(() => {
+        hintDismissed = true
+        setTouchHintVisible(false)
+      }, 7000)
+    }
+    const dismissTouchHint = () => {
+      if (hintDismissed) return
+      hintDismissed = true
+      if (hintAutoHideTimer) clearTimeout(hintAutoHideTimer)
+      setTouchHintVisible(false)
+    }
 
     function ml(e: number, t: number, n: number) {
       let r = Math.max(0, Math.min(1, (n - e) / (t - e)))
@@ -152,6 +177,14 @@ export function BlackHoleCanvas() {
     let colorWaveProgress = 2.0
     let waveRadius = -999.0
 
+    // Mobile manual rotation state (horizontal touch-drag) + inertia.
+    let manualRotY = 0
+    let manualRotVelocity = 0
+    let touchRotating = false
+    let touchStartX = 0
+    let touchStartY = 0
+    let touchLastX = 0
+
     // Physically opaque event horizon mesh
     let eventHorizonMesh: THREE.Mesh
 
@@ -187,7 +220,7 @@ export function BlackHoleCanvas() {
 
     // Set internal resolution without overriding the 100% CSS styling
     renderer.setSize(initWidth, initHeight, false)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
     container.appendChild(renderer.domElement)
     fl.particleCount = resolveParticleCount(fl.particleCount, fl.mobileParticleCount, renderer)
 
@@ -201,6 +234,17 @@ export function BlackHoleCanvas() {
     controls.dampingFactor = 0.05
     controls.enableZoom = false
     controls.target.set(0, 35, 0) // Focus orbital rotation exactly on the active black hole center (y=35)
+
+    // MOBILE SCROLL FIX:
+    // OrbitControls sets `touch-action: none` on the canvas, which hijacks vertical
+    // scrolling on touch devices. We override it with `pan-y` so the browser keeps
+    // handling vertical scroll natively, and on coarse pointers we disable
+    // OrbitControls entirely in favor of a custom horizontal-drag rotation below.
+    renderer.domElement.style.touchAction = 'pan-y'
+    container.style.touchAction = 'pan-y'
+    if (isCoarsePointer) {
+      controls.enabled = false
+    }
 
     const onControlsStart = () => {
       isUserDragging = true
@@ -732,6 +776,51 @@ export function BlackHoleCanvas() {
       isMouseActive = false
     }
 
+    // MOBILE MANUAL ROTATION:
+    // Only engages when the user makes a *clearly horizontal* touch drag.
+    // Vertical drags are ignored so the browser scrolls the page natively
+    // (allowed by `touch-action: pan-y` above).
+    const onTouchStart = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      touchStartX = e.clientX
+      touchStartY = e.clientY
+      touchLastX = e.clientX
+      touchRotating = false
+    }
+
+    const onTouchMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      if (!touchRotating) {
+        const dx = e.clientX - touchStartX
+        const dy = e.clientY - touchStartY
+        // Requires clear horizontal intent before engaging rotation.
+        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+          touchRotating = true
+          touchLastX = e.clientX
+          isUserDragging = true
+          dismissTouchHint()
+        }
+        return
+      }
+      const deltaX = e.clientX - touchLastX
+      touchLastX = e.clientX
+      manualRotY += deltaX * 0.006
+      manualRotVelocity = deltaX * 0.0035
+    }
+
+    const onTouchEnd = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      touchRotating = false
+      isUserDragging = false
+    }
+
+    if (isCoarsePointer) {
+      renderer.domElement.addEventListener('pointerdown', onTouchStart, { passive: true })
+      renderer.domElement.addEventListener('pointermove', onTouchMove, { passive: true })
+      renderer.domElement.addEventListener('pointerup', onTouchEnd, { passive: true })
+      renderer.domElement.addEventListener('pointercancel', onTouchEnd, { passive: true })
+    }
+
     const onPointerDown = (evt: PointerEvent) => {
       // Ignore click on links, buttons, inputs, navbar controls, etc.
       const target = evt.target as HTMLElement | null
@@ -790,9 +879,9 @@ export function BlackHoleCanvas() {
       camera.aspect = w / h
       camera.updateProjectionMatrix()
       renderer.setSize(w, h, false) // pass false to preserve our 100% CSS styling
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
       if (shaderMat && shaderMat.uniforms && shaderMat.uniforms.uPixelRatio) {
-        shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2)
+        shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, maxPixelRatio)
       }
     }
 
@@ -909,8 +998,22 @@ export function BlackHoleCanvas() {
       
       const wobbleTime = timeTracker * 0.22
       const rotX = Math.pow(Math.sin(wobbleTime * 2.0), 3) * 0.45 * P
-      const rotY = timeTracker * 0.06 * P
+      let rotY = timeTracker * 0.06 * P
       const rotZ = Math.pow(Math.sin(wobbleTime), 3) * -0.35 * P
+
+      // MOBILE: smooth auto-rotate by default + manual horizontal-drag offset with inertia.
+      if (isCoarsePointer) {
+        if (!touchRotating) {
+          // Inertia decay after the user lets go
+          manualRotY += manualRotVelocity
+          manualRotVelocity *= Math.max(0, 1 - delta * 3.2)
+          // Gentle continuous auto-rotation
+          if (!prefersReducedMotion) {
+            manualRotY += delta * 0.07 * P
+          }
+        }
+        rotY += manualRotY
+      }
 
       let currentY = 35 + scrollRatioCurrent * 45 + driftY
       centerVec.y = currentY
@@ -1016,6 +1119,14 @@ export function BlackHoleCanvas() {
       window.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('resize', onResize)
 
+      if (hintAutoHideTimer) clearTimeout(hintAutoHideTimer)
+      if (isCoarsePointer) {
+        renderer.domElement.removeEventListener('pointerdown', onTouchStart)
+        renderer.domElement.removeEventListener('pointermove', onTouchMove)
+        renderer.domElement.removeEventListener('pointerup', onTouchEnd)
+        renderer.domElement.removeEventListener('pointercancel', onTouchEnd)
+      }
+
       controls.removeEventListener('start', onControlsStart)
       controls.removeEventListener('end', onControlsEnd)
       controls.dispose()
@@ -1048,6 +1159,14 @@ export function BlackHoleCanvas() {
         className="absolute inset-0 z-0 h-[120%] w-full pointer-events-auto -translate-y-[15%] sm:-translate-y-[18%]"
         style={{ background: 'transparent' }}
       />
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-black/45 px-4 py-2 text-[11px] tracking-wide text-neutral-300 backdrop-blur-sm transition-opacity duration-700 ${
+          touchHintVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        Toque e arraste para rotacionar o buraco negro
+      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Anton, JetBrains_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
+import { LenisProvider } from '@/components/LenisProvider'
 
 const anton = Anton({
   weight: '400',
@@ -82,8 +83,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body suppressHydrationWarning className="relative min-h-screen font-sans antialiased">
-        {children}
+        <LenisProvider>
+          {children}
+        </LenisProvider>
       </body>
     </html>
   )
 }
+

@@ -2,212 +2,279 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 
-/**
- * Trust loop — scroll-scrubbed, refined panel.
- * Clear product language. Elevated visual density without cards-for-cards.
- */
-
 const steps = [
   {
     id: 'intent',
     num: '01',
     title: 'Intenção',
-    line: 'Descreva o objetivo em linguagem natural.',
-    detail:
-      'O pedido entra pelo painel, pelo terminal ou por um canal autorizado e permanece no ambiente local.',
-    facts: [
-      { k: 'Origem', v: 'Painel local' },
-      { k: 'Pedido', v: 'organize invoices/' },
-      { k: 'Estado', v: 'Registrada' },
-    ],
+    description: 'Você define o objetivo em linguagem natural.',
+    detail: 'O pedido entra pelo painel local ou canais autorizados. O processador local interpreta a sua intenção sem enviar seus dados confidenciais para fora da rede.',
   },
   {
     id: 'plan',
     num: '02',
-    title: 'Plano',
-    line: 'O runtime elabora o plano e sinaliza riscos.',
-    detail:
-      'Nenhuma ação é executada nesta etapa. Os passos e o escopo ficam legíveis antes de qualquer alteração.',
-    facts: [
-      { k: 'Artefato', v: 'plan.md · 6 passos' },
-      { k: 'Escopo', v: '42 caminhos' },
-      { k: 'Risco', v: 'Escrita · médio' },
-    ],
+    title: 'Planejamento',
+    description: 'O runtime elabora um plano de ação completo.',
+    detail: 'O agente escreve um arquivo de plano contendo cada comando, modificação de arquivo e chamada externa de API. Nenhum código roda ainda nesta fase.',
   },
   {
     id: 'gate',
     num: '03',
-    title: 'Aprovação',
-    line: 'Operações sensíveis aguardam confirmação explícita.',
-    detail:
-      'Diff, escopo e tipo de ação permanecem visíveis. Sem aprovação, o sistema não é modificado.',
-    facts: [
-      { k: 'Status', v: 'Aguardando operador' },
-      { k: 'Diff', v: '+12 / −3' },
-      { k: 'Opções', v: 'Aprovar · rejeitar' },
-    ],
+    title: 'Aprovação Obrigatória',
+    description: 'Operações críticas aguardam sua decisão.',
+    detail: 'Modificações no sistema e ações sensíveis são bloqueadas em um portal de controle. Você audita o plano e as alterações pendentes e decide se aprova ou rejeita.',
   },
   {
-    id: 'receipt',
+    id: 'proof',
     num: '04',
-    title: 'Recibo',
-    line: 'A execução ocorre em sandbox e gera prova local.',
-    detail:
-      'Resultado e trilha de auditoria ficam no ambiente do operador, disponíveis para revisão e retomada.',
-    facts: [
-      { k: 'Sandbox', v: 'Exit 0' },
-      { k: 'Prova', v: 'sha256 local' },
-      { k: 'Próximo', v: 'Canal, se autorizado' },
-    ],
+    title: 'Prova de Execução',
+    description: 'Ação isolada com recibo criptográfico local.',
+    detail: 'Após sua aprovação, o runtime executa as ações em sandbox seguro e grava um recibo de auditoria inalterável (hash SHA-256) diretamente no seu disco.',
   },
 ] as const
-
-function progressFromSection(section: HTMLElement): number {
-  const rect = section.getBoundingClientRect()
-  const vh = window.innerHeight
-  const total = Math.max(1, rect.height - vh)
-  return Math.max(0, Math.min(1, -rect.top / total))
-}
-
-function stepFromProgress(p: number): number {
-  if (p >= 0.97) return 3
-  return Math.min(3, Math.floor(p * 4))
-}
 
 export function WhatItDoesSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const [active, setActive] = useState(0)
   const [progress, setProgress] = useState(0)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-    const onScroll = () => {
+    const handleScroll = () => {
       const el = sectionRef.current
       if (!el) return
-      const p = progressFromSection(el)
+      const rect = el.getBoundingClientRect()
+      const vh = window.innerHeight
+      const totalScrollable = el.offsetHeight - vh
+      
+      // Calculate progress relative to the section scroll
+      const currentScroll = -rect.top
+      const p = Math.max(0, Math.min(1, currentScroll / totalScrollable))
       setProgress(p)
-      setActive(stepFromProgress(p))
+
+      // Determine active index based on scroll progress
+      let activeIndex = Math.min(steps.length - 1, Math.floor(p * steps.length))
+      if (p >= 0.98) activeIndex = steps.length - 1
+      setActive(activeIndex)
     }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleScroll, { passive: true })
+    handleScroll()
+
     return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
     }
-  }, [mounted])
-
-  const scrollToStep = (index: number) => {
-    const el = sectionRef.current
-    if (!el) return
-    const top = window.scrollY + el.getBoundingClientRect().top
-    const travel = Math.max(1, el.offsetHeight - window.innerHeight)
-    window.scrollTo({ top: top + ((index + 0.45) / 4) * travel, behavior: 'smooth' })
-  }
-
-  const current = steps[active]
-  const pct = Math.round(progress * 100)
+  }, [])
 
   return (
     <section
       id="how-it-works"
       ref={sectionRef}
-      className="tl-section landing-surface relative border-t border-white/[0.06] scroll-mt-20"
-      style={{ height: '210vh' }}
+      className="landing-surface relative border-t border-white/[0.06] scroll-mt-20"
+      style={{ height: '300vh' }}
     >
-      <div className="sticky top-0 flex min-h-[100svh] items-center py-14 sm:py-20">
-        <div
-          className="pointer-events-none absolute inset-0"
-          aria-hidden
-          style={{
-            background:
-              'radial-gradient(ellipse 55% 45% at 72% 48%, rgba(0,232,143,0.06), transparent 68%), radial-gradient(ellipse 40% 30% at 12% 20%, rgba(255,255,255,0.02), transparent 50%)',
-          }}
-        />
-
+      <div className="sticky top-0 flex min-h-screen items-center py-20 overflow-hidden">
         <div className="relative mx-auto w-full max-w-5xl px-6">
-          <header className="max-w-2xl">
-            <span className="section-kicker">Como funciona</span>
-            <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              Intenção, plano, aprovação{' '}
-              <span className="text-emerald-400">e prova.</span>
-            </h2>
-            <p className="mt-4 max-w-lg text-sm leading-relaxed text-neutral-500 sm:text-[15px]">
-              O ciclo de confiança do Zavorth. Role para percorrer cada etapa com o runtime.
-            </p>
-          </header>
+          <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+            {/* Lado Esquerdo: Textos Editoriais Fixos */}
+            <div className="lg:col-span-6 flex flex-col justify-center min-h-[50vh] pr-4">
+              <span className="section-kicker">O Ciclo de Confiança</span>
+              <h2 className="mt-5 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                Transparência absoluta <br />
+                <span className="text-emerald-400">em cada execução.</span>
+              </h2>
+              <p className="mt-4 max-w-md text-sm leading-relaxed text-neutral-500">
+                O Zavorth funciona através de um ciclo de controle inalterável. Role para ver como o runtime processa objetivos com governança local.
+              </p>
 
-          <nav className="tl-rail mt-12 sm:mt-14" aria-label="Etapas do ciclo">
-            <div className="tl-rail-track" aria-hidden>
-              <div className="tl-rail-fill" style={{ width: `${progress * 100}%` }} />
-            </div>
-            <ol className="tl-rail-steps">
-              {steps.map((step, i) => {
-                const isActive = i === active
-                const isDone = i < active
-                return (
-                  <li key={step.id}>
-                    <button
-                      type="button"
-                      onClick={() => scrollToStep(i)}
-                      className={`tl-rail-btn ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}`}
-                      aria-current={isActive ? 'step' : undefined}
-                    >
-                      <span className="tl-rail-dot" />
-                      <span className="tl-rail-label">
-                        <span className="tl-rail-num">{step.num}</span>
-                        <span className="tl-rail-name">{step.title}</span>
-                      </span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ol>
-          </nav>
-
-          <div className="tl-panel mt-10 sm:mt-12">
-            <div className="tl-panel-bar" aria-hidden>
-              <div className="tl-panel-bar-fill" style={{ width: `${progress * 100}%` }} />
-            </div>
-
-            <div key={current.id} className="tl-panel-body">
-              <div className="tl-panel-left">
-                <div className="tl-panel-meta">
-                  <span className="tl-panel-step">Etapa {current.num}</span>
-                  <span className="tl-panel-pct">{pct}%</span>
-                </div>
-                <p className="tl-stage-eyebrow">{current.title}</p>
-                <h3 className="tl-stage-title">{current.line}</h3>
-                <p className="tl-stage-detail">{current.detail}</p>
-
-                <div className="tl-panel-links">
-                  <span className="tl-note">
-                    <span className="tl-note-dot" />
-                    Ações sensíveis exigem aprovação · prova permanece local
+              {/* Bloco de Etapa Ativa com transição visual */}
+              <div className="mt-12 min-h-[220px] transition-all duration-500">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm font-bold text-emerald-400 border border-emerald-400/30 px-2 py-0.5 rounded-md">
+                    Etapa {steps[active].num}
                   </span>
-                  <a href="/demo" className="tl-panel-cta">
-                    Abrir demonstração do ciclo →
-                  </a>
+                  <div className="h-[1px] flex-1 bg-white/10" />
                 </div>
+                <h3 className="mt-6 text-xl sm:text-2xl font-medium text-white transition-colors duration-300">
+                  {steps[active].title}
+                </h3>
+                <p className="mt-3 text-sm text-neutral-300 font-medium">
+                  {steps[active].description}
+                </p>
+                <p className="mt-4 text-xs leading-relaxed text-neutral-500">
+                  {steps[active].detail}
+                </p>
               </div>
 
-              <div className="tl-panel-right">
-                <div className="tl-panel-num" aria-hidden>
-                  {current.num}
+              {/* Progresso visual minimalista */}
+              <div className="mt-8 flex items-center gap-4">
+                <span className="font-mono text-[10px] text-neutral-500">INIT</span>
+                <div className="relative h-[2px] flex-1 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="absolute top-0 left-0 h-full bg-emerald-400 transition-all duration-200"
+                    style={{ width: `${progress * 100}%` }}
+                  />
                 </div>
-                <dl className="tl-metrics">
-                  {current.facts.map((f) => (
-                    <div key={f.k} className="tl-metric">
-                      <dt>{f.k}</dt>
-                      <dd>{f.v}</dd>
-                    </div>
-                  ))}
-                </dl>
+                <span className="font-mono text-[10px] text-emerald-400">{Math.round(progress * 100)}%</span>
+              </div>
+            </div>
+
+            {/* Lado Direito: Diagrama Vetorial Interativo (SVG) */}
+            <div className="lg:col-span-6 flex items-center justify-center">
+              <div className="relative w-full max-w-[420px] aspect-[4/3] bg-neutral-950/40 rounded-3xl border border-white/5 p-8 backdrop-blur-md">
+                <svg
+                  viewBox="0 0 400 300"
+                  className="w-full h-full text-neutral-700"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Definições de gradiente e filtros */}
+                  <defs>
+                    <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="6" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                    <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="6" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+
+                  {/* Caminho do Fluxo Principal (Linha de Conexão Central) */}
+                  <path
+                    d="M 50,150 L 150,150 L 250,150 L 350,150"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.2"
+                  />
+                  {/* Linha de Progresso Ativa no Diagrama */}
+                  <path
+                    d="M 50,150 L 150,150 L 250,150 L 350,150"
+                    stroke="#00e88f"
+                    strokeWidth="2"
+                    strokeDasharray="400"
+                    strokeDashoffset={400 - progress * 300}
+                    className="transition-[stroke-dashoffset] duration-300"
+                    filter="url(#glow-emerald)"
+                  />
+
+                  {/* NÓ 1: INTENÇÃO (01) */}
+                  <g transform="translate(50, 150)">
+                    <circle
+                      r="22"
+                      fill={active >= 0 ? '#0a0a0d' : '#030303'}
+                      stroke={active >= 0 ? '#00e88f' : 'currentColor'}
+                      strokeWidth={active >= 0 ? '2' : '1'}
+                      className="transition-colors duration-300"
+                    />
+                    <text
+                      textAnchor="middle"
+                      dy="5"
+                      fill={active >= 0 ? '#00e88f' : '#888'}
+                      className="font-mono text-[10px] font-bold"
+                    >
+                      INT
+                    </text>
+                    <circle
+                      r="28"
+                      stroke="#00e88f"
+                      strokeWidth="1"
+                      strokeOpacity={active === 0 ? '0.4' : '0'}
+                      strokeDasharray="3 3"
+                      className="animate-[spin_10s_linear_infinite]"
+                    />
+                  </g>
+
+                  {/* NÓ 2: PLANEJAMENTO (02) */}
+                  <g transform="translate(150, 150)">
+                    <circle
+                      r="22"
+                      fill={active >= 1 ? '#0a0a0d' : '#030303'}
+                      stroke={active >= 1 ? '#00e88f' : 'currentColor'}
+                      strokeWidth={active >= 1 ? '2' : '1'}
+                      className="transition-colors duration-300"
+                    />
+                    <text
+                      textAnchor="middle"
+                      dy="5"
+                      fill={active >= 1 ? '#00e88f' : '#888'}
+                      className="font-mono text-[10px] font-bold"
+                    >
+                      PLAN
+                    </text>
+                    {active >= 1 && (
+                      <g className="animate-pulse">
+                        <line x1="-10" y1="35" x2="10" y2="35" stroke="#00e88f" strokeWidth="1" strokeOpacity="0.5" />
+                        <line x1="-8" y1="42" x2="8" y2="42" stroke="#00e88f" strokeWidth="1" strokeOpacity="0.5" />
+                      </g>
+                    )}
+                  </g>
+
+                  {/* NÓ 3: GATE DE APROVAÇÃO (03) */}
+                  <g transform="translate(250, 150)">
+                    {/* Indicador de bloqueio / Gate */}
+                    <circle
+                      r="24"
+                      fill={active >= 2 ? '#0a0a0d' : '#030303'}
+                      stroke={active === 2 ? '#F59E0B' : active > 2 ? '#00e88f' : 'currentColor'}
+                      strokeWidth={active >= 2 ? '2' : '1'}
+                      filter={active === 2 ? 'url(#glow-amber)' : active > 2 ? 'url(#glow-emerald)' : ''}
+                      className="transition-all duration-300"
+                    />
+                    
+                    {/* Ícone de Cadeado minimalista */}
+                    {active < 3 ? (
+                      /* Fechado (Orange/Gray) */
+                      <path
+                        d="M -6,2 L 6,2 L 6,-6 L -6,-6 Z M -3,-6 L -3,-10 C -3,-13 3,-13 3,-10 L 3,-6"
+                        stroke={active === 2 ? '#F59E0B' : 'currentColor'}
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                    ) : (
+                      /* Aberto (Emerald) */
+                      <path
+                        d="M -6,2 L 6,2 L 6,-6 L -6,-6 Z M -3,-6 L -3,-10 C -3,-13 3,-13 3,-10 L 3,-8"
+                        stroke="#00e88f"
+                        strokeWidth="1.5"
+                        fill="none"
+                        className="animate-pulse"
+                      />
+                    )}
+                  </g>
+
+                  {/* NÓ 4: PROVA / EXECUÇÃO (04) */}
+                  <g transform="translate(350, 150)">
+                    <circle
+                      r="22"
+                      fill={active >= 3 ? '#0a0a0d' : '#030303'}
+                      stroke={active >= 3 ? '#00e88f' : 'currentColor'}
+                      strokeWidth={active >= 3 ? '2' : '1'}
+                      className="transition-colors duration-300"
+                    />
+                    <text
+                      textAnchor="middle"
+                      dy="5"
+                      fill={active >= 3 ? '#00e88f' : '#888'}
+                      className="font-mono text-[10px] font-bold"
+                    >
+                      SIGN
+                    </text>
+                  </g>
+                </svg>
+
+                {/* Status flutuante do Diagrama */}
+                <div className="absolute bottom-5 left-5 right-5 flex justify-between font-mono text-[9px] text-neutral-500 uppercase tracking-widest">
+                  <span>SYSTEM_FLOW: ACTIVE</span>
+                  {active === 2 ? (
+                    <span className="text-amber-500 font-semibold animate-pulse">Awaiting Approval</span>
+                  ) : active === 3 ? (
+                    <span className="text-emerald-400 font-semibold">Sandbox Executed</span>
+                  ) : (
+                    <span>Monitoring</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

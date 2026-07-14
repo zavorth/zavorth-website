@@ -677,7 +677,7 @@ export function BlackHoleCanvas() {
             
             // Soft size fade-in on load, and soft fade-out on scroll
             float sizeFlash = smoothstep(0.0, 1.0, entranceScale);
-            float scrollFade = 1.0 - uScrollProgress * 0.62;
+            float scrollFade = 1.0 - uScrollProgress * 1.0;
             
             float currentSize = finalSize * sizeFlash * scrollFade * uPixelRatio * (245.0 / -mvPosition.z);
             gl_PointSize = max(0.5, currentSize);
@@ -743,7 +743,7 @@ export function BlackHoleCanvas() {
             
             float alpha = (glow + core) * borderFade;
             // Dissolve opacity on scroll
-            alpha *= (1.0 - uScrollProgress * 0.62);
+            alpha *= (1.0 - uScrollProgress * 1.0);
             
             vec3 boostedColor = vColor * 1.7 + vec3(0.12, 0.055, 0.01);
             gl_FragColor = vec4(boostedColor, alpha * 0.96);
@@ -871,6 +871,24 @@ export function BlackHoleCanvas() {
       }
     }
 
+    const heroSection = container.closest('#hero') as HTMLElement | null
+    let heroCachedHeight = heroSection ? heroSection.offsetHeight : window.innerHeight * 1.25
+    let heroCachedTop = 0
+
+    const updateCachedDimensions = () => {
+      if (heroSection) {
+        heroCachedHeight = heroSection.offsetHeight
+        let el = heroSection
+        let top = 0
+        while (el) {
+          top += el.offsetTop
+          el = el.offsetParent as HTMLElement
+        }
+        heroCachedTop = top
+      }
+    }
+    updateCachedDimensions()
+
     const onResize = () => {
       if (!containerRef.current) return
       const w = containerRef.current.clientWidth || window.innerWidth
@@ -883,6 +901,7 @@ export function BlackHoleCanvas() {
       if (shaderMat && shaderMat.uniforms && shaderMat.uniforms.uPixelRatio) {
         shaderMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, maxPixelRatio)
       }
+      updateCachedDimensions()
     }
 
     const resizeObserver = new ResizeObserver(() => onResize())
@@ -904,11 +923,7 @@ export function BlackHoleCanvas() {
     const animate = () => {
       const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
       const height = typeof window !== 'undefined' ? window.innerHeight : 800
-      const heroSection = container.closest('#hero') as HTMLElement | null
-      const heroRect = heroSection?.getBoundingClientRect()
-      const isOffscreen = heroRect
-        ? heroRect.bottom < -height * 0.08 || heroRect.top > height * 1.12
-        : scrollY > height * 1.5
+      const isOffscreen = scrollY > heroCachedTop + heroCachedHeight + height * 0.08 || scrollY < heroCachedTop - height * 1.12
 
       if (isOffscreen) {
         wasOffscreen = true
@@ -976,12 +991,12 @@ export function BlackHoleCanvas() {
       uniforms.uWaveRadius.value = waveRadius
       uniforms.uColorWaveProgress.value = colorWaveProgress
 
-      // Smooth scroll tracking directly in RAF loop, using the hero section like the reference animation.
+      // Smooth scroll tracking using cached hero height
       let targetProgress = 0
-      if (heroRect && heroRect.top < 0) {
-        const scrollableHeight = Math.max(1, heroRect.height - height)
-        targetProgress = Math.min(1.0, Math.max(0.0, -heroRect.top / scrollableHeight))
-      } else if (!heroRect) {
+      if (heroSection) {
+        const pinHeight = Math.max(1, heroCachedHeight - height)
+        targetProgress = Math.min(1.0, Math.max(0.0, (scrollY - heroCachedTop) / pinHeight))
+      } else {
         const scrollableHeight = height * 0.65
         targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
       }
@@ -1021,7 +1036,8 @@ export function BlackHoleCanvas() {
       let entranceScale = Math.min(1.0, timeTracker / 0.8)
 
       if (eventHorizonMesh) {
-        let targetScale = (1.0 - scrollRatioCurrent * 0.3) * entranceScale
+        // Shrink core to nearly 0
+        let targetScale = (1.0 - scrollRatioCurrent * 0.98) * entranceScale
         let depthScale = targetScale * (0.2 + 0.8 * scatterCurrent)
         eventHorizonMesh.scale.set(targetScale, targetScale, depthScale)
         eventHorizonMesh.position.set(0, currentY, 0)
@@ -1030,27 +1046,27 @@ export function BlackHoleCanvas() {
 
       if (glowSprite && glowSpriteMat && b[0]) {
         let glowBreathe = Math.sin(timeTracker * 1.5) * 0.12 + 0.88
-        let glowOpacity = (0.52 + 0.12 * Math.sin(timeTracker * 2.2)) * (1.0 - scrollRatioCurrent * 0.62) * entranceScale
-        let currentScrollScale = (1.08 - scrollRatioCurrent * 0.6) * entranceScale
+        let glowOpacity = (0.52 + 0.12 * Math.sin(timeTracker * 2.2)) * (1.0 - scrollRatioCurrent * 1.0) * entranceScale
+        let currentScrollScale = (1.08 - scrollRatioCurrent * 1.08) * entranceScale
         glowSprite.scale.set(
-          fl.eventHorizonRadius * 6.4 * glowBreathe * currentScrollScale,
-          fl.eventHorizonRadius * 6.4 * glowBreathe * currentScrollScale,
+          fl.eventHorizonRadius * 6.4 * glowBreathe * Math.max(0, currentScrollScale),
+          fl.eventHorizonRadius * 6.4 * glowBreathe * Math.max(0, currentScrollScale),
           1
         )
-        glowSpriteMat.opacity = glowOpacity
+        glowSpriteMat.opacity = Math.max(0, glowOpacity)
         glowSprite.position.set(0, currentY, 0)
         glowSpriteMat.rotation = rotY
       }
 
       if (coronaSprite && coronaSpriteMat) {
         const coronaBreathe = Math.sin(timeTracker * 0.85) * 0.08 + 0.94
-        const coronaScale = (1.08 - scrollRatioCurrent * 0.58) * entranceScale * coronaBreathe
+        const coronaScale = (1.08 - scrollRatioCurrent * 1.08) * entranceScale * coronaBreathe
         coronaSprite.scale.set(
-          fl.eventHorizonRadius * 10.5 * coronaScale,
-          fl.eventHorizonRadius * 10.5 * coronaScale,
+          fl.eventHorizonRadius * 10.5 * Math.max(0, coronaScale),
+          fl.eventHorizonRadius * 10.5 * Math.max(0, coronaScale),
           1
         )
-        coronaSpriteMat.opacity = (0.18 + 0.05 * Math.sin(timeTracker * 1.35)) * (1.0 - scrollRatioCurrent * 0.68) * entranceScale
+        coronaSpriteMat.opacity = Math.max(0, (0.18 + 0.05 * Math.sin(timeTracker * 1.35)) * (1.0 - scrollRatioCurrent * 1.0) * entranceScale)
         coronaSprite.position.set(0, currentY, 0)
         coronaSpriteMat.rotation = -rotY * 0.6
       }
@@ -1058,8 +1074,8 @@ export function BlackHoleCanvas() {
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
         pointsObject.rotation.set(rotX, rotY, rotZ)
-        // Grow particles together with entrance scale and shrink on scroll
-        let scrollScale = (1.0 - scrollRatioCurrent * 0.35) * entranceScale
+        // Shrink particles to nearly 0
+        let scrollScale = (1.0 - scrollRatioCurrent * 0.98) * entranceScale
         let currentScale = Math.max(0.001, scrollScale)
         pointsObject.scale.set(currentScale, currentScale, currentScale)
       }

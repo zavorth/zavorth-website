@@ -43,8 +43,7 @@ export function Hero() {
 
     const update = () => {
       if (!active) return
-      const damping = targetProgress > currentProgress ? 0.35 : 0.45
-      currentProgress += (targetProgress - currentProgress) * damping
+      currentProgress += (targetProgress - currentProgress) * 0.9
 
       if (textLayer) {
         const textOpacity = Math.max(0, 1 - currentProgress * 1.5)
@@ -179,7 +178,7 @@ export function Hero() {
     ))
 
   return (
-    <section ref={sectionRef} id="hero" className="relative h-[165vh] bg-black">
+    <section ref={sectionRef} id="hero" className="relative h-[125vh] bg-black">
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
         <div
           ref={canvasWrapRef}

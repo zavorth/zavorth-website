@@ -986,9 +986,8 @@ export function BlackHoleCanvas() {
         targetProgress = Math.min(1.0, Math.max(0.0, scrollY / scrollableHeight))
       }
 
-      // Smooth scroll interpolation — responsive but smooth
-      const damping = targetProgress < scrollRatioCurrent ? 0.45 : 0.35
-      scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * damping
+      // Smooth scroll interpolation — instant and snappy tracking
+      scrollRatioCurrent += (targetProgress - scrollRatioCurrent) * 0.9
 
       // Dynamic, constant 3D tilting wobble and rotation.
       // Decreases as user scrolls down (P gets smaller)
@@ -1015,7 +1014,7 @@ export function BlackHoleCanvas() {
         rotY += manualRotY
       }
 
-      let currentY = 35 + scrollRatioCurrent * 45 + driftY
+      let currentY = 35 + scrollRatioCurrent * 8 + driftY
       centerVec.y = currentY
 
       // Calculate entrance scale — all parts grow together from 0 in ~1 second
@@ -1059,8 +1058,9 @@ export function BlackHoleCanvas() {
       if (pointsObject) {
         pointsObject.position.set(0, currentY, 0)
         pointsObject.rotation.set(rotX, rotY, rotZ)
-        // Grow particles together with entrance scale for synchronized entrance animation
-        let currentScale = Math.max(0.001, entranceScale)
+        // Grow particles together with entrance scale and shrink on scroll
+        let scrollScale = (1.0 - scrollRatioCurrent * 0.35) * entranceScale
+        let currentScale = Math.max(0.001, scrollScale)
         pointsObject.scale.set(currentScale, currentScale, currentScale)
       }
 

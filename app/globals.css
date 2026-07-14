@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -340,8 +340,8 @@ main {
 .hero-marquee-group {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding-right: 0.35rem;
+  gap: 1.4rem;
+  padding-right: 1.4rem;
 }
 .hero-mark {
   --mark-glow: #00e88f;
@@ -349,34 +349,25 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 0.7rem;
-  color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.35);
+  background: transparent;
+  border: none;
   cursor: default;
   transition:
     color 0.3s ease,
-    background 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.35s ease,
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.35s ease;
 }
 .hero-mark-svg {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.45rem;
+  height: 1.45rem;
   display: block;
 }
 .hero-mark:hover {
   color: var(--mark-glow);
-  background: color-mix(in srgb, var(--mark-glow) 12%, transparent);
-  border-color: color-mix(in srgb, var(--mark-glow) 35%, transparent);
-  transform: translateY(-3px) scale(1.08);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mark-glow) 15%, transparent),
-    0 0 18px color-mix(in srgb, var(--mark-glow) 35%, transparent),
-    0 8px 20px rgba(0, 0, 0, 0.35);
+  background: transparent;
+  transform: translateY(-3px) scale(1.12);
+  filter: drop-shadow(0 0 8px var(--mark-glow));
   z-index: 1;
 }
 @keyframes hero-marquee-scroll {

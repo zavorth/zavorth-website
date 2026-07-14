@@ -1,8 +1,8 @@
 export const NAV_LINKS = [
-  { id: 'overview', href: '#overview', label: 'O que é' },
+  { id: 'overview', href: '#overview', label: 'Produto' },
   { id: 'how-it-works', href: '#how-it-works', label: 'Como funciona' },
-  { id: 'features', href: '#features', label: 'Painel' },
-  { id: 'install', href: '#install', label: 'Começar' },
+  { id: 'features', href: '#features', label: 'Habilidades' },
+  { id: 'install', href: '#install', label: 'Instalar' },
 ]
 
 export const HERO_MESSAGES = [

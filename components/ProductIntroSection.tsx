@@ -1,36 +1,28 @@
 'use client'
 
 import React from 'react'
-import { MessageSquareCode, Cpu, ShieldAlert, Database } from 'lucide-react'
 
-const productPillars = [
+/**
+ * Editorial intro — what Zavorth is.
+ * Clear product language for a local agent launch.
+ */
+
+const beats = [
   {
-    title: 'Conversa',
-    description:
-      'Recebe instruções em linguagem natural pelo terminal, dashboard web ou canais autorizados como Telegram.',
-    icon: MessageSquareCode,
-    num: '01',
+    title: 'Entrada em linguagem natural',
+    text: 'Instruções pelo painel, pelo terminal ou por um canal autorizado — sem depender de um formato rígido de prompt.',
   },
   {
-    title: 'Execução',
-    description:
-      'Orquestra modelos locais e em nuvem, escolhe ferramentas e respeita orçamento de contexto e custo.',
-    icon: Cpu,
-    num: '02',
+    title: 'Execução no ambiente local',
+    text: 'O agente opera no seu computador: arquivos, comandos e ferramentas do runtime, não apenas respostas em chat.',
   },
   {
-    title: 'Aprovação',
-    description:
-      'Bloqueia ações sensíveis em sandbox e pede confirmação explícita antes de mudar o seu sistema.',
-    icon: ShieldAlert,
-    num: '03',
+    title: 'Controle antes de ações sensíveis',
+    text: 'Alterações de risco exigem plano visível e aprovação explícita. Nada avança sem confirmação.',
   },
   {
-    title: 'Memória local',
-    description:
-      'Mantém memória vetorial no seu disco — legível, editável e sob o seu controle, sem inventar defaults.',
-    icon: Database,
-    num: '04',
+    title: 'Aprendizado com o uso',
+    text: 'Memória e preferências permanecem no ambiente local. O agente se adapta ao fluxo de trabalho com o tempo.',
   },
 ] as const
 
@@ -43,59 +35,40 @@ export function ProductIntroSection() {
     >
       <div className="mesh-grid absolute inset-0 opacity-[0.02] pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-6">
         <div className="max-w-3xl">
-          <span className="section-kicker">Apresentação</span>
+          <span className="section-kicker">O agente</span>
           <h2 className="mt-6 font-display text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Seu computador, <span className="text-emerald-400">suas regras.</span>
+            Um agente de IA local.{' '}
+            <span className="text-emerald-400">Com governança embutida.</span>
           </h2>
           <p className="mt-6 text-base leading-8 text-neutral-400 sm:text-lg">
-            O Zavorth é um runtime de IA projetado para rodar localmente no seu computador. Ele executa tarefas no
-            seu sistema sob um modelo de governança rígido: você aprova cada ação de risco em tempo real.
+            O Zavorth é um runtime de agente projetado para operar no seu computador. Ele interpreta
+            objetivos, apresenta um plano, solicita aprovação em operações sensíveis e registra prova
+            de execução — com memória e habilidades que evoluem com o uso.
           </p>
-
-          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-4">
-            <button
-              type="button"
-              onClick={() => {
-                const section = document.getElementById('install')
-                if (section) section.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="rounded bg-emerald-400 px-5 py-2.5 font-mono text-[11px] font-bold text-[#060809] transition-colors hover:bg-emerald-300 shadow-[0_4px_20px_rgba(0,232,143,0.15)]"
-            >
-              Primeiros Passos
-            </button>
-            <a
-              href="/docs"
-              className="rounded border border-white/[0.08] px-5 py-2.5 font-mono text-[11px] font-semibold text-neutral-300 transition-colors hover:bg-white/[0.04] hover:text-white"
-            >
-              Documentação &rarr;
-            </a>
-          </div>
         </div>
 
-        <div className="mx-auto mt-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {productPillars.map((pillar) => {
-            const Icon = pillar.icon
-            return (
-              <div
-                key={pillar.title}
-                className="group relative flex flex-col justify-between rounded-xl border border-white/[0.06] bg-[#050608] p-6 transition-all duration-300 hover:border-emerald-400/20 hover:bg-emerald-400/[0.01]"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 items-center justify-center rounded bg-white/[0.02] border border-white/[0.06] text-neutral-400 group-hover:text-emerald-400 group-hover:border-emerald-500/25 transition-colors">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <span className="font-mono text-[10px] text-neutral-600 font-bold">{pillar.num}</span>
-                  </div>
-                  <h3 className="font-display text-sm font-bold text-white tracking-tight">{pillar.title}</h3>
-                  <p className="text-xs leading-relaxed text-neutral-400 font-light">{pillar.description}</p>
+        <div className="mt-16 sm:mt-20">
+          <ol className="story-list">
+            {beats.map((beat, i) => (
+              <li key={beat.title} className="story-row">
+                <span className="story-num" aria-hidden>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="story-copy">
+                  <h3 className="story-title">{beat.title}</h3>
+                  <p className="story-text">{beat.text}</p>
                 </div>
-              </div>
-            )
-          })}
+              </li>
+            ))}
+          </ol>
         </div>
+
+        <p className="mt-14 max-w-2xl text-sm leading-7 text-neutral-500">
+          Habilidades, memória e sessões permanecem no ambiente do operador. Sem provider inventado.
+          Sem mutação fora da política de aprovação.
+        </p>
       </div>
     </section>
   )

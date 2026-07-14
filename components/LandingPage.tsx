@@ -6,6 +6,7 @@ import { Hero } from './Hero'
 import { ProductIntroSection } from './ProductIntroSection'
 import { WhatItDoesSection } from './WhatItDoesSection'
 import { FeaturesGridSection } from './FeaturesGridSection'
+import { FeaturesSection } from './FeaturesSection'
 import { InstallSection } from './InstallSection'
 import { Footer } from './Footer'
 
@@ -17,6 +18,7 @@ export default function LandingPage() {
       <ProductIntroSection />
       <WhatItDoesSection />
       <FeaturesGridSection />
+      <FeaturesSection />
       <InstallSection />
       <Footer />
     </main>

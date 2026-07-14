@@ -2,7 +2,8 @@
 
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
-import { Check, Copy, Terminal as TermIcon, Play, RefreshCw } from 'lucide-react'
+import { Check, Copy, Play, RefreshCw } from 'lucide-react'
+import { ZRow, ZSurface } from './ZSurface'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
@@ -131,100 +132,76 @@ export function InstallSection() {
         </div>
 
         <h3 className="relative text-3xl font-semibold tracking-normal text-white sm:text-4xl">
-          Pronto para começar?
+          Instale o runtime local
         </h3>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-neutral-500 font-light">
-          Rode o instalador global, configure o sandbox seguro localmente e gerencie seus agentes diretamente do terminal.
+          Um comando. Runtime no seu ambiente. Habilidades, memória e aprovação de risco desde o primeiro start.
         </p>
 
-        {/* Premium Interactive Console Terminal */}
-        <div className="mx-auto mt-10 max-w-xl rounded-xl border border-white/[0.08] bg-[#050608] shadow-[0_24px_50px_rgba(0,0,0,0.65)] overflow-hidden text-left">
-          
-          {/* Tab Header bar */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4 py-3 select-none">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
-              <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
-              <span className="h-2 w-2 rounded-full bg-[#28c840]" />
-              <div className="ml-4 flex items-center gap-1.5 rounded bg-white/5 border border-white/5 px-2 py-0.5 font-mono text-[9px] text-neutral-400">
-                <TermIcon size={8} />
-                <span>install.sh</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleCopy}
-                className="flex items-center gap-1 font-mono text-[9.5px] text-neutral-400 hover:text-white transition-colors bg-white/[0.04] hover:bg-white/[0.08] px-2.5 py-1 rounded border border-white/[0.05]"
-              >
-                {copied ? (
-                  <>
-                    <Check size={9} className="text-emerald-400" />
-                    <span className="text-emerald-400 font-semibold">Copiado</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={9} />
-                    <span>Copiar</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Console Output Screen */}
-          <div className="p-6 font-mono text-[10.5px] sm:text-[11.5px] leading-relaxed min-h-[180px] flex flex-col justify-between">
-            <div className="space-y-2 select-text">
-              <div className="flex items-center gap-2 text-white">
-                <span className="text-emerald-400">❯</span>
-                <span>{INSTALL_CMD}</span>
-              </div>
-              
-              {/* Animated log lines */}
-              <div className="space-y-1.5 text-neutral-400">
-                {logs.map((log, idx) => {
-                  const isSuccess = log.startsWith('✓')
-                  return (
-                    <div key={idx} className={isSuccess ? 'text-emerald-400 font-bold' : ''}>
-                      {log}
-                    </div>
-                  )
-                })}
-              </div>
-
-              {simulating && (
-                <div className="flex items-center gap-1 text-emerald-400 mt-2 select-none">
-                  <span className="h-1 w-1 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-[10px] text-neutral-500">instalando arquivos locais...</span>
-                </div>
-              )}
-            </div>
-
-            {/* Interactive Controller footer inside Terminal */}
-            <div className="mt-6 flex items-center justify-between border-t border-white/[0.04] pt-4 select-none">
-              {!simulating && !simDone && (
+        <div className="mx-auto mt-10 max-w-xl text-left">
+          <ZSurface
+            label="install"
+            meta="npm · global"
+            status={simDone ? 'ready' : simulating ? 'running' : 'idle'}
+            footer={
+              <>
+                {!simulating && !simDone ? (
+                  <button
+                    type="button"
+                    onClick={startSimulation}
+                    className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-emerald-400 hover:text-emerald-300"
+                  >
+                    <Play size={10} />
+                    Simular instalação
+                  </button>
+                ) : null}
+                {simDone ? (
+                  <button
+                    type="button"
+                    onClick={resetSimulation}
+                    className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-400 hover:text-white"
+                  >
+                    <RefreshCw size={10} />
+                    Limpar
+                  </button>
+                ) : null}
+                {simulating ? <span className="zs-foot-dim">instalando…</span> : null}
                 <button
-                  onClick={startSimulation}
-                  className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors text-[10px]"
+                  type="button"
+                  onClick={handleCopy}
+                  className="ml-auto inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-400 hover:text-white"
                 >
-                  <Play size={10} />
-                  <span>Simular Instalação Local</span>
+                  {copied ? (
+                    <>
+                      <Check size={10} className="text-emerald-400" />
+                      <span className="text-emerald-400">Copiado</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={10} />
+                      Copiar
+                    </>
+                  )}
                 </button>
-              )}
-
-              {simDone && (
-                <button
-                  onClick={resetSimulation}
-                  className="flex items-center gap-1.5 text-neutral-400 hover:text-white transition-colors text-[10px]"
-                >
-                  <RefreshCw size={10} />
-                  <span>Limpar Console</span>
-                </button>
-              )}
-
-              <span className="text-[9.5px] text-neutral-500">Unix build stable</span>
-            </div>
-          </div>
+              </>
+            }
+          >
+            <ZRow tone="cmd">
+              <span className="zs-prompt">❯</span>
+              {INSTALL_CMD}
+            </ZRow>
+            {logs.map((log) => (
+              <ZRow key={log} tone={log.startsWith('✓') ? 'ok' : 'dim'}>
+                {log}
+              </ZRow>
+            ))}
+            {simulating ? (
+              <ZRow tone="ok">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping mr-2" />
+                resolvendo pacote local…
+              </ZRow>
+            ) : null}
+          </ZSurface>
         </div>
 
         {/* TUI Keycaps and requirements */}
@@ -235,12 +212,20 @@ export function InstallSection() {
             <span>OS: macOS / Linux / Windows</span>
           </div>
 
-          <a
-            href="/demo#trust-loop"
-            className="text-[12px] font-medium text-accent transition-colors hover:text-accent-light"
-          >
-            Ver loop aprovar → receipt (demo estática)
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <a
+              href="/demo"
+              className="text-[13px] font-medium text-emerald-400 transition-colors hover:text-emerald-300"
+            >
+              Ver demonstração sem instalar →
+            </a>
+            <a
+              href="/start"
+              className="text-[13px] font-medium text-neutral-400 transition-colors hover:text-white"
+            >
+              Guia do primeiro uso
+            </a>
+          </div>
 
           {/* Styled Developer Keycaps */}
           <div className="flex items-center gap-1.5 mt-2 select-none">

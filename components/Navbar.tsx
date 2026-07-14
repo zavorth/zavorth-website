@@ -11,8 +11,8 @@ export function Navbar() {
 
   useEffect(() => {
     const show = () => setVisible(true)
-    // Fallback only after a full typing sequence (~6–8s), not mid-intro
-    const fallback = window.setTimeout(show, 9000)
+    // Fallback after faster typing sequence (~2–3s)
+    const fallback = window.setTimeout(show, 3500)
     window.addEventListener('hero-title-typed', show)
     return () => {
       window.clearTimeout(fallback)

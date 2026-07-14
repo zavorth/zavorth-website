@@ -27,7 +27,7 @@ export function Footer() {
           <div>
             <span className="text-base font-semibold text-white">Zavorth</span>
             <p className="mt-1 max-w-xs text-sm leading-relaxed text-neutral-500">
-              Peça do seu jeito. Ele mostra o que vai fazer. Você decide.
+              Agente local com habilidades, memória e aprovação em operações sensíveis.
             </p>
           </div>
         </div>

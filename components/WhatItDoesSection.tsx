@@ -1,93 +1,64 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { Terminal, Cpu, Shield, FileCheck } from 'lucide-react'
 
 /**
- * Trust loop — fast scroll scrub + refined UI.
- * Middle ground: not heavy cards, not sparse rail — product-grade panel.
+ * Trust loop — scroll-scrubbed, refined panel.
+ * Clear product language. Elevated visual density without cards-for-cards.
  */
 
 const steps = [
   {
     id: 'intent',
     num: '01',
-    kicker: 'Entrada',
     title: 'Intenção',
-    description:
-      'Você descreve o objetivo em linguagem natural no dashboard, no CLI ou em um canal autorizado.',
-    icon: Terminal,
-    panel: {
-      badge: 'entrada',
-      headline: 'Comando capturado',
-      detail: 'Sem executar ainda — só a intenção e a origem.',
-      rows: [
-        { k: 'origem', v: 'dashboard · local' },
-        { k: 'pedido', v: 'organize invoices/ e avise no Telegram' },
-        { k: 'estado', v: 'intenção pronta' },
-      ],
-      accent: 'intent',
-    },
+    line: 'Descreva o objetivo em linguagem natural.',
+    detail:
+      'O pedido entra pelo painel, pelo terminal ou por um canal autorizado e permanece no ambiente local.',
+    facts: [
+      { k: 'Origem', v: 'Painel local' },
+      { k: 'Pedido', v: 'organize invoices/' },
+      { k: 'Estado', v: 'Registrada' },
+    ],
   },
   {
     id: 'plan',
     num: '02',
-    kicker: 'Análise',
-    title: 'Plano local',
-    description:
-      'O runtime indexa o workspace, monta o plano e lista ferramentas e riscos — sem rodar nada sensível.',
-    icon: Cpu,
-    panel: {
-      badge: 'plano',
-      headline: 'Plano montado',
-      detail: 'Arquivos, passos e risco visíveis antes do portão.',
-      rows: [
-        { k: 'arquivo', v: 'plan.md · 6 passos' },
-        { k: 'escopo', v: '42 caminhos mapeados' },
-        { k: 'risco', v: 'write · network · medium' },
-      ],
-      accent: 'plan',
-    },
+    title: 'Plano',
+    line: 'O runtime elabora o plano e sinaliza riscos.',
+    detail:
+      'Nenhuma ação é executada nesta etapa. Os passos e o escopo ficam legíveis antes de qualquer alteração.',
+    facts: [
+      { k: 'Artefato', v: 'plan.md · 6 passos' },
+      { k: 'Escopo', v: '42 caminhos' },
+      { k: 'Risco', v: 'Escrita · médio' },
+    ],
   },
   {
     id: 'gate',
     num: '03',
-    kicker: 'Governança',
-    title: 'Portão de decisão',
-    description:
-      'Ações sensíveis ficam bloqueadas até você aprovar. Diff, destino e permissões legíveis.',
-    icon: Shield,
-    panel: {
-      badge: 'portão',
-      headline: 'Aguardando você',
-      detail: 'Nada sai do sandbox sem confirmação explícita.',
-      rows: [
-        { k: 'gate', v: 'awaiting operator' },
-        { k: 'diff', v: '+12 / −3 caminhos' },
-        { k: 'ações', v: 'aprovar · rejeitar · editar' },
-      ],
-      accent: 'gate',
-    },
+    title: 'Aprovação',
+    line: 'Operações sensíveis aguardam confirmação explícita.',
+    detail:
+      'Diff, escopo e tipo de ação permanecem visíveis. Sem aprovação, o sistema não é modificado.',
+    facts: [
+      { k: 'Status', v: 'Aguardando operador' },
+      { k: 'Diff', v: '+12 / −3' },
+      { k: 'Opções', v: 'Aprovar · rejeitar' },
+    ],
   },
   {
     id: 'receipt',
     num: '04',
-    kicker: 'Auditoria',
-    title: 'Recibo assinado',
-    description:
-      'Sandbox executa e grava um recibo local — o que rodou, o que mudou, o que restou.',
-    icon: FileCheck,
-    panel: {
-      badge: 'recibo',
-      headline: 'Recibo gravado',
-      detail: 'Prova legível no disco, pronta para auditoria.',
-      rows: [
-        { k: 'sandbox', v: 'isolado · exit 0' },
-        { k: 'receipt', v: 'sha256 · data/runtime/' },
-        { k: 'próximo', v: 'notificar canal se autorizado' },
-      ],
-      accent: 'receipt',
-    },
+    title: 'Recibo',
+    line: 'A execução ocorre em sandbox e gera prova local.',
+    detail:
+      'Resultado e trilha de auditoria ficam no ambiente do operador, disponíveis para revisão e retomada.',
+    facts: [
+      { k: 'Sandbox', v: 'Exit 0' },
+      { k: 'Prova', v: 'sha256 local' },
+      { k: 'Próximo', v: 'Canal, se autorizado' },
+    ],
   },
 ] as const
 
@@ -105,7 +76,7 @@ function stepFromProgress(p: number): number {
 
 export function WhatItDoesSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const [activeStep, setActiveStep] = useState(0)
+  const [active, setActive] = useState(0)
   const [progress, setProgress] = useState(0)
   const [mounted, setMounted] = useState(false)
 
@@ -116,11 +87,11 @@ export function WhatItDoesSection() {
   useEffect(() => {
     if (!mounted) return
     const onScroll = () => {
-      const section = sectionRef.current
-      if (!section) return
-      const p = progressFromSection(section)
+      const el = sectionRef.current
+      if (!el) return
+      const p = progressFromSection(el)
       setProgress(p)
-      setActiveStep(stepFromProgress(p))
+      setActive(stepFromProgress(p))
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -132,111 +103,111 @@ export function WhatItDoesSection() {
   }, [mounted])
 
   const scrollToStep = (index: number) => {
-    const section = sectionRef.current
-    if (!section) return
-    const top = window.scrollY + section.getBoundingClientRect().top
-    const travel = Math.max(1, section.offsetHeight - window.innerHeight)
+    const el = sectionRef.current
+    if (!el) return
+    const top = window.scrollY + el.getBoundingClientRect().top
+    const travel = Math.max(1, el.offsetHeight - window.innerHeight)
     window.scrollTo({ top: top + ((index + 0.45) / 4) * travel, behavior: 'smooth' })
   }
 
-  const current = steps[activeStep]
-  const Icon = current.icon
+  const current = steps[active]
+  const pct = Math.round(progress * 100)
 
   return (
     <section
       id="how-it-works"
       ref={sectionRef}
-      className="how-section relative border-t border-white/[0.06] bg-black scroll-mt-20"
-      style={{ height: '240vh' }}
+      className="tl-section landing-surface relative border-t border-white/[0.06] scroll-mt-20"
+      style={{ height: '210vh' }}
     >
-      <div className="sticky top-0 flex min-h-[100svh] items-center py-14 sm:py-16">
-        <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl">
+      <div className="sticky top-0 flex min-h-[100svh] items-center py-14 sm:py-20">
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            background:
+              'radial-gradient(ellipse 55% 45% at 72% 48%, rgba(0,232,143,0.06), transparent 68%), radial-gradient(ellipse 40% 30% at 12% 20%, rgba(255,255,255,0.02), transparent 50%)',
+          }}
+        />
+
+        <div className="relative mx-auto w-full max-w-5xl px-6">
+          <header className="max-w-2xl">
             <span className="section-kicker">Como funciona</span>
             <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              Loop de confiança, <span className="text-emerald-400">não de surpresa.</span>
+              Intenção, plano, aprovação{' '}
+              <span className="text-emerald-400">e prova.</span>
             </h2>
-            <p className="mt-4 max-w-lg text-sm leading-7 text-neutral-400 sm:text-base">
-              Role para ver intenção → plano → portão → recibo — o mesmo fluxo do runtime.
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-neutral-500 sm:text-[15px]">
+              O ciclo de confiança do Zavorth. Role para percorrer cada etapa com o runtime.
             </p>
-          </div>
+          </header>
 
-          <div className="mt-12 grid gap-10 lg:grid-cols-12 lg:gap-12 lg:items-center">
-            {/* Left rail — refined, not empty, not heavy cards */}
-            <div className="lg:col-span-5">
-              <div className="how-steps">
-                {steps.map((step, index) => {
-                  const StepIcon = step.icon
-                  const active = index === activeStep
-                  const done = index < activeStep
-                  return (
+          <nav className="tl-rail mt-12 sm:mt-14" aria-label="Etapas do ciclo">
+            <div className="tl-rail-track" aria-hidden>
+              <div className="tl-rail-fill" style={{ width: `${progress * 100}%` }} />
+            </div>
+            <ol className="tl-rail-steps">
+              {steps.map((step, i) => {
+                const isActive = i === active
+                const isDone = i < active
+                return (
+                  <li key={step.id}>
                     <button
-                      key={step.id}
                       type="button"
-                      onClick={() => scrollToStep(index)}
-                      className={`how-step ${active ? 'is-active' : ''} ${done ? 'is-done' : ''}`}
+                      onClick={() => scrollToStep(i)}
+                      className={`tl-rail-btn ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}`}
+                      aria-current={isActive ? 'step' : undefined}
                     >
-                      <span className="how-step-index">
-                        <span className="how-step-num">{step.num}</span>
-                        <span className="how-step-track" aria-hidden />
-                      </span>
-                      <span className="how-step-content">
-                        <span className="how-step-kicker">{step.kicker}</span>
-                        <span className="how-step-title">
-                          <StepIcon size={15} className="how-step-icon" aria-hidden />
-                          {step.title}
-                        </span>
-                        <span className="how-step-desc">{step.description}</span>
+                      <span className="tl-rail-dot" />
+                      <span className="tl-rail-label">
+                        <span className="tl-rail-num">{step.num}</span>
+                        <span className="tl-rail-name">{step.title}</span>
                       </span>
                     </button>
-                  )
-                })}
-              </div>
+                  </li>
+                )
+              })}
+            </ol>
+          </nav>
+
+          <div className="tl-panel mt-10 sm:mt-12">
+            <div className="tl-panel-bar" aria-hidden>
+              <div className="tl-panel-bar-fill" style={{ width: `${progress * 100}%` }} />
             </div>
 
-            {/* Right proof panel */}
-            <div className="lg:col-span-7">
-              <div className="how-surface">
-                <div className="how-surface-progress" style={{ width: `${Math.round(progress * 100)}%` }} />
-
-                <div className="how-surface-head">
-                  <span className="how-surface-badge">
-                    <span className="how-surface-badge-dot" />
-                    {current.panel.badge}
-                  </span>
-                  <span className="how-surface-count">
-                    {String(activeStep + 1).padStart(2, '0')}
-                    <span> / 04</span>
-                  </span>
+            <div key={current.id} className="tl-panel-body">
+              <div className="tl-panel-left">
+                <div className="tl-panel-meta">
+                  <span className="tl-panel-step">Etapa {current.num}</span>
+                  <span className="tl-panel-pct">{pct}%</span>
                 </div>
+                <p className="tl-stage-eyebrow">{current.title}</p>
+                <h3 className="tl-stage-title">{current.line}</h3>
+                <p className="tl-stage-detail">{current.detail}</p>
 
-                <div key={current.id} className="how-mock-fade">
-                  <div className="how-surface-icon">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="how-surface-title">{current.panel.headline}</h3>
-                  <p className="how-surface-detail">{current.panel.detail}</p>
-
-                  <div className="how-surface-grid">
-                    {current.panel.rows.map((row) => (
-                      <div key={row.k} className="how-surface-row">
-                        <span className="how-surface-k">{row.k}</span>
-                        <span className="how-surface-v">{row.v}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="how-surface-foot">
-                    <span className="how-surface-check">✓</span>
-                    sem inventar provider · sem ação fora do portão
-                  </div>
+                <div className="tl-panel-links">
+                  <span className="tl-note">
+                    <span className="tl-note-dot" />
+                    Ações sensíveis exigem aprovação · prova permanece local
+                  </span>
+                  <a href="/demo" className="tl-panel-cta">
+                    Abrir demonstração do ciclo →
+                  </a>
                 </div>
+              </div>
 
-                <div className="how-surface-dots" aria-hidden>
-                  {steps.map((s, i) => (
-                    <span key={s.id} className={i <= activeStep ? 'on' : ''} />
+              <div className="tl-panel-right">
+                <div className="tl-panel-num" aria-hidden>
+                  {current.num}
+                </div>
+                <dl className="tl-metrics">
+                  {current.facts.map((f) => (
+                    <div key={f.k} className="tl-metric">
+                      <dt>{f.k}</dt>
+                      <dd>{f.v}</dd>
+                    </div>
                   ))}
-                </div>
+                </dl>
               </div>
             </div>
           </div>

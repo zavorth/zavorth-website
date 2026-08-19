@@ -5,6 +5,7 @@ import { Navbar } from './Navbar'
 import { Hero } from './Hero'
 import { ProductIntroSection } from './ProductIntroSection'
 import { WhatItDoesSection } from './WhatItDoesSection'
+import { FeaturesGridSection } from './FeaturesGridSection'
 import { InstallSection } from './InstallSection'
 import { Footer } from './Footer'
 import { ScrollReveal } from './ScrollReveal'
@@ -15,17 +16,22 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       
-      {/* 1. Visão Geral (GSAP Scroll Word-by-Word Illumination) */}
+      {/* 1. O Que É o Zavorth (Kinetic Core Stage) */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <ProductIntroSection />
       </ScrollReveal>
       
-      {/* 2. Capacidades Essenciais (Horizontal Minimal Rows) */}
+      {/* 2. Sistema Swarm (Orquestração Concorrente de Subagentes) */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <WhatItDoesSection />
       </ScrollReveal>
       
-      {/* 3. Instale o Runtime Local (com Ink Reveal e Fundo Preto 100% Sólido) */}
+      {/* 3. Auto-Evolução, Agnosticismo & Escalabilidade */}
+      <ScrollReveal className="relative z-10" y={20} duration={0.6}>
+        <FeaturesGridSection />
+      </ScrollReveal>
+      
+      {/* 4. Instalação Local (com Ink Reveal Artwork) */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <InstallSection />
       </ScrollReveal>

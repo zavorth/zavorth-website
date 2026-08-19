@@ -13,7 +13,7 @@ interface InkStamp {
 export interface InkRevealCanvasProps {
   /** Source URL of the background artwork image to reveal */
   imageSrc?: string
-  /** Mask background color in RGB format e.g. "10, 10, 10" or "0, 0, 0" */
+  /** Mask background color in RGB format e.g. "8, 8, 8" or "0, 0, 0" */
   maskColor?: string
   /** Maximum radius of the ink reveal holes */
   maxRadius?: number
@@ -26,8 +26,8 @@ export interface InkRevealCanvasProps {
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
   maskColor = '8, 8, 8',
-  maxRadius = 140,
-  lifetime = 1600,
+  maxRadius = 175,
+  lifetime = 2000,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -38,23 +38,24 @@ export function InkRevealCanvas({
     const canvas = canvasRef.current
     if (!container || !canvas) return
 
+    const parent = (container.closest('section') || container.parentElement || container) as HTMLElement
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return
 
-    const DPR = Math.min(window.devicePixelRatio || 1, 2)
-    const R_START = 24
+    const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
+    const R_START = 32
     const R_END = maxRadius
     const R_VARY = 0.35
-    const MAX_STAMPS = 90
-    const STAMP_STEP = 16
+    const MAX_STAMPS = 140
+    const STAMP_STEP = 12
 
     let w = 0
     let h = 0
 
     const resize = () => {
       const rect = container.getBoundingClientRect()
-      w = rect.width
-      h = rect.height
+      w = Math.max(1, Math.round(rect.width))
+      h = Math.max(1, Math.round(rect.height))
       canvas.width = Math.round(w * DPR)
       canvas.height = Math.round(h * DPR)
       canvas.style.width = `${w}px`
@@ -66,6 +67,16 @@ export function InkRevealCanvas({
     }
 
     resize()
+
+    let resizeObserver: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        resize()
+      })
+      resizeObserver.observe(parent)
+      resizeObserver.observe(container)
+    }
+
     window.addEventListener('resize', resize)
 
     const stamps: InkStamp[] = []
@@ -102,9 +113,9 @@ export function InkRevealCanvas({
     }
 
     const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
-      const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r)
-      g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
-      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.85 * alpha})`)
+      const g = ctx.createRadialGradient(x, y, r * 0.16, x, y, r)
+      g.addColorStop(0, `rgba(0, 0, 0, ${0.98 * alpha})`)
+      g.addColorStop(0.6, `rgba(0, 0, 0, ${0.86 * alpha})`)
       g.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.fillStyle = g
@@ -161,34 +172,51 @@ export function InkRevealCanvas({
       }
     }
 
-    const handleMouseEnter = (e: MouseEvent) => {
+    const onPointerMove = (e: MouseEvent | PointerEvent | TouchEvent) => {
       const rect = container.getBoundingClientRect()
-      lastX = e.clientX - rect.left
-      lastY = e.clientY - rect.top
-      stampAlong(lastX, lastY)
-      start()
+      let clientX = 0
+      let clientY = 0
+
+      if ('touches' in e && e.touches.length > 0) {
+        clientX = e.touches[0].clientX
+        clientY = e.touches[0].clientY
+      } else if ('clientX' in e) {
+        clientX = e.clientX
+        clientY = e.clientY
+      }
+
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+
+      if (x >= -50 && x <= rect.width + 50 && y >= -50 && y <= rect.height + 50) {
+        stampAlong(Math.max(0, Math.min(rect.width, x)), Math.max(0, Math.min(rect.height, y)))
+        start()
+      } else {
+        lastX = null
+        lastY = null
+      }
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect()
-      stampAlong(e.clientX - rect.left, e.clientY - rect.top)
-      start()
-    }
-
-    const handleMouseLeave = () => {
+    const onPointerLeave = () => {
       lastX = null
       lastY = null
     }
 
-    container.addEventListener('mouseenter', handleMouseEnter)
-    container.addEventListener('mousemove', handleMouseMove)
-    container.addEventListener('mouseleave', handleMouseLeave)
+    // Attach pointer listeners to the parent section so movement across the entire section surface is captured
+    parent.addEventListener('mousemove', onPointerMove, { passive: true })
+    parent.addEventListener('pointermove', onPointerMove, { passive: true })
+    parent.addEventListener('touchmove', onPointerMove, { passive: true })
+    parent.addEventListener('mouseleave', onPointerLeave)
+    parent.addEventListener('pointerleave', onPointerLeave)
 
     return () => {
       window.removeEventListener('resize', resize)
-      container.removeEventListener('mouseenter', handleMouseEnter)
-      container.removeEventListener('mousemove', handleMouseMove)
-      container.removeEventListener('mouseleave', handleMouseLeave)
+      if (resizeObserver) resizeObserver.disconnect()
+      parent.removeEventListener('mousemove', onPointerMove)
+      parent.removeEventListener('pointermove', onPointerMove)
+      parent.removeEventListener('touchmove', onPointerMove)
+      parent.removeEventListener('mouseleave', onPointerLeave)
+      parent.removeEventListener('pointerleave', onPointerLeave)
       if (animId) cancelAnimationFrame(animId)
     }
   }, [maskColor, maxRadius, lifetime])
@@ -196,26 +224,24 @@ export function InkRevealCanvas({
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden pointer-events-auto ${className}`}
+      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none ${className}`}
       style={{
         zIndex: 0,
       }}
     >
-      {/* Underlying artwork background layer */}
+      {/* Background artwork covering 100% of the entire section */}
       <div
-        className="absolute inset-0 bg-no-repeat bg-center transition-transform duration-700 ease-out"
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out"
         style={{
           backgroundImage: `url("${imageSrc}")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          opacity: 0.85,
+          opacity: 0.92,
         }}
       />
 
-      {/* Procedural ink reveal canvas mask */}
+      {/* Full-bleed procedural canvas mask */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 block w-full h-full cursor-crosshair"
+        className="absolute inset-0 block w-full h-full pointer-events-none"
       />
     </div>
   )

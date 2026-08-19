@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Sparkles, Wand2, FolderTree, Code2, Rocket, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, Wand2, FolderHeart, Zap } from 'lucide-react'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -12,30 +12,26 @@ if (typeof window !== 'undefined') {
 
 export function ProductIntroSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [activeIdea, setActiveIdea] = useState(0)
+  const [activeTab, setActiveTab] = useState(0)
 
-  const ideas = [
+  const scenarios = [
     {
       icon: Wand2,
-      label: 'Criar um Projeto',
-      prompt: 'Crie uma landing page moderna e elegante para o meu novo produto',
-      output: 'Layout desenhado, código gerado, componentes estilizados e publicado em segundos.',
-      color: 'from-emerald-400 to-teal-300',
+      label: 'Criar',
+      input: 'Crie uma landing page moderna em React para o meu novo projeto',
+      result: 'Código completo, tipado e publicado localmente em segundos.',
     },
     {
-      icon: FolderTree,
-      label: 'Organizar Meu Computador',
-      prompt: 'Organize minhas notas, recibos e documentos da semana em pastas limpas',
-      output: 'Arquivos renomeados, duplicatas eliminadas e relatórios gerados sem você mover um dedo.',
-      color: 'from-blue-400 to-cyan-300',
+      icon: FolderHeart,
+      label: 'Organizar',
+      input: 'Organize minhas fotos, notas e notas fiscais por mês e categoria',
+      result: 'Arquivos renomeados, pastas limpas e relatório de tudo o que mudou.',
     },
     {
-      icon: Rocket,
-      label: 'Automatizar Tarefas',
-      prompt: 'Analise meus dados e envie um resumo visual direto no meu canal preferido',
-      output: 'Dados processados, gráficos gerados e notificação entregue no horário marcado.',
-      color: 'from-purple-400 to-pink-300',
+      icon: Zap,
+      label: 'Automatizar',
+      input: 'Monitore novos dados e me avise com um resumo visual quando terminar',
+      result: 'Rotina executada em segundo plano com notificações instantâneas.',
     },
   ]
 
@@ -45,17 +41,19 @@ export function ProductIntroSection() {
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '.kinetic-title-word',
-        { y: 40, opacity: 0 },
+        '.gsap-intro-text',
+        { opacity: 0.15, y: 30 },
         {
-          y: 0,
           opacity: 1,
-          stagger: 0.08,
-          duration: 0.8,
+          y: 0,
+          stagger: 0.12,
+          duration: 1,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: section,
-            start: 'top 75%',
+            start: 'top 70%',
+            end: 'top 30%',
+            scrub: 0.5,
           },
         }
       )
@@ -69,97 +67,80 @@ export function ProductIntroSection() {
       id="overview"
       ref={sectionRef}
       data-product-intro
-      className="landing-surface relative overflow-hidden py-32 sm:py-44 border-t border-white/[0.06] text-white scroll-mt-20"
+      className="landing-surface relative overflow-hidden py-36 sm:py-52 bg-black text-white scroll-mt-20"
     >
-      {/* Dynamic ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-gradient-to-tr from-emerald-500/10 via-teal-500/5 to-transparent rounded-full blur-[160px] pointer-events-none" />
+      {/* Soft ambient gradient aura */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-500/[0.05] rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
         
-        {/* Kinetic Header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-md mb-8">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-xs font-medium tracking-widest uppercase text-neutral-300">
-              Simples &amp; Poderoso
-            </span>
-          </div>
-
-          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.08]">
-            <span className="inline-block kinetic-title-word">Você</span>{' '}
-            <span className="inline-block kinetic-title-word">imagina.</span>{' '}
-            <span className="inline-block kinetic-title-word text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-white">
-              O Zavorth realiza.
-            </span>
-          </h2>
-
-          <p className="mt-8 text-base sm:text-lg text-neutral-400 font-light leading-relaxed max-w-2xl mx-auto">
-            Sem telas complicadas ou comandos chatos. Diga o que você quer em português simples e veja suas ideias ganharem vida diretamente no seu computador.
-          </p>
+        {/* Minimalist Kicker */}
+        <div className="mb-8">
+          <span className="section-kicker text-xs font-mono tracking-widest text-emerald-400 uppercase">
+            Sem Atrito
+          </span>
         </div>
 
-        {/* Cinematic Kinetic Idea Morphing Console */}
-        <div className="relative rounded-3xl border border-white/[0.08] bg-neutral-950/70 p-6 sm:p-12 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden">
-          
-          {/* Interactive Idea Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-            {ideas.map((item, idx) => {
+        {/* Big Editorial Headline (Google Launch Style) */}
+        <h2 className="text-4xl sm:text-7xl lg:text-8xl font-normal tracking-tight leading-[1.05] max-w-4xl mx-auto mb-12">
+          <span className="block gsap-intro-text text-neutral-400">Pense no que você quer.</span>
+          <span className="block gsap-intro-text text-white font-medium">O Zavorth realiza.</span>
+        </h2>
+
+        <p className="text-base sm:text-xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed mb-20">
+          Você não precisa aprender comandos complexos. Converse em português simples e veja seu computador trabalhar por você.
+        </p>
+
+        {/* Minimalist Floating Interactive Beam */}
+        <div className="max-w-3xl mx-auto">
+          {/* Interactive Floating Pill Switcher */}
+          <div className="flex items-center justify-center gap-2 mb-12">
+            {scenarios.map((item, idx) => {
               const Icon = item.icon
-              const isActive = activeIdea === idx
+              const isActive = activeTab === idx
               return (
                 <button
                   key={item.label}
                   type="button"
-                  onClick={() => setActiveIdea(idx)}
-                  className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2.5 ${
+                  onClick={() => setActiveTab(idx)}
+                  className={`px-6 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                     isActive
-                      ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.25)] scale-105'
-                      : 'bg-white/[0.04] text-neutral-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.05]'
+                      ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)] scale-105'
+                      : 'bg-white/[0.03] text-neutral-400 hover:text-white hover:bg-white/[0.06]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-emerald-400'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-emerald-400'}`} />
                   <span>{item.label}</span>
                 </button>
               )
             })}
           </div>
 
-          {/* Morphing Thought-to-Result Stage */}
+          {/* Minimalist Thought Display */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeIdea}
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: -15 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="p-6 sm:p-10 rounded-2xl bg-black/60 border border-white/[0.06] relative"
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="relative p-8 sm:p-12 rounded-3xl bg-neutral-950/60 border border-white/[0.06] backdrop-blur-2xl text-left"
             >
-              <div className="mb-6 pb-6 border-b border-white/[0.06]">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 block mb-2">
-                  O que você pede:
+              <div className="mb-6">
+                <span className="text-[11px] font-mono text-neutral-500 uppercase tracking-widest block mb-2">
+                  Você pede
                 </span>
-                <p className="text-lg sm:text-2xl font-light text-white leading-relaxed">
-                  "{ideas[activeIdea].prompt}"
+                <p className="text-lg sm:text-2xl text-white font-light leading-snug">
+                  "{scenarios[activeTab].input}"
                 </p>
               </div>
 
-              <div>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-500 block mb-2">
-                  O que o Zavorth faz no seu computador:
-                </span>
-                <p className="text-sm sm:text-base font-light text-neutral-300 leading-relaxed flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                  {ideas[activeIdea].output}
-                </p>
+              <div className="pt-6 border-t border-white/[0.04] flex items-center gap-3 text-sm text-emerald-400 font-light">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{scenarios[activeTab].result}</span>
               </div>
             </motion.div>
           </AnimatePresence>
-
-          {/* Bottom subtle trust seal */}
-          <div className="mt-8 text-center text-xs text-neutral-500 font-light flex items-center justify-center gap-2">
-            <span>Tudo acontece localmente na sua máquina, com total privacidade e sem esforço.</span>
-          </div>
-
         </div>
 
       </div>

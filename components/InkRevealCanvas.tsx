@@ -13,7 +13,7 @@ interface InkStamp {
 export interface InkRevealCanvasProps {
   /** Source URL of the background artwork image to reveal */
   imageSrc?: string
-  /** Mask background color in RGB format e.g. "8, 8, 8" or "0, 0, 0" */
+  /** Mask background color in hex/rgb format */
   maskColor?: string
   /** Maximum radius of the ink reveal holes */
   maxRadius?: number
@@ -25,7 +25,7 @@ export interface InkRevealCanvasProps {
 
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
-  maskColor = '8, 8, 8',
+  maskColor = '#000000',
   maxRadius = 175,
   lifetime = 2000,
   className = '',
@@ -52,18 +52,24 @@ export function InkRevealCanvas({
     let w = 0
     let h = 0
 
+    const fillSolidMask = () => {
+      ctx.save()
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = maskColor
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.restore()
+    }
+
     const resize = () => {
       const rect = container.getBoundingClientRect()
-      w = Math.max(1, Math.round(rect.width))
-      h = Math.max(1, Math.round(rect.height))
+      w = Math.max(1, Math.ceil(rect.width))
+      h = Math.max(1, Math.ceil(rect.height))
       canvas.width = Math.round(w * DPR)
       canvas.height = Math.round(h * DPR)
       canvas.style.width = `${w}px`
       canvas.style.height = `${h}px`
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = `rgb(${maskColor})`
-      ctx.fillRect(0, 0, w, h)
+      fillSolidMask()
     }
 
     resize()
@@ -141,11 +147,13 @@ export function InkRevealCanvas({
     const loop = () => {
       const now = performance.now()
 
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = `rgb(${maskColor})`
-      ctx.fillRect(0, 0, w, h)
+      // Full canvas solid black repaint
+      fillSolidMask()
 
+      ctx.save()
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
       ctx.globalCompositeOperation = 'destination-out'
+
       for (let i = stamps.length - 1; i >= 0; i--) {
         const t = (now - stamps[i].born) / lifetime
         if (t >= 1) {
@@ -157,11 +165,13 @@ export function InkRevealCanvas({
         const alpha = 1 - t * t
         carveInk(stamps[i].x, stamps[i].y, r, alpha, stamps[i].seed)
       }
+      ctx.restore()
 
       if (stamps.length > 0) {
         animId = requestAnimationFrame(loop)
       } else {
         running = false
+        fillSolidMask()
       }
     }
 
@@ -188,8 +198,8 @@ export function InkRevealCanvas({
       const x = clientX - rect.left
       const y = clientY - rect.top
 
-      if (x >= -50 && x <= rect.width + 50 && y >= -50 && y <= rect.height + 50) {
-        stampAlong(Math.max(0, Math.min(rect.width, x)), Math.max(0, Math.min(rect.height, y)))
+      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+        stampAlong(x, y)
         start()
       } else {
         lastX = null
@@ -202,7 +212,6 @@ export function InkRevealCanvas({
       lastY = null
     }
 
-    // Attach pointer listeners to the parent section so movement across the entire section surface is captured
     parent.addEventListener('mousemove', onPointerMove, { passive: true })
     parent.addEventListener('pointermove', onPointerMove, { passive: true })
     parent.addEventListener('touchmove', onPointerMove, { passive: true })
@@ -224,21 +233,21 @@ export function InkRevealCanvas({
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none ${className}`}
+      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-black ${className}`}
       style={{
         zIndex: 0,
       }}
     >
-      {/* Background artwork covering 100% of the entire section */}
+      {/* Background artwork image */}
       <div
         className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out"
         style={{
           backgroundImage: `url("${imageSrc}")`,
-          opacity: 0.92,
+          opacity: 0.95,
         }}
       />
 
-      {/* Full-bleed procedural canvas mask */}
+      {/* Full-bleed solid procedural canvas mask */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 block w-full h-full pointer-events-none"

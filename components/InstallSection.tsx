@@ -74,9 +74,9 @@ export function InstallSection() {
       {/* Procedural Ink Reveal Artwork Background */}
       <InkRevealCanvas
         imageSrc="/artwork/hero-bg.png"
-        maskColor="8, 8, 8"
-        maxRadius={150}
-        lifetime={1800}
+        maskColor="#000000"
+        maxRadius={160}
+        lifetime={1900}
       />
 
       {/* Subtle Grid Accent */}

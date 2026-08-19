@@ -13,14 +13,16 @@ import {
   ArrowRight
 } from 'lucide-react'
 
-export function ProductIntroSection() {
+export function CognitiveEngineSection() {
   const [activeStep, setActiveStep] = useState<number>(0)
   const [testSimulating, setTestSimulating] = useState<boolean>(false)
+  const [testsPassed, setTestsPassed] = useState<boolean>(true)
 
   const handleRunVerification = () => {
     setTestSimulating(true)
     setTimeout(() => {
       setTestSimulating(false)
+      setTestsPassed(true)
     }, 1200)
   }
 
@@ -53,9 +55,8 @@ export function ProductIntroSection() {
 
   return (
     <section
-      id="overview"
-      data-product-intro
-      className="landing-surface relative overflow-hidden py-28 sm:py-36 border-t border-white/[0.06] text-white scroll-mt-20"
+      id="engine"
+      className="relative overflow-hidden py-28 sm:py-36 bg-black text-white scroll-mt-20"
     >
       {/* Subtle ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[340px] bg-emerald-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
@@ -72,7 +73,7 @@ export function ProductIntroSection() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-md mb-6"
           >
             <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-[11px] font-medium tracking-wider uppercase text-neutral-300">
+            <span className="text-[11px] font-medium tracking-wider uppercase text-neutral-300">
               O Motor Cognitivo
             </span>
           </motion.div>
@@ -212,7 +213,7 @@ export function ProductIntroSection() {
                 <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/[0.04]">
                   <span className="text-xs text-neutral-300 font-medium flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Linter &amp; Clean Code Hygiene
+                    Linter & Clean Code Hygiene
                   </span>
                   <span className="text-[10px] font-mono text-emerald-400 font-semibold">CLEAN</span>
                 </div>
@@ -220,7 +221,7 @@ export function ProductIntroSection() {
                 <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/[0.04]">
                   <span className="text-xs text-neutral-300 font-medium flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Unit &amp; Integration Tests
+                    Unit & Integration Tests
                   </span>
                   <span className="text-[10px] font-mono text-emerald-400 font-semibold">21/21 PASSING</span>
                 </div>

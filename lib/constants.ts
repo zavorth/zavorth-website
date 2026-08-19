@@ -1,7 +1,9 @@
 export const NAV_LINKS = [
-  { id: 'overview', href: '#overview', label: 'Produto' },
-  { id: 'how-it-works', href: '#how-it-works', label: 'Como funciona' },
-  { id: 'features', href: '#features', label: 'Habilidades' },
+  { id: 'overview', href: '#overview', label: 'Motor Cognitivo' },
+  { id: 'how-it-works', href: '#how-it-works', label: 'Agnóstico' },
+  { id: 'features', href: '#features', label: 'Memória' },
+  { id: 'subagents', href: '#subagents', label: 'Subagentes' },
+  { id: 'safety', href: '#safety', label: 'Segurança' },
   { id: 'install', href: '#install', label: 'Instalar' },
 ]
 

@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Brain, Database, HardDrive, Search, History, Zap } from 'lucide-react'
+import { Brain, Database, HardDrive, Search, History, Zap, Check } from 'lucide-react'
 
-export function FeaturesGridSection() {
+export function InfiniteMemorySection() {
   const [selectedTurn, setSelectedTurn] = useState<number>(2)
 
   const turnsDemo = [
@@ -51,8 +51,8 @@ export function FeaturesGridSection() {
 
   return (
     <section
-      id="features"
-      className="landing-surface relative overflow-hidden py-28 sm:py-36 border-t border-white/[0.06] text-white scroll-mt-20"
+      id="memory"
+      className="relative overflow-hidden py-28 sm:py-36 bg-black text-white scroll-mt-20 border-t border-white/[0.06]"
     >
       <div className="relative z-10 mx-auto max-w-6xl px-6">
         
@@ -66,7 +66,7 @@ export function FeaturesGridSection() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-md mb-6"
           >
             <Brain className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-[11px] font-medium tracking-wider uppercase text-neutral-300">
+            <span className="text-[11px] font-medium tracking-wider uppercase text-neutral-300">
               Contexto Infinito &amp; Memória Viva
             </span>
           </motion.div>

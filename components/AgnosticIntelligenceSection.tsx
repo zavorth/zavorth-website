@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Sparkles, Network, Terminal, Shield, RefreshCw, Zap } from 'lucide-react'
 
-export function WhatItDoesSection() {
+export function AgnosticIntelligenceSection() {
   const [hoveredFamily, setHoveredFamily] = useState<number | null>(null)
 
   const providerFamilies = [
@@ -55,9 +55,8 @@ export function WhatItDoesSection() {
 
   return (
     <section
-      id="how-it-works"
-      data-how-it-works
-      className="landing-surface relative overflow-hidden py-28 sm:py-36 border-t border-white/[0.06] text-white scroll-mt-20"
+      id="intelligence"
+      className="relative overflow-hidden py-28 sm:py-36 bg-black text-white scroll-mt-20 border-t border-white/[0.06]"
     >
       {/* Background Radial Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-emerald-500/[0.03] rounded-full blur-[160px] pointer-events-none" />
@@ -74,7 +73,7 @@ export function WhatItDoesSection() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-md mb-6"
           >
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-[11px] font-medium tracking-wider uppercase text-neutral-300">
+            <span className="text-[11px] font-medium tracking-wider uppercase text-neutral-300">
               Arquitetura Agnóstica
             </span>
           </motion.div>

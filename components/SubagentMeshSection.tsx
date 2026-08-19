@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Users, 
@@ -10,11 +9,12 @@ import {
   Code2, 
   CheckCircle2, 
   Sparkles, 
+  ArrowRight,
   Activity,
-  ShieldCheck
+  Layers
 } from 'lucide-react'
 
-export function FeaturesSection() {
+export function SubagentMeshSection() {
   const [selectedAgent, setSelectedAgent] = useState<number>(0)
   const [isOrchestrating, setIsOrchestrating] = useState<boolean>(false)
 
@@ -74,9 +74,8 @@ export function FeaturesSection() {
 
   return (
     <section
-      id="features"
-      data-proof-section
-      className="landing-surface relative overflow-hidden py-28 sm:py-36 border-t border-white/[0.06] text-white scroll-mt-20"
+      id="subagents"
+      className="relative overflow-hidden py-28 sm:py-36 bg-black text-white scroll-mt-20 border-t border-white/[0.06]"
     >
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-emerald-500/[0.03] rounded-full blur-[140px] pointer-events-none" />
@@ -93,7 +92,7 @@ export function FeaturesSection() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-md mb-6"
           >
             <Users className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-[11px] font-medium tracking-wider uppercase text-neutral-300">
+            <span className="text-[11px] font-medium tracking-wider uppercase text-neutral-300">
               Mesh de Subagentes
             </span>
           </motion.div>
@@ -123,7 +122,7 @@ export function FeaturesSection() {
         </div>
 
         {/* Interactive Swarm Mesh Console */}
-        <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/50 via-black to-neutral-950/80 p-8 sm:p-12 backdrop-blur-xl mb-14">
+        <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/50 via-black to-neutral-950/80 p-8 sm:p-12 backdrop-blur-xl mb-12">
           
           {/* Swarm Status Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-white/[0.06] mb-8">
@@ -216,54 +215,6 @@ export function FeaturesSection() {
             </motion.div>
           </AnimatePresence>
 
-        </div>
-
-        {/* Real Product Proof Display */}
-        <div 
-          data-zavorth-proof 
-          className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/30 to-black p-8 sm:p-12 overflow-hidden"
-        >
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.06]">
-            <div>
-              <h3 className="text-sm font-semibold text-white">Superfícies de Operação do Agente</h3>
-              <p className="text-xs text-neutral-400 font-light mt-0.5">Desktop Shell, Painel Web e Runtime CLI integrados</p>
-            </div>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-              UNIFIED SURFACES
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-white/[0.08] overflow-hidden bg-black/50 p-2 group">
-              <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
-                <Image
-                  src="/product/zavorth-desktop-shell.png"
-                  alt="Zavorth Desktop Shell"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-medium text-white">Zavorth Desktop App</p>
-                <p className="text-[11px] text-neutral-400 font-light">Controle visual reativo com hotkeys e overlay</p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.08] overflow-hidden bg-black/50 p-2 group">
-              <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
-                <Image
-                  src="/product/zavorth-control-overview.png"
-                  alt="Zavorth Control Overview"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-medium text-white">Zavorth Web Control Console</p>
-                <p className="text-[11px] text-neutral-400 font-light">Auditoria, aprovação e monitoramento local</p>
-              </div>
-            </div>
-          </div>
         </div>
 
       </div>

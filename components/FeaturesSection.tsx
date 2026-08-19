@@ -1,240 +1,88 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Users, 
-  Compass, 
-  Search, 
-  Code2, 
-  CheckCircle2, 
-  Sparkles, 
-  Activity,
-  ShieldCheck
-} from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Users2, Sparkles, LayoutTemplate, ShieldCheck, CheckCircle2 } from 'lucide-react'
 
 export function FeaturesSection() {
-  const [selectedAgent, setSelectedAgent] = useState<number>(0)
-  const [isOrchestrating, setIsOrchestrating] = useState<boolean>(false)
-
-  const agents = [
+  const teamPerks = [
     {
-      id: 'architect',
-      name: 'Architect Subagent',
-      role: 'Design & Dependências',
-      icon: Compass,
-      tag: 'PLANNER',
-      status: 'Ready',
-      mission: 'Mapeia a arquitetura do projeto, analisa impacto de mudanças e cria planos de execução estruturados.',
-      action: 'Decompondo grafo de módulos e contratos de interface...',
-      metrics: 'Zero Dependência Cíclica · Inversão de Controle',
+      title: 'Planejamento e Pesquisa',
+      desc: 'Analisa o cenário, pesquisa a documentação e monta a estratégia ideal antes de começar.',
     },
     {
-      id: 'researcher',
-      name: 'Research Subagent',
-      role: 'Varredura de Código & Docs',
-      icon: Search,
-      tag: 'DISCOVERY',
-      status: 'Active',
-      mission: 'Explora repositórios, documentações e logs históricos em paralelo sem poluir a janela de contexto principal.',
-      action: 'Indexando símbolos TypeScript e referências de API...',
-      metrics: 'Busca Semântica < 15ms · AST Traversals',
+      title: 'Construção Completa',
+      desc: 'Cria o código e os recursos necessários de ponta a ponta, sem atalhos ou partes incompletas.',
     },
     {
-      id: 'engineer',
-      name: 'Core Engineer Subagent',
-      role: 'Implementação de Código',
-      icon: Code2,
-      tag: 'BUILDER',
-      status: 'Active',
-      mission: 'Escreve código completo, tipado e funcional seguindo a política anti-regressão e sem placeholders preguiçosos.',
-      action: 'Gerando componentes modulares com Strict Typing (Zero Any)...',
-      metrics: '100% Código Real · Anti-Placeholder Policy',
-    },
-    {
-      id: 'auditor',
-      name: 'QA & Verification Subagent',
-      role: 'Auditoria & Testes',
-      icon: CheckCircle2,
-      tag: 'GUARDIAN',
-      status: 'Verified',
-      mission: 'Executa suítes de testes automatizados, checagens de tipos e linters antes de validar qualquer entrega.',
-      action: 'Executando testes unitários e validação de regressão...',
-      metrics: '21/21 Suítes Passando · 0 Erros de Compilação',
+      title: 'Auditoria e Testes',
+      desc: 'Roda verificações automatizadas para garantir que tudo funcione perfeitamente antes de entregar.',
     },
   ]
-
-  const handleSimulateSwarm = () => {
-    setIsOrchestrating(true)
-    setTimeout(() => {
-      setIsOrchestrating(false)
-    }, 2000)
-  }
 
   return (
     <section
       id="features"
       data-proof-section
-      className="landing-surface relative overflow-hidden py-28 sm:py-36 border-t border-white/[0.06] text-white scroll-mt-20"
+      className="landing-surface relative overflow-hidden py-32 sm:py-44 border-t border-white/[0.06] text-white scroll-mt-20"
     >
-      {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-emerald-500/[0.03] rounded-full blur-[140px] pointer-events-none" />
-
-      <div className="relative z-10 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-6">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-md mb-6"
-          >
-            <Users className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-[11px] font-medium tracking-wider uppercase text-neutral-300">
-              Mesh de Subagentes
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-md mb-8">
+            <Users2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="section-kicker text-xs font-medium tracking-widest uppercase text-neutral-300">
+              Colaboração Invisível
             </span>
-          </motion.div>
+          </div>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-5xl font-semibold tracking-tight text-white leading-[1.15]"
-          >
-            Um time de engenharia autônomo{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-emerald-400">
-              sob seu comando.
+          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.08]">
+            Multiplique sua capacidade por dez,{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-white">
+              sem esforço extra.
             </span>
-          </motion.h2>
+          </h2>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-6 text-sm sm:text-base text-neutral-400 leading-relaxed max-w-2xl mx-auto font-light"
-          >
-            O Zavorth orquestra subagentes especializados em paralelo. Enquanto um pesquisa o codebase, outro planeja as interfaces e outro valida a segurança em tempo real.
-          </motion.p>
+          <p className="mt-8 text-base sm:text-lg text-neutral-400 font-light leading-relaxed max-w-2xl mx-auto">
+            Enquanto você foca nas decisões importantes, o Zavorth divide o trabalho pesado entre tarefas simultâneas — pesquisando, construindo e testando tudo para você.
+          </p>
         </div>
 
-        {/* Interactive Swarm Mesh Console */}
-        <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/50 via-black to-neutral-950/80 p-8 sm:p-12 backdrop-blur-xl mb-14">
-          
-          {/* Swarm Status Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-white/[0.06] mb-8">
-            <div className="flex items-center gap-3">
-              <span className={`w-2.5 h-2.5 rounded-full ${isOrchestrating ? 'bg-emerald-400 animate-ping' : 'bg-emerald-400'}`} />
-              <span className="text-xs font-semibold text-white tracking-wide">
-                ORQUESTRAÇÃO CONCORRENTE ATIVA
-              </span>
+        {/* 3 Core Highlights (Simple & Clear) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
+          {teamPerks.map((perk) => (
+            <div
+              key={perk.title}
+              className="p-8 rounded-3xl border border-white/[0.08] bg-neutral-950/70 backdrop-blur-2xl text-center sm:text-left"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6 mx-auto sm:mx-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-semibold text-white mb-2">{perk.title}</h3>
+              <p className="text-xs sm:text-sm text-neutral-400 font-light leading-relaxed">{perk.desc}</p>
             </div>
-            
-            <button
-              type="button"
-              onClick={handleSimulateSwarm}
-              disabled={isOrchestrating}
-              className="py-2 px-4 rounded-xl text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all flex items-center gap-2"
-            >
-              <Activity className="w-3.5 h-3.5" />
-              <span>{isOrchestrating ? 'Sincronizando subagentes...' : 'Disparar Loop Concorrente'}</span>
-            </button>
-          </div>
-
-          {/* 4 Agent Nodes Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {agents.map((agent, idx) => {
-              const Icon = agent.icon
-              const isSelected = selectedAgent === idx
-              return (
-                <button
-                  key={agent.id}
-                  type="button"
-                  onClick={() => setSelectedAgent(idx)}
-                  className={`p-5 rounded-2xl text-left transition-all duration-300 border relative ${
-                    isSelected
-                      ? 'bg-white/[0.08] border-emerald-500/50 shadow-[0_0_24px_rgba(16,185,129,0.14)]'
-                      : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                      isSelected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/[0.05] text-neutral-400'
-                    }`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-[9px] font-mono font-semibold text-neutral-500 px-2 py-0.5 rounded bg-white/[0.03]">
-                      {agent.tag}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xs font-semibold text-white mb-0.5">{agent.name}</h3>
-                  <p className="text-[11px] text-neutral-400 font-light mb-3">{agent.role}</p>
-
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>{agent.status}</span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Selected Agent Mission & Live Telemetry */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={agents[selectedAgent].id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="p-6 sm:p-8 rounded-2xl bg-black/60 border border-white/[0.06]"
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-white/[0.04]">
-                <div>
-                  <h4 className="text-sm font-semibold text-white">
-                    {agents[selectedAgent].name} — {agents[selectedAgent].role}
-                  </h4>
-                  <p className="text-xs text-neutral-400 font-light mt-1">
-                    {agents[selectedAgent].mission}
-                  </p>
-                </div>
-                <span className="text-[10px] font-mono font-medium text-emerald-400/80 bg-emerald-500/[0.06] border border-emerald-500/20 px-3 py-1.5 rounded-xl self-start md:self-auto">
-                  {agents[selectedAgent].metrics}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 text-xs font-mono text-neutral-300 bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.04]">
-                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-neutral-400">Ação atual:</span>
-                <span className="text-white">{agents[selectedAgent].action}</span>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-
+          ))}
         </div>
 
         {/* Real Product Proof Display */}
         <div 
           data-zavorth-proof 
-          className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/30 to-black p-8 sm:p-12 overflow-hidden"
+          className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/40 via-black to-neutral-950/80 p-8 sm:p-12 overflow-hidden backdrop-blur-2xl"
         >
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 pb-4 border-b border-white/[0.06]">
             <div>
-              <h3 className="text-sm font-semibold text-white">Superfícies de Operação do Agente</h3>
-              <p className="text-xs text-neutral-400 font-light mt-0.5">Desktop Shell, Painel Web e Runtime CLI integrados</p>
+              <h3 className="text-base font-semibold text-white">Do Desktop ao Navegador</h3>
+              <p className="text-xs text-neutral-400 font-light mt-0.5">Use o Zavorth onde for mais confortável para o seu dia a dia.</p>
             </div>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-              UNIFIED SURFACES
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              DESKTOP &amp; WEB CONSOLE
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-white/[0.08] overflow-hidden bg-black/50 p-2 group">
+            <div className="rounded-2xl border border-white/[0.08] overflow-hidden bg-black/60 p-2.5 group">
               <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
                 <Image
                   src="/product/zavorth-desktop-shell.png"
@@ -244,12 +92,12 @@ export function FeaturesSection() {
                 />
               </div>
               <div className="p-3">
-                <p className="text-xs font-medium text-white">Zavorth Desktop App</p>
-                <p className="text-[11px] text-neutral-400 font-light">Controle visual reativo com hotkeys e overlay</p>
+                <p className="text-xs font-semibold text-white">Aplicativo Desktop</p>
+                <p className="text-[11px] text-neutral-400 font-light">Atalhos globais rápidos, overlay discreto e resposta instantânea.</p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/[0.08] overflow-hidden bg-black/50 p-2 group">
+            <div className="rounded-2xl border border-white/[0.08] overflow-hidden bg-black/60 p-2.5 group">
               <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
                 <Image
                   src="/product/zavorth-control-overview.png"
@@ -259,8 +107,8 @@ export function FeaturesSection() {
                 />
               </div>
               <div className="p-3">
-                <p className="text-xs font-medium text-white">Zavorth Web Control Console</p>
-                <p className="text-[11px] text-neutral-400 font-light">Auditoria, aprovação e monitoramento local</p>
+                <p className="text-xs font-semibold text-white">Console Web de Controle</p>
+                <p className="text-[11px] text-neutral-400 font-light">Visão panorâmica dos seus projetos e histórico completo.</p>
               </div>
             </div>
           </div>

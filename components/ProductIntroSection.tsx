@@ -1,253 +1,167 @@
 'use client'
 
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Cpu, 
-  GitBranch, 
-  ShieldCheck, 
-  RotateCcw, 
-  CheckCircle2, 
-  Sparkles,
-  Layers,
-  ArrowRight
-} from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Sparkles, Wand2, FolderTree, Code2, Rocket, ArrowRight } from 'lucide-react'
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 export function ProductIntroSection() {
-  const [activeStep, setActiveStep] = useState<number>(0)
-  const [testSimulating, setTestSimulating] = useState<boolean>(false)
+  const sectionRef = useRef<HTMLElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [activeIdea, setActiveIdea] = useState(0)
 
-  const handleRunVerification = () => {
-    setTestSimulating(true)
-    setTimeout(() => {
-      setTestSimulating(false)
-    }, 1200)
-  }
-
-  const loopStages = [
+  const ideas = [
     {
-      icon: Layers,
-      title: 'Decomposição de Metas',
-      desc: 'Metas complexas são convertidas em grafos atômicos de tarefas com análise de dependência antes de qualquer alteração.',
-      tag: 'Planning Core',
+      icon: Wand2,
+      label: 'Criar um Projeto',
+      prompt: 'Crie uma landing page moderna e elegante para o meu novo produto',
+      output: 'Layout desenhado, código gerado, componentes estilizados e publicado em segundos.',
+      color: 'from-emerald-400 to-teal-300',
     },
     {
-      icon: ShieldCheck,
-      title: 'Sandbox de Risco',
-      desc: 'Operações sensíveis são isoladas e validadas por contratos de integridade antes da execução em disco.',
-      tag: 'Risk Grading',
+      icon: FolderTree,
+      label: 'Organizar Meu Computador',
+      prompt: 'Organize minhas notas, recibos e documentos da semana em pastas limpas',
+      output: 'Arquivos renomeados, duplicatas eliminadas e relatórios gerados sem você mover um dedo.',
+      color: 'from-blue-400 to-cyan-300',
     },
     {
-      icon: CheckCircle2,
-      title: 'Portais de Verificação',
-      desc: 'Suítes de testes, checagem de tipos (Zero Any) e linters são executados autonomamente para blindar o código.',
-      tag: 'Automated Gate',
-    },
-    {
-      icon: RotateCcw,
-      title: 'Rollback Cirúrgico',
-      desc: 'Em caso de divergência, o agente restaura cirurgicamente apenas os arquivos afetados, preservando o progresso válido.',
-      tag: 'Self-Healing',
+      icon: Rocket,
+      label: 'Automatizar Tarefas',
+      prompt: 'Analise meus dados e envie um resumo visual direto no meu canal preferido',
+      output: 'Dados processados, gráficos gerados e notificação entregue no horário marcado.',
+      color: 'from-purple-400 to-pink-300',
     },
   ]
+
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.kinetic-title-word',
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.08,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 75%',
+          },
+        }
+      )
+    }, section)
+
+    return () => ctx.revert()
+  }, [])
 
   return (
     <section
       id="overview"
+      ref={sectionRef}
       data-product-intro
-      className="landing-surface relative overflow-hidden py-28 sm:py-36 border-t border-white/[0.06] text-white scroll-mt-20"
+      className="landing-surface relative overflow-hidden py-32 sm:py-44 border-t border-white/[0.06] text-white scroll-mt-20"
     >
-      {/* Subtle ambient lighting */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[340px] bg-emerald-500/[0.04] rounded-full blur-[140px] pointer-events-none" />
+      {/* Dynamic ambient background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-gradient-to-tr from-emerald-500/10 via-teal-500/5 to-transparent rounded-full blur-[160px] pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-6">
         
-        {/* Header Badge & Title */}
+        {/* Kinetic Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-md mb-6"
-          >
-            <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="section-kicker text-[11px] font-medium tracking-wider uppercase text-neutral-300">
-              O Motor Cognitivo
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-md mb-8">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="section-kicker text-xs font-medium tracking-widest uppercase text-neutral-300">
+              Simples &amp; Poderoso
             </span>
-          </motion.div>
+          </div>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-5xl font-semibold tracking-tight text-white leading-[1.15]"
-          >
-            Autonomia guiada por{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-emerald-400">
-              verificação em tempo real.
+          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.08]">
+            <span className="inline-block kinetic-title-word">Você</span>{' '}
+            <span className="inline-block kinetic-title-word">imagina.</span>{' '}
+            <span className="inline-block kinetic-title-word text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-white">
+              O Zavorth realiza.
             </span>
-          </motion.h2>
+          </h2>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-6 text-sm sm:text-base text-neutral-400 leading-relaxed max-w-2xl mx-auto font-light"
-          >
-            O Zavorth não é apenas um gerador de texto. Ele é um sistema de execução de ciclo fechado:
-            decompondo objetivos, aplicando código sem atalhos e testando cada linha antes de considerar a tarefa concluída.
-          </motion.p>
+          <p className="mt-8 text-base sm:text-lg text-neutral-400 font-light leading-relaxed max-w-2xl mx-auto">
+            Sem telas complicadas ou comandos chatos. Diga o que você quer em português simples e veja suas ideias ganharem vida diretamente no seu computador.
+          </p>
         </div>
 
-        {/* Bento Grid Architecture */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Cinematic Kinetic Idea Morphing Console */}
+        <div className="relative rounded-3xl border border-white/[0.08] bg-neutral-950/70 p-6 sm:p-12 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden">
           
-          {/* Bento Card 1: Autonomous Loop Decomposition (7 cols) */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="md:col-span-7 rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/60 to-neutral-950/80 p-8 relative overflow-hidden backdrop-blur-xl group hover:border-white/[0.15] transition-all duration-500"
-          >
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <GitBranch className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white">Decomposição em Grafo</h3>
-                  <p className="text-[11px] text-neutral-500 font-mono">execution_plan.graph</p>
-                </div>
-              </div>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                ACTIVE PIPELINE
-              </span>
-            </div>
+          {/* Interactive Idea Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+            {ideas.map((item, idx) => {
+              const Icon = item.icon
+              const isActive = activeIdea === idx
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => setActiveIdea(idx)}
+                  className={`px-5 py-3 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2.5 ${
+                    isActive
+                      ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.25)] scale-105'
+                      : 'bg-white/[0.04] text-neutral-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.05]'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-emerald-400'}`} />
+                  <span>{item.label}</span>
+                </button>
+              )
+            })}
+          </div>
 
-            {/* Interactive Stage Selector */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {loopStages.map((stage, idx) => {
-                const Icon = stage.icon
-                const isActive = activeStep === idx
-                return (
-                  <button
-                    key={stage.title}
-                    type="button"
-                    onClick={() => setActiveStep(idx)}
-                    className={`p-4 rounded-2xl text-left transition-all duration-300 border ${
-                      isActive
-                        ? 'bg-white/[0.06] border-emerald-500/40 shadow-[0_0_24px_rgba(16,185,129,0.12)]'
-                        : 'bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-neutral-500">
-                        {stage.tag}
-                      </span>
-                    </div>
-                    <p className={`text-xs font-medium ${isActive ? 'text-white' : 'text-neutral-300'}`}>
-                      {stage.title}
-                    </p>
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Active Stage Detailed Breakdown */}
-            <div className="p-5 rounded-2xl bg-black/50 border border-white/[0.06] relative">
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-medium text-white mb-1">
-                    {loopStages[activeStep].title}
-                  </p>
-                  <p className="text-xs text-neutral-400 leading-relaxed font-light">
-                    {loopStages[activeStep].desc}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Bento Card 2: Automated Verification Gate (5 cols) */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="md:col-span-5 rounded-3xl border border-white/[0.08] bg-gradient-to-b from-neutral-900/60 to-neutral-950/80 p-8 flex flex-col justify-between backdrop-blur-xl group hover:border-white/[0.15] transition-all duration-500"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">Portal de Verificação</h3>
-                    <p className="text-[11px] text-neutral-500 font-mono">zero_regression_gate</p>
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-xs text-neutral-400 leading-relaxed mb-6 font-light">
-                Nenhuma tarefa é dada como concluída sem execução real da suíte de verificação automatizada.
-              </p>
-
-              {/* Real-time Verification Badges */}
-              <div className="space-y-2.5 mb-8">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/[0.04]">
-                  <span className="text-xs text-neutral-300 font-medium flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Typecheck (TypeScript Strict)
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">0 ERRORS</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/[0.04]">
-                  <span className="text-xs text-neutral-300 font-medium flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Linter &amp; Clean Code Hygiene
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">CLEAN</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/[0.04]">
-                  <span className="text-xs text-neutral-300 font-medium flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Unit &amp; Integration Tests
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">21/21 PASSING</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleRunVerification}
-              disabled={testSimulating}
-              className="w-full py-3 px-4 rounded-xl font-medium text-xs bg-white/[0.05] hover:bg-white/[0.1] text-white border border-white/[0.1] transition-all flex items-center justify-center gap-2"
+          {/* Morphing Thought-to-Result Stage */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIdea}
+              initial={{ opacity: 0, scale: 0.96, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -15 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="p-6 sm:p-10 rounded-2xl bg-black/60 border border-white/[0.06] relative"
             >
-              {testSimulating ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                  <span>Auditando integridade do runtime...</span>
-                </>
-              ) : (
-                <>
-                  <span>Simular Verificação Contínua</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
-                </>
-              )}
-            </button>
-          </motion.div>
+              <div className="mb-6 pb-6 border-b border-white/[0.06]">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 block mb-2">
+                  O que você pede:
+                </span>
+                <p className="text-lg sm:text-2xl font-light text-white leading-relaxed">
+                  "{ideas[activeIdea].prompt}"
+                </p>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-500 block mb-2">
+                  O que o Zavorth faz no seu computador:
+                </span>
+                <p className="text-sm sm:text-base font-light text-neutral-300 leading-relaxed flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                  {ideas[activeIdea].output}
+                </p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Bottom subtle trust seal */}
+          <div className="mt-8 text-center text-xs text-neutral-500 font-light flex items-center justify-center gap-2">
+            <span>Tudo acontece localmente na sua máquina, com total privacidade e sem esforço.</span>
+          </div>
 
         </div>
+
       </div>
     </section>
   )

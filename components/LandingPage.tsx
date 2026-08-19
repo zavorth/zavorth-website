@@ -7,7 +7,6 @@ import { ProductIntroSection } from './ProductIntroSection'
 import { WhatItDoesSection } from './WhatItDoesSection'
 import { FeaturesGridSection } from './FeaturesGridSection'
 import { FeaturesSection } from './FeaturesSection'
-import { SafetyGovernanceSection } from './SafetyGovernanceSection'
 import { InstallSection } from './InstallSection'
 import { Footer } from './Footer'
 import { ScrollReveal } from './ScrollReveal'
@@ -18,32 +17,27 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       
-      {/* 1. Cognitive Engine (Bento Grid 3D) */}
+      {/* 1. Do Pensamento ao Produto (Kinetic Ideation Stage) */}
       <ScrollReveal className="relative z-10" y={28} duration={0.7}>
         <ProductIntroSection />
       </ScrollReveal>
       
-      {/* 2. Agnostic Intelligence & Pluggable Provider Families */}
+      {/* 2. As Melhores IAs Unificadas (Interactive Constellation Particle Canvas) */}
       <ScrollReveal className="relative z-10" y={28} duration={0.7}>
         <WhatItDoesSection />
       </ScrollReveal>
       
-      {/* 3. Infinite Context & Living Memory Stream */}
+      {/* 3. Memória Real (Living Memory Story) */}
       <ScrollReveal className="relative z-10" y={28} duration={0.7}>
         <FeaturesGridSection />
       </ScrollReveal>
       
-      {/* 4. Autonomous Subagent Mesh & Swarm Orchestration */}
+      {/* 4. Colaboração Invisível & Prova Real do Produto */}
       <ScrollReveal className="relative z-10" y={28} duration={0.7}>
         <FeaturesSection />
       </ScrollReveal>
       
-      {/* 5. Safety Governance & Transparent Audit Receipts */}
-      <ScrollReveal className="relative z-10" y={28} duration={0.7}>
-        <SafetyGovernanceSection />
-      </ScrollReveal>
-      
-      {/* 6. Local Install Section (with Ink Reveal Artwork) */}
+      {/* 5. Instale no seu Computador (com Efeito de Tinta Procedural) */}
       <ScrollReveal className="relative z-10" y={28} duration={0.7}>
         <InstallSection />
       </ScrollReveal>

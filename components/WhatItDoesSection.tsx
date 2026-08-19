@@ -1,10 +1,8 @@
 'use client'
 
 import React, { useRef, useEffect } from 'react'
-import Image from 'next/image'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Globe2 } from 'lucide-react'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -13,11 +11,22 @@ if (typeof window !== 'undefined') {
 export function WhatItDoesSection() {
   const sectionRef = useRef<HTMLElement>(null)
 
-  const providerIcons = [
-    { src: '/logos/anthropic.svg', alt: 'Anthropic' },
-    { src: '/logos/openai.svg', alt: 'OpenAI' },
-    { src: '/logos/googlegemini.svg', alt: 'Google Gemini' },
-    { src: '/logos/shell.svg', alt: 'Local Offline' },
+  const capabilities = [
+    {
+      kicker: '01 / FLEXIBILIDADE',
+      title: 'Agnóstico por Design',
+      desc: 'Use qualquer modelo de ponta da nuvem ou execute modelos locais com zero dependência de um único fornecedor.',
+    },
+    {
+      kicker: '02 / PRIVACIDADE',
+      title: '100% Local & Seguro',
+      desc: 'Seus códigos, pastas e documentos permanecem na sua máquina. Nada é enviado para a nuvem sem autorização.',
+    },
+    {
+      kicker: '03 / CONTINUIDADE',
+      title: 'Memória que Evolui',
+      desc: 'O assistente aprende suas preferências, retoma projetos antigos e se torna mais rápido e preciso a cada dia.',
+    },
   ]
 
   useEffect(() => {
@@ -26,18 +35,17 @@ export function WhatItDoesSection() {
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '.gsap-model-item',
-        { scale: 0.8, opacity: 0, y: 30 },
+        '.gsap-cap-item',
+        { y: 35, opacity: 0 },
         {
-          scale: 1,
-          opacity: 1,
           y: 0,
-          stagger: 0.15,
+          opacity: 1,
+          stagger: 0.2,
           duration: 0.8,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: section,
-            start: 'top 65%',
+            start: 'top 70%',
           },
         }
       )
@@ -51,48 +59,43 @@ export function WhatItDoesSection() {
       id="how-it-works"
       ref={sectionRef}
       data-how-it-works
-      className="landing-surface relative overflow-hidden py-36 sm:py-52 bg-black text-white scroll-mt-20 border-t border-white/[0.04]"
+      className="landing-surface relative overflow-hidden py-32 sm:py-48 bg-black text-white scroll-mt-20 border-t border-white/[0.04]"
     >
-      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
+      <div className="relative z-10 mx-auto max-w-4xl px-6">
         
-        {/* Minimalist Kicker */}
-        <div className="mb-8">
-          <span className="section-kicker text-xs font-mono tracking-widest text-emerald-400 uppercase">
-            Agnóstico
+        {/* Minimal Kicker */}
+        <div className="text-center mb-16">
+          <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase">
+            Capacidades
           </span>
+          <h2 className="mt-4 text-2xl sm:text-4xl font-normal tracking-tight text-white">
+            Poder de engenharia.{' '}
+            <span className="text-neutral-400 font-light">Com total simplicidade.</span>
+          </h2>
         </div>
 
-        {/* Headline */}
-        <h2 className="text-4xl sm:text-7xl lg:text-8xl font-normal tracking-tight leading-[1.05] max-w-4xl mx-auto mb-12">
-          <span className="block text-neutral-400">Conectado a todas as IAs.</span>
-          <span className="block text-white font-medium">Preso a nenhuma.</span>
-        </h2>
-
-        <p className="text-base sm:text-xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed mb-20">
-          Acesse os melhores cérebros do mundo em uma única interface ou execute 100% offline no seu próprio computador.
-        </p>
-
-        {/* Floating Minimalist Provider Glyphs (Zero heavy card boxes) */}
-        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 my-12">
-          {providerIcons.map((item) => (
+        {/* 3 Lightweight Horizontal Minimal Rows (Zero Card Boxes) */}
+        <div className="space-y-12">
+          {capabilities.map((cap) => (
             <div
-              key={item.alt}
-              className="gsap-model-item w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white/[0.02] border border-white/[0.08] hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-500 flex items-center justify-center backdrop-blur-xl group cursor-pointer"
+              key={cap.title}
+              className="gsap-cap-item flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-8 border-b border-white/[0.06] group"
             >
-              <Image
-                src={item.src}
-                alt={item.alt}
-                width={36}
-                height={36}
-                className="opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 filter invert brightness-200"
-              />
+              <div className="sm:w-1/3">
+                <span className="font-mono text-xs text-[#00e88f] font-semibold block mb-1">
+                  {cap.kicker}
+                </span>
+                <h3 className="text-base sm:text-lg font-medium text-white group-hover:text-[#00e88f] transition-colors">
+                  {cap.title}
+                </h3>
+              </div>
+              <div className="sm:w-2/3">
+                <p className="text-xs sm:text-sm text-neutral-400 font-light leading-relaxed">
+                  {cap.desc}
+                </p>
+              </div>
             </div>
           ))}
-        </div>
-
-        {/* Subtle Minimal Statement */}
-        <div className="mt-16 text-xs text-neutral-500 font-mono tracking-wider uppercase">
-          Zero Vendor Lock-in &middot; Suporte a Nuvem e Modelos Locais &middot; Privacidade Absoluta
         </div>
 
       </div>

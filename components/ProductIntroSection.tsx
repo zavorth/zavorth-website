@@ -1,10 +1,8 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Sparkles, ArrowRight, Wand2, FolderHeart, Zap } from 'lucide-react'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -12,48 +10,29 @@ if (typeof window !== 'undefined') {
 
 export function ProductIntroSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const [activeTab, setActiveTab] = useState(0)
-
-  const scenarios = [
-    {
-      icon: Wand2,
-      label: 'Criar',
-      input: 'Crie uma landing page moderna em React para o meu novo projeto',
-      result: 'Código completo, tipado e publicado localmente em segundos.',
-    },
-    {
-      icon: FolderHeart,
-      label: 'Organizar',
-      input: 'Organize minhas fotos, notas e notas fiscais por mês e categoria',
-      result: 'Arquivos renomeados, pastas limpas e relatório de tudo o que mudou.',
-    },
-    {
-      icon: Zap,
-      label: 'Automatizar',
-      input: 'Monitore novos dados e me avise com um resumo visual quando terminar',
-      result: 'Rotina executada em segundo plano com notificações instantâneas.',
-    },
-  ]
+  const textRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
     const section = sectionRef.current
-    if (!section) return
+    const textEl = textRef.current
+    if (!section || !textEl) return
+
+    const words = textEl.querySelectorAll('.scroll-word')
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '.gsap-intro-text',
-        { opacity: 0.15, y: 30 },
+        words,
+        { opacity: 0.15, y: 10 },
         {
           opacity: 1,
           y: 0,
-          stagger: 0.12,
-          duration: 1,
-          ease: 'power3.out',
+          stagger: 0.05,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: section,
-            start: 'top 70%',
-            end: 'top 30%',
-            scrub: 0.5,
+            start: 'top 75%',
+            end: 'center 45%',
+            scrub: 0.6,
           },
         }
       )
@@ -62,85 +41,75 @@ export function ProductIntroSection() {
     return () => ctx.revert()
   }, [])
 
+  const editorialWords = [
+    'O', 'Zavorth', 'é', 'um', 'assistente', 'inteligente', 'que', 'opera', 'diretamente', 'no', 'seu', 'computador.',
+    'Você', 'diz', 'o', 'que', 'precisa', 'em', 'português', 'simples,', 'e', 'ele', 'planeja,', 'constrói', 'e', 'organiza',
+    'suas', 'tarefas', 'locais', '—', 'mantendo', 'seus', 'dados', 'privados', 'e', 'você', 'sempre', 'no', 'controle.'
+  ]
+
   return (
     <section
       id="overview"
       ref={sectionRef}
       data-product-intro
-      className="landing-surface relative overflow-hidden py-36 sm:py-52 bg-black text-white scroll-mt-20"
+      className="landing-surface relative overflow-hidden py-32 sm:py-48 bg-black text-white scroll-mt-20 border-t border-white/[0.04]"
     >
-      {/* Soft ambient gradient aura */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-500/[0.05] rounded-full blur-[140px] pointer-events-none" />
+      {/* Subtle single emerald ambient aura */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[250px] bg-[#00e88f]/[0.03] rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         
-        {/* Minimalist Kicker */}
-        <div className="mb-8">
-          <span className="section-kicker text-xs font-mono tracking-widest text-emerald-400 uppercase">
-            Sem Atrito
+        {/* Minimal Kicker */}
+        <div className="mb-10">
+          <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase">
+            Visão Geral
           </span>
         </div>
 
-        {/* Big Editorial Headline (Google Launch Style) */}
-        <h2 className="text-4xl sm:text-7xl lg:text-8xl font-normal tracking-tight leading-[1.05] max-w-4xl mx-auto mb-12">
-          <span className="block gsap-intro-text text-neutral-400">Pense no que você quer.</span>
-          <span className="block gsap-intro-text text-white font-medium">O Zavorth realiza.</span>
-        </h2>
-
-        <p className="text-base sm:text-xl text-neutral-400 font-light max-w-2xl mx-auto leading-relaxed mb-20">
-          Você não precisa aprender comandos complexos. Converse em português simples e veja seu computador trabalhar por você.
+        {/* Minimalist Scroll-Illuminated Editorial Paragraph */}
+        <p
+          ref={textRef}
+          className="text-2xl sm:text-4xl lg:text-5xl font-normal leading-[1.3] sm:leading-[1.25] tracking-tight text-white max-w-3xl mx-auto"
+        >
+          {editorialWords.map((word, i) => (
+            <span
+              key={i}
+              className={`scroll-word inline-block mr-[0.28em] transition-colors duration-200 ${
+                word.includes('Zavorth') || word.includes('computador') || word.includes('controle')
+                  ? 'text-[#00e88f]'
+                  : 'text-white'
+              }`}
+            >
+              {word}
+            </span>
+          ))}
         </p>
 
-        {/* Minimalist Floating Interactive Beam */}
-        <div className="max-w-3xl mx-auto">
-          {/* Interactive Floating Pill Switcher */}
-          <div className="flex items-center justify-center gap-2 mb-12">
-            {scenarios.map((item, idx) => {
-              const Icon = item.icon
-              const isActive = activeTab === idx
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => setActiveTab(idx)}
-                  className={`px-6 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                    isActive
-                      ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)] scale-105'
-                      : 'bg-white/[0.03] text-neutral-400 hover:text-white hover:bg-white/[0.06]'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-emerald-400'}`} />
-                  <span>{item.label}</span>
-                </button>
-              )
-            })}
+        {/* 3 Clean Minimalist Steps (Zero Card Borders) */}
+        <div className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-10 text-left border-t border-white/[0.06] pt-12">
+          <div>
+            <span className="font-mono text-xs text-[#00e88f] font-semibold block mb-2">01 / INTENÇÃO</span>
+            <h3 className="text-sm font-medium text-white mb-1">Você define o objetivo</h3>
+            <p className="text-xs text-neutral-400 font-light leading-relaxed">
+              Diga o que deseja em linguagem natural. Sem necessidade de prompts complexos.
+            </p>
           </div>
 
-          {/* Minimalist Thought Display */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="relative p-8 sm:p-12 rounded-3xl bg-neutral-950/60 border border-white/[0.06] backdrop-blur-2xl text-left"
-            >
-              <div className="mb-6">
-                <span className="text-[11px] font-mono text-neutral-500 uppercase tracking-widest block mb-2">
-                  Você pede
-                </span>
-                <p className="text-lg sm:text-2xl text-white font-light leading-snug">
-                  "{scenarios[activeTab].input}"
-                </p>
-              </div>
+          <div>
+            <span className="font-mono text-xs text-[#00e88f] font-semibold block mb-2">02 / EXECUÇÃO</span>
+            <h3 className="text-sm font-medium text-white mb-1">O agente constrói</h3>
+            <p className="text-xs text-neutral-400 font-light leading-relaxed">
+              Escreve código completo, organiza arquivos e realiza tarefas no seu computador.
+            </p>
+          </div>
 
-              <div className="pt-6 border-t border-white/[0.04] flex items-center gap-3 text-sm text-emerald-400 font-light">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>{scenarios[activeTab].result}</span>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          <div>
+            <span className="font-mono text-xs text-[#00e88f] font-semibold block mb-2">03 / GOVERNANÇA</span>
+            <h3 className="text-sm font-medium text-white mb-1">Você no controle</h3>
+            <p className="text-xs text-neutral-400 font-light leading-relaxed">
+              Ações sensíveis aguardam sua aprovação explícita antes de qualquer alteração.
+            </p>
+          </div>
         </div>
 
       </div>

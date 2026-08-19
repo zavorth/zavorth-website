@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react'
 import Image from 'next/image'
 import { Check, Copy, Play, RefreshCw } from 'lucide-react'
 import { ZRow, ZSurface } from './ZSurface'
+import { InkRevealCanvas } from './InkRevealCanvas'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
@@ -22,19 +23,6 @@ export function InstallSection() {
   const [simulating, setSimulating] = useState(false)
   const [simDone, setSimDone] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
-  
-  // Spotlight position state
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [isHovered, setIsHovered] = useState(false)
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!sectionRef.current) return
-    const rect = sectionRef.current.getBoundingClientRect()
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    })
-  }
 
   const handleCopy = async () => {
     try {
@@ -81,29 +69,25 @@ export function InstallSection() {
     <section
       id="install"
       ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="landing-final-surface relative scroll-mt-20 overflow-hidden py-24 sm:py-32"
     >
-      {/* Interactive Grid Background */}
-      <div 
-        className="absolute inset-0 pointer-events-none select-none opacity-[0.05] bg-grid-pattern transition-opacity duration-500"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
-        }}
+      {/* Procedural Ink Reveal Artwork Background */}
+      <InkRevealCanvas
+        imageSrc="/artwork/hero-bg.png"
+        maskColor="8, 8, 8"
+        maxRadius={150}
+        lifetime={1800}
       />
 
-      {/* Dynamic Cursor Spotlight Beam */}
-      {isHovered && (
-        <div 
-          className="absolute inset-0 pointer-events-none transition-all duration-300"
-          style={{
-            background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, rgba(0, 232, 143, 0.08), transparent 80%)`
-          }}
-        />
-      )}
+      {/* Subtle Grid Accent */}
+      <div 
+        className="absolute inset-0 pointer-events-none select-none opacity-[0.04] bg-grid-pattern"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          zIndex: 1,
+        }}
+      />
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         

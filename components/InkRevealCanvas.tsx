@@ -67,8 +67,8 @@ export function InkRevealCanvas({
 
     const resize = () => {
       const rect = parent.getBoundingClientRect()
-      w = Math.max(1, Math.round(rect.width))
-      h = Math.max(1, Math.round(rect.height))
+      w = rect.width
+      h = rect.height
       canvas.width = Math.round(w * DPR)
       canvas.height = Math.round(h * DPR)
       canvas.style.width = `${w}px`
@@ -150,7 +150,10 @@ export function InkRevealCanvas({
       const now = performance.now()
 
       // Repaint solid mask
-      fillSolidMask()
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = `rgb(${MASK})`
+      ctx.fillRect(0, 0, w, h)
 
       ctx.globalCompositeOperation = 'destination-out'
       for (let i = stamps.length - 1; i >= 0; i--) {
@@ -191,10 +194,8 @@ export function InkRevealCanvas({
       const rect = parent.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        stampAlong(x, y)
-        start()
-      }
+      stampAlong(x, y)
+      start()
     }
 
     const onMouseLeave = () => {

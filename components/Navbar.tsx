@@ -12,7 +12,7 @@ export function Navbar() {
 
   useEffect(() => {
     const show = () => setVisible(true)
-    const fallback = window.setTimeout(show, 2500)
+    const fallback = window.setTimeout(show, 1500)
     window.addEventListener('hero-title-typed', show)
     return () => {
       window.clearTimeout(fallback)
@@ -36,25 +36,25 @@ export function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileOpen])
 
-  // Scroll spy to highlight active section
+  // Precision Scroll Spy with getBoundingClientRect
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 140
+      if (window.scrollY < 200) {
+        setActiveSection('')
+        return
+      }
 
       for (let i = NAV_LINKS.length - 1; i >= 0; i--) {
         const link = NAV_LINKS[i]
         const el = document.getElementById(link.id)
         if (el) {
-          const top = el.offsetTop
-          if (scrollPosition >= top) {
+          const rect = el.getBoundingClientRect()
+          // Section is in view when its top has reached the upper third of screen
+          if (rect.top <= 280 && rect.bottom >= 100) {
             setActiveSection(link.id)
             return
           }
         }
-      }
-
-      if (window.scrollY < 200) {
-        setActiveSection('')
       }
     }
 
@@ -74,20 +74,12 @@ export function Navbar() {
 
     const el = document.getElementById(id)
     if (el) {
-      const prefersReduced =
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-      const navOffset = 60
-      const bodyRect = document.body.getBoundingClientRect().top
-      const elementRect = el.getBoundingClientRect().top
-      const elementPosition = elementRect - bodyRect
-      const offsetPosition = elementPosition - navOffset
-
+      const top = el.getBoundingClientRect().top + window.scrollY - 70
       window.scrollTo({
-        top: Math.max(0, offsetPosition),
-        behavior: prefersReduced ? 'auto' : 'smooth',
+        top: Math.max(0, top),
+        behavior: 'smooth',
       })
+      setActiveSection(id)
     }
     setMobileOpen(false)
   }
@@ -104,10 +96,8 @@ export function Navbar() {
         {/* Brand Link */}
         <button
           onClick={() => {
-            const prefersReduced =
-              typeof window.matchMedia === 'function' &&
-              window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' })
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            setActiveSection('')
           }}
           className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity pl-1 cursor-pointer"
           aria-label="Zavorth, voltar ao topo"
@@ -132,9 +122,11 @@ export function Navbar() {
                 }}
                 className={`px-3 py-1 rounded-full text-xs font-mono transition-all duration-200 cursor-pointer ${
                   isInstall
-                    ? 'bg-[#00e88f] text-black font-semibold hover:bg-[#00e88f]/90 hover:shadow-[0_0_15px_rgba(0,232,143,0.3)] ml-2'
+                    ? isActive
+                      ? 'bg-[#00e88f] text-black font-bold shadow-[0_0_20px_rgba(0,232,143,0.4)] ml-2'
+                      : 'bg-[#00e88f]/90 text-black font-semibold hover:bg-[#00e88f] hover:shadow-[0_0_15px_rgba(0,232,143,0.3)] ml-2'
                     : isActive
-                    ? 'text-white bg-white/[0.12] font-semibold'
+                    ? 'text-[#00e88f] bg-white/[0.1] font-semibold shadow-[inset_0_0_8px_rgba(0,232,143,0.1)]'
                     : 'text-neutral-400 hover:text-white hover:bg-white/[0.06]'
                 }`}
               >
@@ -173,7 +165,7 @@ export function Navbar() {
                   link.id === 'install'
                     ? 'bg-[#00e88f] text-black font-bold'
                     : activeSection === link.id
-                    ? 'text-white bg-white/[0.12] font-semibold'
+                    ? 'text-[#00e88f] bg-white/[0.1] font-semibold'
                     : 'text-neutral-300 hover:text-white bg-white/[0.04]'
                 }`}
               >

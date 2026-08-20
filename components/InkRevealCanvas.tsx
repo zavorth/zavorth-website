@@ -191,8 +191,10 @@ export function InkRevealCanvas({
       const rect = parent.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      stampAlong(x, y)
-      start()
+      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+        stampAlong(x, y)
+        start()
+      }
     }
 
     const onMouseLeave = () => {

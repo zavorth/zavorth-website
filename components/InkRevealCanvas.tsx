@@ -217,19 +217,23 @@ export function InkRevealCanvas({
     }
   }, [maskColor, startRadius, maxRadius, radiusVariation, lifetime, stampStep, maxStamps])
 
+  const isDark = maskColor.includes('0, 0, 0') || maskColor.includes('0,0,0')
+
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-[#fcfaf8] ${className}`}
+      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none ${isDark ? 'bg-black' : 'bg-[#fcfaf8]'} ${className}`}
       style={{ zIndex: 0 }}
     >
       <div
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full transition-opacity duration-300"
         style={{
           backgroundImage: `url("${imageSrc}")`,
           backgroundSize: '1440px 100%',
           backgroundPosition: 'bottom center',
           backgroundRepeat: 'no-repeat',
+          filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(1.1) brightness(0.9)' : undefined,
+          opacity: 0.95,
         }}
       />
 

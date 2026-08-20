@@ -2,11 +2,18 @@
 
 import React, { useEffect, useRef } from 'react'
 
-interface InkStamp {
+interface SmokePuff {
   x: number
   y: number
+  vx: number
+  vy: number
   born: number
-  rmax: number
+  lifetime: number
+  rStart: number
+  rEnd: number
+  angle: number
+  vAngle: number
+  opacity: number
 }
 
 export interface InkRevealCanvasProps {
@@ -14,9 +21,9 @@ export interface InkRevealCanvasProps {
   imageSrc?: string
   /** Mask background color in hex/rgb format */
   maskColor?: string
-  /** Maximum radius of the reveal spotlight */
+  /** Maximum radius of the smoke billows */
   maxRadius?: number
-  /** Lifetime in ms before a reveal spotlight fades back to solid black */
+  /** Lifetime in ms before smoke dissipates */
   lifetime?: number
   /** CSS class names for the container */
   className?: string
@@ -25,8 +32,8 @@ export interface InkRevealCanvasProps {
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
   maskColor = '#000000',
-  maxRadius = 160,
-  lifetime = 1800,
+  maxRadius = 140,
+  lifetime = 2200,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -42,10 +49,8 @@ export function InkRevealCanvas({
     if (!ctx) return
 
     const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
-    const R_START = 28
-    const R_END = maxRadius
-    const MAX_STAMPS = 120
-    const STAMP_STEP = 10
+    const MAX_PUFFS = 180
+    const STAMP_STEP = 12
 
     let w = 0
     let h = 0
@@ -83,50 +88,87 @@ export function InkRevealCanvas({
 
     window.addEventListener('resize', resize)
 
-    const stamps: InkStamp[] = []
+    const puffs: SmokePuff[] = []
     let lastX: number | null = null
     let lastY: number | null = null
     let running = false
     let animId = 0
 
-    const addStamp = (x: number, y: number) => {
-      if (stamps.length >= MAX_STAMPS) stamps.shift()
-      stamps.push({
-        x,
-        y,
+    const addSmokePuff = (x: number, y: number, speedMultiplier = 1) => {
+      if (puffs.length >= MAX_PUFFS) puffs.shift()
+
+      // Organic subtle drift and turbulence
+      const angle = Math.random() * Math.PI * 2
+      const driftSpeed = (0.2 + Math.random() * 0.5) * speedMultiplier
+      const vx = Math.cos(angle) * driftSpeed
+      const vy = Math.sin(angle) * driftSpeed - 0.25 // subtle upward smoke drift
+
+      puffs.push({
+        x: x + (Math.random() * 16 - 8),
+        y: y + (Math.random() * 16 - 8),
+        vx,
+        vy,
         born: performance.now(),
-        rmax: R_END * (0.9 + Math.random() * 0.2),
+        lifetime: lifetime * (0.8 + Math.random() * 0.4),
+        rStart: 24 + Math.random() * 16,
+        rEnd: maxRadius * (0.85 + Math.random() * 0.35),
+        angle: Math.random() * Math.PI * 2,
+        vAngle: (Math.random() * 0.02 - 0.01),
+        opacity: 0.85 + Math.random() * 0.15,
       })
     }
 
     const stampAlong = (x: number, y: number) => {
       if (lastX === null || lastY === null) {
-        addStamp(x, y)
+        addSmokePuff(x, y)
       } else {
         const dx = x - lastX
         const dy = y - lastY
         const dist = Math.hypot(dx, dy)
         const steps = Math.max(1, Math.ceil(dist / STAMP_STEP))
         for (let i = 1; i <= steps; i++) {
-          addStamp(lastX + (dx * i) / steps, lastY + (dy * i) / steps)
+          const px = lastX + (dx * i) / steps
+          const py = lastY + (dy * i) / steps
+          addSmokePuff(px, py, 0.8)
+          // Add a smaller sub-puff for volumetric smoke depth
+          if (i % 2 === 0) {
+            addSmokePuff(px + (Math.random() * 20 - 10), py + (Math.random() * 20 - 10), 0.5)
+          }
         }
       }
       lastX = x
       lastY = y
     }
 
-    // Pure, smooth organic spotlight shape with silky soft feathered edges
-    const carveSmoothSpotlight = (x: number, y: number, r: number, alpha: number) => {
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-      g.addColorStop(0, `rgba(0, 0, 0, ${0.98 * alpha})`)
-      g.addColorStop(0.35, `rgba(0, 0, 0, ${0.85 * alpha})`)
-      g.addColorStop(0.7, `rgba(0, 0, 0, ${0.4 * alpha})`)
+    // Volumetric organic smoke billow with multi-stop radial feathering
+    const drawSmokePuff = (puff: SmokePuff, now: number) => {
+      const elapsed = now - puff.born
+      const t = elapsed / puff.lifetime
+      if (t >= 1) return false
+
+      // Update position with drift
+      puff.x += puff.vx
+      puff.y += puff.vy
+      puff.angle += puff.vAngle
+
+      // Smooth expansion & dissipation curve
+      const expandEase = 1 - Math.pow(1 - t, 2.2)
+      const currentRadius = puff.rStart + (puff.rEnd - puff.rStart) * expandEase
+      const alpha = (1 - t * t) * puff.opacity
+
+      const g = ctx.createRadialGradient(puff.x, puff.y, 0, puff.x, puff.y, currentRadius)
+      g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
+      g.addColorStop(0.25, `rgba(0, 0, 0, ${0.82 * alpha})`)
+      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.45 * alpha})`)
+      g.addColorStop(0.8, `rgba(0, 0, 0, ${0.15 * alpha})`)
       g.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.fillStyle = g
       ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.arc(puff.x, puff.y, currentRadius, 0, Math.PI * 2)
       ctx.fill()
+
+      return true
     }
 
     const loop = () => {
@@ -139,20 +181,15 @@ export function InkRevealCanvas({
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
       ctx.globalCompositeOperation = 'destination-out'
 
-      for (let i = stamps.length - 1; i >= 0; i--) {
-        const t = (now - stamps[i].born) / lifetime
-        if (t >= 1) {
-          stamps.splice(i, 1)
-          continue
+      for (let i = puffs.length - 1; i >= 0; i--) {
+        const alive = drawSmokePuff(puffs[i], now)
+        if (!alive) {
+          puffs.splice(i, 1)
         }
-        const ease = 1 - Math.pow(1 - t, 2.5)
-        const r = R_START + (stamps[i].rmax - R_START) * ease
-        const alpha = 1 - t * t
-        carveSmoothSpotlight(stamps[i].x, stamps[i].y, r, alpha)
       }
       ctx.restore()
 
-      if (stamps.length > 0) {
+      if (puffs.length > 0) {
         animId = requestAnimationFrame(loop)
       } else {
         running = false

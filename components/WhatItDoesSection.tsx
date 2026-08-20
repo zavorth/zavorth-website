@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Network, CheckCircle2 } from 'lucide-react'
+import { Network, Compass, Search, Code2, ShieldCheck, CheckCircle2, Zap } from 'lucide-react'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -11,27 +12,40 @@ if (typeof window !== 'undefined') {
 
 export function WhatItDoesSection() {
   const sectionRef = useRef<HTMLElement>(null)
+  const [activeTrack, setActiveTrack] = useState<number | null>(null)
 
-  const swarmPillars = [
+  const swarmTracks = [
     {
-      kicker: 'PESQUISA',
-      title: 'Varredura de Contexto',
-      desc: 'Analisa seus arquivos, histórico e documentações locais em milissegundos para entender o cenário antes de começar.',
+      id: 'architect',
+      tag: '01 / ARQUITETO',
+      role: 'Planejamento e Grafo',
+      desc: 'Mapeia módulos, contratos de tipos e dependências para garantir que nada seja quebrado.',
+      icon: Compass,
+      metric: '0 Dependências Cíclicas',
     },
     {
-      kicker: 'ARQUITETURA',
-      title: 'Planejamento e Grafo',
-      desc: 'Mapeia dependências e monta uma estratégia clara de execução para garantir que nada no seu projeto seja corrompido.',
+      id: 'researcher',
+      tag: '02 / PESQUISADOR',
+      role: 'Varredura de Contexto',
+      desc: 'Indexa documentações, arquivos e referências sem poluir a memória principal.',
+      icon: Search,
+      metric: 'Busca Semântica < 10ms',
     },
     {
-      kicker: 'CONSTRUÇÃO',
-      title: 'Implementação Real',
-      desc: 'Escreve o código completo, edita os arquivos e cria os recursos necessários de ponta a ponta sem atalhos.',
+      id: 'builder',
+      tag: '03 / CONSTRUTOR',
+      role: 'Implementação de Código',
+      desc: 'Escreve o código completo, edita arquivos e cria os recursos necessários sem atalhos.',
+      icon: Code2,
+      metric: 'Tipagem 100% Estrita',
     },
     {
-      kicker: 'AUDITORIA',
-      title: 'Validação e Testes',
-      desc: 'Executa testes automatizados e checagens de integridade antes de entregar o resultado pronto no seu computador.',
+      id: 'auditor',
+      tag: '04 / AUDITOR',
+      role: 'Validação e Testes',
+      desc: 'Roda testes automatizados, linters e auditorias antes de autorizar a entrega final.',
+      icon: ShieldCheck,
+      metric: 'Zero Regressões',
     },
   ]
 
@@ -41,17 +55,17 @@ export function WhatItDoesSection() {
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '.gsap-swarm-row',
-        { opacity: 0, y: 25 },
+        '.gsap-swarm-stream',
+        { opacity: 0, x: -20 },
         {
           opacity: 1,
-          y: 0,
-          stagger: 0.15,
+          x: 0,
+          stagger: 0.12,
           duration: 0.8,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: section,
-            start: 'top 70%',
+            start: 'top 65%',
           },
         }
       )
@@ -67,48 +81,104 @@ export function WhatItDoesSection() {
       data-how-it-works
       className="landing-surface relative overflow-hidden py-32 sm:py-48 bg-black text-white scroll-mt-20 border-t border-white/[0.04]"
     >
-      <div className="relative z-10 mx-auto max-w-4xl px-6">
+      {/* Background ambient light */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#00e88f]/[0.025] rounded-full blur-[180px] pointer-events-none" />
+
+      <div className="relative z-10 mx-auto max-w-5xl px-6">
         
-        {/* Minimal Kicker */}
-        <div className="mb-8 text-center">
-          <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase">
-            Sistema Swarm &middot; Como Opera
-          </span>
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-white/[0.08] bg-white/[0.02] mb-6">
+            <Network className="w-3.5 h-3.5 text-[#00e88f]" />
+            <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase">
+              Orquestração Swarm
+            </span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight">
+            Vários especialistas{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-[#00e88f]">
+              operando em paralelo.
+            </span>
+          </h2>
+
+          <p className="mt-4 text-sm sm:text-base text-neutral-400 font-light leading-relaxed">
+            Em vez de uma única IA fazendo tudo em fila lenta, o Zavorth divide o trabalho entre 4 subagentes especializados que operam simultaneamente.
+          </p>
         </div>
 
-        {/* Big Editorial Headline */}
-        <h2 className="text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight leading-[1.15] text-white text-center mb-12">
-          <span className="block text-neutral-400">Vários especialistas de IA</span>
-          <span className="block text-white font-medium">trabalhando em paralelo.</span>
-        </h2>
-
-        <p className="text-base sm:text-lg text-neutral-300 font-light leading-relaxed text-center max-w-2xl mx-auto mb-24">
-          Quando você define um objetivo, o Zavorth não faz tudo em uma fila lenta. Ele divide a demanda entre subagentes especializados que colaboram ao mesmo tempo.
-        </p>
-
-        {/* Linear 4-Role Flow (Zero Cards, Clean Horizontal Connectors) */}
-        <div className="space-y-12 border-t border-white/[0.06] pt-16">
-          {swarmPillars.map((pillar, idx) => (
-            <div
-              key={pillar.title}
-              className="gsap-swarm-row flex flex-col sm:flex-row sm:items-baseline justify-between gap-6 pb-8 border-b border-white/[0.04] group"
-            >
-              <div className="sm:w-1/3">
-                <span className="font-mono text-xs text-[#00e88f] font-semibold block mb-1">
-                  0{idx + 1} / {pillar.kicker}
-                </span>
-                <h3 className="text-base sm:text-lg font-medium text-white group-hover:text-[#00e88f] transition-colors">
-                  {pillar.title}
-                </h3>
-              </div>
-
-              <div className="sm:w-2/3">
-                <p className="text-sm text-neutral-400 font-light leading-relaxed">
-                  {pillar.desc}
-                </p>
-              </div>
+        {/* The Sleek Multi-Threaded Swarm Stream Console */}
+        <div className="rounded-3xl border border-white/[0.08] bg-neutral-950/80 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_20px_80px_rgba(0,0,0,0.8)] max-w-4xl mx-auto overflow-hidden">
+          
+          {/* Console Header Bar */}
+          <div className="flex items-center justify-between pb-6 border-b border-white/[0.06] mb-6 text-xs font-mono">
+            <div className="flex items-center gap-2 text-neutral-300">
+              <span className="w-2 h-2 rounded-full bg-[#00e88f] animate-pulse" />
+              <span>SWARM CHOREOGRAPHY &middot; 4 THREADS CONCORRENTES</span>
             </div>
-          ))}
+            <span className="text-[10px] text-[#00e88f] px-2.5 py-1 rounded-full bg-[#00e88f]/10 border border-[#00e88f]/20">
+              EXECUÇÃO PARALELA
+            </span>
+          </div>
+
+          {/* 4 Multi-Threaded Tracks */}
+          <div className="space-y-3.5">
+            {swarmTracks.map((track, idx) => {
+              const Icon = track.icon
+              const isHovered = activeTrack === idx
+
+              return (
+                <div
+                  key={track.id}
+                  onMouseEnter={() => setActiveTrack(idx)}
+                  onMouseLeave={() => setActiveTrack(null)}
+                  className={`gsap-swarm-stream p-4 sm:p-5 rounded-2xl border transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-default ${
+                    isHovered
+                      ? 'bg-white/[0.05] border-[#00e88f]/50 shadow-[0_0_30px_rgba(0,232,143,0.1)]'
+                      : 'bg-white/[0.02] border-white/[0.04] hover:border-white/[0.08]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5 sm:w-1/3 shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-[#00e88f]/10 border border-[#00e88f]/20 flex items-center justify-center text-[#00e88f] shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-[#00e88f] block">
+                        {track.tag}
+                      </span>
+                      <span className="text-xs font-medium text-white block">
+                        {track.role}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="sm:w-1/2">
+                    <p className="text-xs text-neutral-300 font-light leading-relaxed">
+                      {track.desc}
+                    </p>
+                  </div>
+
+                  <div className="sm:w-1/4 flex sm:justify-end">
+                    <span className="text-[10px] font-mono text-neutral-400 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+                      {track.metric}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Convergence Output Footer */}
+          <div className="mt-8 pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-neutral-400 font-light">
+            <div className="flex items-center gap-2 text-white">
+              <CheckCircle2 className="w-4 h-4 text-[#00e88f]" />
+              <span>Resultados sintetizados e testados com zero regressões</span>
+            </div>
+            <span className="font-mono text-[11px] text-neutral-500">
+              SINCRONIZAÇÃO AUTOMÁTICA
+            </span>
+          </div>
+
         </div>
 
       </div>

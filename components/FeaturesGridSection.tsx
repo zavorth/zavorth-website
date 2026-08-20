@@ -3,7 +3,7 @@
 import React, { useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Cpu, Layers, Terminal, Lock } from 'lucide-react'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -14,19 +14,22 @@ export function FeaturesGridSection() {
 
   const capabilities = [
     {
-      kicker: 'AUTO-APRIMORAMENTO',
+      kicker: '01 / AUTO-APRIMORAMENTO',
       title: 'Aprende e se auto-modifica',
-      desc: 'Quando o Zavorth encontra um desafio novo, ele é capaz de criar e registrar novas habilidades para si mesmo, evoluindo dia após dia com seu uso.',
+      desc: 'Quando o Zavorth encontra um desafio novo, ele é capaz de criar e registrar novas habilidades (.agy skills) para si mesmo, evoluindo a cada uso.',
+      tag: 'AUTO-SKILL CREATION',
     },
     {
-      kicker: 'NÍVEL AGNÓSTICO ALTO',
+      kicker: '02 / NÍVEL AGNÓSTICO ALTO',
       title: 'Liberdade total de modelos',
-      desc: 'Use qualquer modelo avançado na nuvem ou execute modelos 100% offline no seu próprio computador. Seus dados continuam no seu ambiente.',
+      desc: 'Use qualquer modelo avançado na nuvem (OpenAI, Claude, Gemini) ou execute modelos locais 100% offline no seu hardware sem mudar de ferramenta.',
+      tag: 'ZERO VENDOR LOCK-IN',
     },
     {
-      kicker: 'ESCALABILIDADE UNIVERSAL',
+      kicker: '03 / ESCALABILIDADE UNIVERSAL',
       title: 'Para todo tipo de usuário',
-      desc: 'Tão prático e direto para tarefas simples do dia a dia quanto potente para arquitetar e programar sistemas inteiros de software.',
+      desc: 'Tão simples e direto para organizar notas e arquivos do dia a dia quanto potente para arquitetar e programar sistemas inteiros de software.',
+      tag: 'LOCAL RUNTIME',
     },
   ]
 
@@ -36,8 +39,8 @@ export function FeaturesGridSection() {
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        '.gsap-cap-row',
-        { opacity: 0, y: 25 },
+        '.gsap-cap-strip',
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
@@ -61,45 +64,55 @@ export function FeaturesGridSection() {
       ref={sectionRef}
       className="landing-surface relative overflow-hidden py-32 sm:py-48 bg-black text-white scroll-mt-20 border-t border-white/[0.04]"
     >
-      <div className="relative z-10 mx-auto max-w-4xl px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-6">
         
-        {/* Minimal Kicker */}
-        <div className="mb-8 text-center">
-          <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase">
-            Auto-Evolução &middot; Liberdade Total
-          </span>
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-white/[0.08] bg-white/[0.02] mb-6">
+            <Sparkles className="w-3.5 h-3.5 text-[#00e88f]" />
+            <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase">
+              Auto-Evolução &middot; Liberdade Total
+            </span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-normal tracking-tight leading-tight text-white">
+            Uma inteligência que{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-[#00e88f]">
+              se molda ao seu ritmo.
+            </span>
+          </h2>
+
+          <p className="mt-4 text-sm sm:text-base text-neutral-400 font-light leading-relaxed">
+            Sem restrições de ferramentas ou fornecedores. O agente expande as próprias capacidades conforme seus projetos crescem.
+          </p>
         </div>
 
-        {/* Big Editorial Headline */}
-        <h2 className="text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight leading-[1.15] text-white text-center mb-12">
-          <span className="block text-neutral-400">Uma inteligência que</span>
-          <span className="block text-white font-medium">se molda ao seu ritmo.</span>
-        </h2>
-
-        <p className="text-base sm:text-lg text-neutral-300 font-light leading-relaxed text-center max-w-2xl mx-auto mb-24">
-          Sem dependências de um único fornecedor e sem barreiras de complexidade. O agente expande as próprias capacidades conforme suas necessidades aumentam.
-        </p>
-
-        {/* Linear 3-Capability Flow (Zero Cards, Clean Horizontal Connectors) */}
-        <div className="space-y-12 border-t border-white/[0.06] pt-16">
-          {capabilities.map((item, idx) => (
+        {/* 3 Sleek High-Craft Capability Strips */}
+        <div className="space-y-4 max-w-4xl mx-auto">
+          {capabilities.map((item) => (
             <div
               key={item.title}
-              className="gsap-cap-row flex flex-col sm:flex-row sm:items-baseline justify-between gap-6 pb-8 border-b border-white/[0.04] group"
+              className="gsap-cap-strip p-6 sm:p-8 rounded-3xl border border-white/[0.08] bg-neutral-950/80 backdrop-blur-2xl hover:border-[#00e88f]/40 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-6"
             >
-              <div className="sm:w-1/3">
-                <span className="font-mono text-xs text-[#00e88f] font-semibold block mb-1">
-                  0{idx + 1} / {item.kicker}
+              <div className="md:w-1/3">
+                <span className="font-mono text-[10px] text-[#00e88f] font-semibold block mb-1">
+                  {item.kicker}
                 </span>
-                <h3 className="text-base sm:text-lg font-medium text-white group-hover:text-[#00e88f] transition-colors">
+                <h3 className="text-base sm:text-lg font-medium text-white">
                   {item.title}
                 </h3>
               </div>
 
-              <div className="sm:w-2/3">
-                <p className="text-sm text-neutral-400 font-light leading-relaxed">
+              <div className="md:w-1/2">
+                <p className="text-xs sm:text-sm text-neutral-400 font-light leading-relaxed">
                   {item.desc}
                 </p>
+              </div>
+
+              <div className="md:w-1/4 flex md:justify-end">
+                <span className="text-[10px] font-mono text-neutral-400 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+                  {item.tag}
+                </span>
               </div>
             </div>
           ))}

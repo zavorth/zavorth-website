@@ -58,7 +58,7 @@ export function FeaturesGridSection() {
     <section
       id="features"
       ref={sectionRef}
-      className="landing-surface relative py-28 sm:py-40 bg-black text-white scroll-mt-20 border-t border-white/[0.06]"
+      className="landing-surface relative py-28 sm:py-40 bg-black text-white scroll-mt-20"
     >
       <div className="mx-auto max-w-5xl px-6">
         
@@ -75,8 +75,8 @@ export function FeaturesGridSection() {
           </p>
         </div>
 
-        {/* 3 Open Columns (Google Minimalist Style - Zero Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 pt-8 border-t border-white/[0.08]">
+        {/* 3 Open Columns (Google Minimalist Style - Zero Cards & Zero Divider Lines) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 pt-2">
           {capabilities.map((item) => (
             <div key={item.number} className="google-feat-item space-y-3">
               <span className="font-mono text-xs text-[#00e88f] font-semibold block">

@@ -68,7 +68,7 @@ export function WhatItDoesSection() {
       id="how-it-works"
       ref={sectionRef}
       data-how-it-works
-      className="landing-surface relative py-28 sm:py-40 bg-black text-white scroll-mt-20 border-t border-white/[0.06]"
+      className="landing-surface relative py-28 sm:py-40 bg-black text-white scroll-mt-20"
     >
       <div className="mx-auto max-w-5xl px-6">
         
@@ -85,8 +85,8 @@ export function WhatItDoesSection() {
           </p>
         </div>
 
-        {/* 4 Open Columns (Google Minimalist Style - Zero Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 pt-8 border-t border-white/[0.08]">
+        {/* 4 Open Columns (Google Minimalist Style - Zero Cards & Zero Divider Lines) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 pt-2">
           {steps.map((step) => (
             <div key={step.number} className="google-swarm-item space-y-3">
               <div className="flex items-center gap-2">

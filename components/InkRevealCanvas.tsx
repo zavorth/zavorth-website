@@ -24,7 +24,7 @@ export interface InkRevealCanvasProps {
 
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
-  maskColor = '0, 0, 0',
+  maskColor = '252, 250, 248',
   startRadius = 8,
   maxRadius = 128,
   radiusVariation = 0.45,
@@ -48,7 +48,7 @@ export function InkRevealCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const MASK = maskColor.replace('#000000', '0, 0, 0').replace('#fcfaf8', '252, 250, 248')
+    const MASK = maskColor.replace('#fcfaf8', '252, 250, 248')
     const R_START = startRadius
     const R_END = maxRadius
     const R_VARY = radiusVariation
@@ -214,7 +214,7 @@ export function InkRevealCanvas({
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-black ${className}`}
+      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-[#fcfaf8] ${className}`}
       style={{ zIndex: 0 }}
     >
       <div

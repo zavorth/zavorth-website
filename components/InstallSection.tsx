@@ -1,28 +1,17 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { Check, Copy, Play, RefreshCw } from 'lucide-react'
-import { ZRow, ZSurface } from './ZSurface'
+import gsap from 'gsap'
+import { Check, Copy, Terminal, Sparkles } from 'lucide-react'
 import { InkRevealCanvas } from './InkRevealCanvas'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
-const logSteps = [
-  { text: 'fetching package metadata...', delay: 350 },
-  { text: 'unpacking library contents... [14.2MB]', delay: 450 },
-  { text: 'verifying local environment node >= 18... [OK]', delay: 300 },
-  { text: 'allocating secure local memory sandbox... [OK]', delay: 400 },
-  { text: 'generating local cryptographic checksums... [OK]', delay: 500 },
-  { text: '✓ zavorth 1.0.0 installed successfully in ~/bin/zavorth!', delay: 350 },
-]
-
 export function InstallSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
+  const terminalRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
-  const [simulating, setSimulating] = useState(false)
-  const [simDone, setSimDone] = useState(false)
-  const [logs, setLogs] = useState<string[]>([])
 
   const handleCopy = async () => {
     try {
@@ -39,37 +28,48 @@ export function InstallSection() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const startSimulation = async () => {
-    if (simulating) return
-    setSimulating(true)
-    setSimDone(false)
-    setLogs([])
+  // 3D Terminal GSAP Tilt Physics
+  useEffect(() => {
+    const term = terminalRef.current
+    if (!term) return
 
-    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+    const xTo = gsap.quickTo(term, 'rotationY', { duration: 0.5, ease: 'power2.out' })
+    const yTo = gsap.quickTo(term, 'rotationX', { duration: 0.5, ease: 'power2.out' })
+    const zTo = gsap.quickTo(term, 'z', { duration: 0.5, ease: 'power2.out' })
 
-    // Start simulation steps
-    await sleep(200)
+    const onPointerMove = (e: MouseEvent) => {
+      const rect = term.getBoundingClientRect()
+      const x = e.clientX - rect.left - rect.width / 2
+      const y = e.clientY - rect.top - rect.height / 2
+      
+      const rotY = (x / (rect.width / 2)) * 12 // max 12deg tilt
+      const rotX = -(y / (rect.height / 2)) * 12
 
-    for (let i = 0; i < logSteps.length; i++) {
-      setLogs(prev => [...prev, logSteps[i].text])
-      await sleep(logSteps[i].delay)
+      xTo(rotY)
+      yTo(rotX)
+      zTo(20)
     }
 
-    setSimulating(false)
-    setSimDone(true)
-  }
+    const onPointerLeave = () => {
+      xTo(0)
+      yTo(0)
+      zTo(0)
+    }
 
-  const resetSimulation = () => {
-    setLogs([])
-    setSimDone(false)
-    setSimulating(false)
-  }
+    term.addEventListener('mousemove', onPointerMove)
+    term.addEventListener('mouseleave', onPointerLeave)
+
+    return () => {
+      term.removeEventListener('mousemove', onPointerMove)
+      term.removeEventListener('mouseleave', onPointerLeave)
+    }
+  }, [])
 
   return (
     <section
       id="install"
       ref={sectionRef}
-      className="landing-final-surface relative scroll-mt-20 overflow-hidden py-24 sm:py-32"
+      className="landing-final-surface relative scroll-mt-20 overflow-hidden py-32 sm:py-48 bg-black text-white"
     >
       {/* Procedural Ink Reveal Artwork Background */}
       <InkRevealCanvas
@@ -81,10 +81,10 @@ export function InstallSection() {
 
       {/* Subtle Grid Accent */}
       <div 
-        className="absolute inset-0 pointer-events-none select-none opacity-[0.04] bg-grid-pattern"
+        className="absolute inset-0 pointer-events-none select-none opacity-[0.03]"
         style={{
           backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
+          backgroundSize: '28px 28px',
           zIndex: 1,
         }}
       />
@@ -115,111 +115,67 @@ export function InstallSection() {
           </div>
         </div>
 
-        <h3 className="relative text-3xl font-semibold tracking-normal text-white sm:text-4xl">
+        <h3 className="relative text-3xl font-normal tracking-tight text-white sm:text-5xl">
           Instale o runtime local
         </h3>
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-neutral-500 font-light">
-          Um comando. Runtime no seu ambiente. Habilidades, memória e aprovação de risco desde o primeiro start.
+        <p className="mx-auto mt-4 max-w-lg text-sm sm:text-base leading-relaxed text-neutral-400 font-light">
+          Um comando. Zero configurações lentas. O agente fica disponível instantaneamente no seu terminal e sistema.
         </p>
 
-        <div className="mx-auto mt-10 max-w-xl text-left">
-          <ZSurface
-            label="install"
-            meta="npm · global"
-            status={simDone ? 'ready' : simulating ? 'running' : 'idle'}
-            footer={
-              <>
-                {!simulating && !simDone ? (
-                  <button
-                    type="button"
-                    onClick={startSimulation}
-                    className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-emerald-400 hover:text-emerald-300"
-                  >
-                    <Play size={10} />
-                    Simular instalação
-                  </button>
-                ) : null}
-                {simDone ? (
-                  <button
-                    type="button"
-                    onClick={resetSimulation}
-                    className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-400 hover:text-white"
-                  >
-                    <RefreshCw size={10} />
-                    Limpar
-                  </button>
-                ) : null}
-                {simulating ? <span className="zs-foot-dim">instalando…</span> : null}
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="ml-auto inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-400 hover:text-white"
-                >
-                  {copied ? (
-                    <>
-                      <Check size={10} className="text-emerald-400" />
-                      <span className="text-emerald-400">Copiado</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={10} />
-                      Copiar
-                    </>
-                  )}
-                </button>
-              </>
-            }
+        {/* 3D Perspective Terminal (GSAP Interactive Tilt) */}
+        <div 
+          className="mx-auto mt-12 max-w-xl"
+          style={{ perspective: '1200px' }}
+        >
+          <div
+            ref={terminalRef}
+            style={{ transformStyle: 'preserve-3d' }}
+            className="group relative rounded-2xl border border-white/[0.12] bg-[#09090b]/95 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_40px_rgba(0,232,143,0.06)] hover:border-[#00e88f]/40 transition-colors duration-300"
           >
-            <ZRow tone="cmd">
-              <span className="zs-prompt">❯</span>
-              {INSTALL_CMD}
-            </ZRow>
-            {logs.map((log) => (
-              <ZRow key={log} tone={log.startsWith('✓') ? 'ok' : 'dim'}>
-                {log}
-              </ZRow>
-            ))}
-            {simulating ? (
-              <ZRow tone="ok">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping mr-2" />
-                resolvendo pacote local…
-              </ZRow>
-            ) : null}
-          </ZSurface>
-        </div>
+            {/* Terminal Header Bar */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#ff5f56] opacity-80" />
+                <span className="w-3 h-3 rounded-full bg-[#ffbd2e] opacity-80" />
+                <span className="w-3 h-3 rounded-full bg-[#27c93f] opacity-80" />
+                <span className="ml-2 text-[11px] font-mono text-neutral-400">zavorth ~ terminal</span>
+              </div>
+              <span className="text-[10px] font-mono text-[#00e88f] px-2 py-0.5 rounded-full bg-[#00e88f]/10 border border-[#00e88f]/20">
+                NPM GLOBAL
+              </span>
+            </div>
 
-        {/* TUI Keycaps and requirements */}
-        <div className="mt-12 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-3 font-mono text-[9px] tracking-wide text-neutral-600">
-            <span>REQUISITOS: Node.js 18+</span>
-            <span>&middot;</span>
-            <span>OS: macOS / Linux / Windows</span>
-          </div>
+            {/* Terminal Body */}
+            <div className="p-6 sm:p-8 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 font-mono text-sm sm:text-base text-neutral-200 overflow-x-auto">
+                <span className="text-[#00e88f] font-bold select-none">&gt;</span>
+                <span className="text-white font-medium select-all">{INSTALL_CMD}</span>
+                <span className="w-2 h-4 bg-[#00e88f] animate-pulse inline-block select-none" />
+              </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <a
-              href="/demo"
-              className="text-[13px] font-medium text-emerald-400 transition-colors hover:text-emerald-300"
-            >
-              Ver demonstração sem instalar →
-            </a>
-            <a
-              href="/start"
-              className="text-[13px] font-medium text-neutral-400 transition-colors hover:text-white"
-            >
-              Guia do primeiro uso
-            </a>
-          </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="shrink-0 p-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-[#00e88f]/10 hover:border-[#00e88f]/30 text-neutral-300 hover:text-[#00e88f] transition-all duration-200 cursor-pointer group/btn"
+                title="Copiar comando"
+                aria-label="Copiar comando"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-[#00e88f]" />
+                ) : (
+                  <Copy className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                )}
+              </button>
+            </div>
 
-          {/* Styled Developer Keycaps */}
-          <div className="flex items-center gap-1.5 mt-2 select-none">
-            <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold border border-white/10 rounded bg-white/5 text-neutral-400 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">NPM</span>
-            <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold border border-white/10 rounded bg-white/5 text-neutral-400 shadow-[0_2px_4px_rgba(0,0,0,0.5)]">INSTALL</span>
-            <span className="text-neutral-600 font-mono text-[9px] px-0.5">&amp;</span>
-            <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold border border-emerald-500/20 rounded bg-emerald-500/5 text-emerald-400 shadow-[0_2px_6px_rgba(16,185,129,0.1)]">ZAVORTH</span>
-            <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold border border-emerald-500/20 rounded bg-emerald-500/5 text-emerald-400 shadow-[0_2px_6px_rgba(16,185,129,0.1)]">START</span>
+            {/* Terminal Footer Status */}
+            <div className="px-6 py-3 border-t border-white/[0.04] bg-white/[0.01] flex items-center justify-between text-[11px] font-mono text-neutral-500">
+              <span>Node &gt;= 18 &middot; macOS / Linux / Windows</span>
+              <span>{copied ? '✓ Copiado para a área de transferência' : 'Clique para copiar'}</span>
+            </div>
           </div>
         </div>
+
       </div>
     </section>
   )

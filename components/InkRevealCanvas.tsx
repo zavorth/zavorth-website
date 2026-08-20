@@ -2,18 +2,20 @@
 
 import React, { useEffect, useRef } from 'react'
 
-interface SmokePuff {
+interface TrailPoint {
+  x: number
+  y: number
+  time: number
+}
+
+interface SmokeWisp {
   x: number
   y: number
   vx: number
   vy: number
+  size: number
   born: number
-  lifetime: number
-  rStart: number
-  rEnd: number
-  angle: number
-  vAngle: number
-  opacity: number
+  life: number
 }
 
 export interface InkRevealCanvasProps {
@@ -21,9 +23,9 @@ export interface InkRevealCanvasProps {
   imageSrc?: string
   /** Mask background color in hex/rgb format */
   maskColor?: string
-  /** Maximum radius of the smoke billows */
-  maxRadius?: number
-  /** Lifetime in ms before smoke dissipates */
+  /** Brush thickness for the continuous path */
+  brushSize?: number
+  /** Lifetime in ms before the smoke trail fades */
   lifetime?: number
   /** CSS class names for the container */
   className?: string
@@ -32,8 +34,8 @@ export interface InkRevealCanvasProps {
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
   maskColor = '#000000',
-  maxRadius = 140,
-  lifetime = 2200,
+  brushSize = 50,
+  lifetime = 1400,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -49,9 +51,6 @@ export function InkRevealCanvas({
     if (!ctx) return
 
     const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
-    const MAX_PUFFS = 180
-    const STAMP_STEP = 12
-
     let w = 0
     let h = 0
 
@@ -79,118 +78,139 @@ export function InkRevealCanvas({
 
     let resizeObserver: ResizeObserver | null = null
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        resize()
-      })
+      resizeObserver = new ResizeObserver(() => resize())
       resizeObserver.observe(parent)
       resizeObserver.observe(container)
     }
 
     window.addEventListener('resize', resize)
 
-    const puffs: SmokePuff[] = []
-    let lastX: number | null = null
-    let lastY: number | null = null
-    let running = false
+    const points: TrailPoint[] = []
+    const wisps: SmokeWisp[] = []
     let animId = 0
+    let running = false
 
-    const addSmokePuff = (x: number, y: number, speedMultiplier = 1) => {
-      if (puffs.length >= MAX_PUFFS) puffs.shift()
+    const addPoint = (x: number, y: number) => {
+      const now = performance.now()
+      points.push({ x, y, time: now })
 
-      // Organic subtle drift and turbulence
-      const angle = Math.random() * Math.PI * 2
-      const driftSpeed = (0.2 + Math.random() * 0.5) * speedMultiplier
-      const vx = Math.cos(angle) * driftSpeed
-      const vy = Math.sin(angle) * driftSpeed - 0.25 // subtle upward smoke drift
-
-      puffs.push({
-        x: x + (Math.random() * 16 - 8),
-        y: y + (Math.random() * 16 - 8),
-        vx,
-        vy,
-        born: performance.now(),
-        lifetime: lifetime * (0.8 + Math.random() * 0.4),
-        rStart: 24 + Math.random() * 16,
-        rEnd: maxRadius * (0.85 + Math.random() * 0.35),
-        angle: Math.random() * Math.PI * 2,
-        vAngle: (Math.random() * 0.02 - 0.01),
-        opacity: 0.85 + Math.random() * 0.15,
-      })
-    }
-
-    const stampAlong = (x: number, y: number) => {
-      if (lastX === null || lastY === null) {
-        addSmokePuff(x, y)
-      } else {
-        const dx = x - lastX
-        const dy = y - lastY
-        const dist = Math.hypot(dx, dy)
-        const steps = Math.max(1, Math.ceil(dist / STAMP_STEP))
-        for (let i = 1; i <= steps; i++) {
-          const px = lastX + (dx * i) / steps
-          const py = lastY + (dy * i) / steps
-          addSmokePuff(px, py, 0.8)
-          // Add a smaller sub-puff for volumetric smoke depth
-          if (i % 2 === 0) {
-            addSmokePuff(px + (Math.random() * 20 - 10), py + (Math.random() * 20 - 10), 0.5)
-          }
-        }
+      // Spawn subtle smoke wisps along the path
+      if (Math.random() < 0.6) {
+        wisps.push({
+          x: x + (Math.random() * 14 - 7),
+          y: y + (Math.random() * 14 - 7),
+          vx: (Math.random() * 0.4 - 0.2),
+          vy: -0.2 - Math.random() * 0.3, // gently rise
+          size: 14 + Math.random() * 18,
+          born: now,
+          life: 900 + Math.random() * 500,
+        })
       }
-      lastX = x
-      lastY = y
     }
 
-    // Volumetric organic smoke billow with multi-stop radial feathering
-    const drawSmokePuff = (puff: SmokePuff, now: number) => {
-      const elapsed = now - puff.born
-      const t = elapsed / puff.lifetime
-      if (t >= 1) return false
-
-      // Update position with drift
-      puff.x += puff.vx
-      puff.y += puff.vy
-      puff.angle += puff.vAngle
-
-      // Smooth expansion & dissipation curve
-      const expandEase = 1 - Math.pow(1 - t, 2.2)
-      const currentRadius = puff.rStart + (puff.rEnd - puff.rStart) * expandEase
-      const alpha = (1 - t * t) * puff.opacity
-
-      const g = ctx.createRadialGradient(puff.x, puff.y, 0, puff.x, puff.y, currentRadius)
-      g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
-      g.addColorStop(0.25, `rgba(0, 0, 0, ${0.82 * alpha})`)
-      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.45 * alpha})`)
-      g.addColorStop(0.8, `rgba(0, 0, 0, ${0.15 * alpha})`)
-      g.addColorStop(1, 'rgba(0, 0, 0, 0)')
-
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.arc(puff.x, puff.y, currentRadius, 0, Math.PI * 2)
-      ctx.fill()
-
-      return true
-    }
-
-    const loop = () => {
+    const render = () => {
       const now = performance.now()
 
       // Repaint solid black mask
       fillSolidMask()
 
+      // Filter out expired points
+      while (points.length > 0 && now - points[0].time > lifetime) {
+        points.shift()
+      }
+
+      // Filter out expired wisps
+      for (let i = wisps.length - 1; i >= 0; i--) {
+        if (now - wisps[i].born > wisps[i].life) {
+          wisps.splice(i, 1)
+        }
+      }
+
       ctx.save()
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
       ctx.globalCompositeOperation = 'destination-out'
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
 
-      for (let i = puffs.length - 1; i >= 0; i--) {
-        const alive = drawSmokePuff(puffs[i], now)
-        if (!alive) {
-          puffs.splice(i, 1)
+      // 1. Draw smooth continuous smoke ribbon trail along mouse path
+      if (points.length > 1) {
+        for (let i = 1; i < points.length; i++) {
+          const p0 = points[i - 1]
+          const p1 = points[i]
+          const age = now - p1.time
+          const progress = age / lifetime
+          if (progress >= 1) continue
+
+          const alpha = 1 - progress
+          const currentWidth = brushSize * (0.6 + 0.4 * alpha)
+
+          // Outer feathered smoke aura
+          ctx.save()
+          ctx.strokeStyle = `rgba(0, 0, 0, ${0.45 * alpha})`
+          ctx.lineWidth = currentWidth * 1.6
+          ctx.shadowBlur = 24
+          ctx.shadowColor = 'rgba(0, 0, 0, 1)'
+          ctx.beginPath()
+          ctx.moveTo(p0.x, p0.y)
+          ctx.lineTo(p1.x, p1.y)
+          ctx.stroke()
+          ctx.restore()
+
+          // Inner solid path core
+          ctx.save()
+          ctx.strokeStyle = `rgba(0, 0, 0, ${0.9 * alpha})`
+          ctx.lineWidth = currentWidth
+          ctx.shadowBlur = 12
+          ctx.shadowColor = 'rgba(0, 0, 0, 1)'
+          ctx.beginPath()
+          ctx.moveTo(p0.x, p0.y)
+          ctx.lineTo(p1.x, p1.y)
+          ctx.stroke()
+          ctx.restore()
+        }
+      } else if (points.length === 1) {
+        // Single tap/point
+        const p = points[0]
+        const alpha = 1 - (now - p.time) / lifetime
+        if (alpha > 0) {
+          const rad = (brushSize / 2) * alpha
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad)
+          g.addColorStop(0, `rgba(0, 0, 0, ${0.9 * alpha})`)
+          g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+          ctx.fillStyle = g
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2)
+          ctx.fill()
         }
       }
+
+      // 2. Draw drifting smoke wisps along the trail
+      for (let i = 0; i < wisps.length; i++) {
+        const wisp = wisps[i]
+        const wElapsed = now - wisp.born
+        const wT = wElapsed / wisp.life
+        if (wT >= 1) continue
+
+        wisp.x += wisp.vx
+        wisp.y += wisp.vy
+
+        const wAlpha = (1 - wT) * 0.4
+        const wRadius = wisp.size * (1 + wT * 0.5)
+
+        const g = ctx.createRadialGradient(wisp.x, wisp.y, 0, wisp.x, wisp.y, wRadius)
+        g.addColorStop(0, `rgba(0, 0, 0, ${wAlpha})`)
+        g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.arc(wisp.x, wisp.y, wRadius, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
       ctx.restore()
 
-      if (puffs.length > 0) {
-        animId = requestAnimationFrame(loop)
+      if (points.length > 0 || wisps.length > 0) {
+        animId = requestAnimationFrame(render)
       } else {
         running = false
         fillSolidMask()
@@ -200,9 +220,12 @@ export function InkRevealCanvas({
     const start = () => {
       if (!running) {
         running = true
-        animId = requestAnimationFrame(loop)
+        animId = requestAnimationFrame(render)
       }
     }
+
+    let lastX = 0
+    let lastY = 0
 
     const onPointerMove = (e: MouseEvent | PointerEvent | TouchEvent) => {
       const rect = container.getBoundingClientRect()
@@ -221,24 +244,19 @@ export function InkRevealCanvas({
       const y = clientY - rect.top
 
       if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        stampAlong(x, y)
-        start()
-      } else {
-        lastX = null
-        lastY = null
+        const dist = Math.hypot(x - lastX, y - lastY)
+        if (dist > 4) {
+          addPoint(x, y)
+          lastX = x
+          lastY = y
+          start()
+        }
       }
-    }
-
-    const onPointerLeave = () => {
-      lastX = null
-      lastY = null
     }
 
     parent.addEventListener('mousemove', onPointerMove, { passive: true })
     parent.addEventListener('pointermove', onPointerMove, { passive: true })
     parent.addEventListener('touchmove', onPointerMove, { passive: true })
-    parent.addEventListener('mouseleave', onPointerLeave)
-    parent.addEventListener('pointerleave', onPointerLeave)
 
     return () => {
       window.removeEventListener('resize', resize)
@@ -246,11 +264,9 @@ export function InkRevealCanvas({
       parent.removeEventListener('mousemove', onPointerMove)
       parent.removeEventListener('pointermove', onPointerMove)
       parent.removeEventListener('touchmove', onPointerMove)
-      parent.removeEventListener('mouseleave', onPointerLeave)
-      parent.removeEventListener('pointerleave', onPointerLeave)
       if (animId) cancelAnimationFrame(animId)
     }
-  }, [maskColor, maxRadius, lifetime])
+  }, [maskColor, brushSize, lifetime])
 
   return (
     <div

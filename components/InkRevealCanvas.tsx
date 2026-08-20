@@ -232,8 +232,9 @@ export function InkRevealCanvas({
           backgroundSize: '1440px 100%',
           backgroundPosition: 'bottom center',
           backgroundRepeat: 'no-repeat',
-          filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(1.1) brightness(0.9)' : undefined,
-          opacity: 0.95,
+          filter: isDark ? 'invert(1) grayscale(1) contrast(1.8) brightness(1.9)' : undefined,
+          mixBlendMode: isDark ? 'screen' : undefined,
+          opacity: 1,
         }}
       />
 

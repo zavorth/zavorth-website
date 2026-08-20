@@ -24,7 +24,7 @@ export interface InkRevealCanvasProps {
 
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
-  maskColor = '252, 250, 248',
+  maskColor = '0, 0, 0',
   startRadius = 8,
   maxRadius = 128,
   radiusVariation = 0.45,
@@ -48,6 +48,7 @@ export function InkRevealCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    const isDark = maskColor.includes('0, 0, 0') || maskColor.includes('0,0,0')
     const MASK = maskColor.replace('#fcfaf8', '252, 250, 248').replace('#000000', '0, 0, 0')
     const R_START = startRadius
     const R_END = maxRadius
@@ -69,9 +70,13 @@ export function InkRevealCanvas({
       canvas.style.width = `${w}px`
       canvas.style.height = `${h}px`
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = `rgb(${MASK})`
-      ctx.fillRect(0, 0, w, h)
+      if (isDark) {
+        ctx.clearRect(0, 0, w, h)
+      } else {
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.fillStyle = `rgb(${MASK})`
+        ctx.fillRect(0, 0, w, h)
+      }
     }
 
     resize()
@@ -120,10 +125,17 @@ export function InkRevealCanvas({
     const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
       if (r <= 0 || alpha <= 0.001) return
 
-      const g = ctx.createRadialGradient(x, y, r * 0.25, x, y, r)
-      g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
-      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.88 * alpha})`)
-      g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r)
+      if (isDark) {
+        g.addColorStop(0, `rgba(255, 255, 255, ${0.98 * alpha})`)
+        g.addColorStop(0.4, `rgba(255, 255, 255, ${0.85 * alpha})`)
+        g.addColorStop(0.7, `rgba(255, 255, 255, ${0.45 * alpha})`)
+        g.addColorStop(1, 'rgba(255, 255, 255, 0)')
+      } else {
+        g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
+        g.addColorStop(0.55, `rgba(0, 0, 0, ${0.88 * alpha})`)
+        g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      }
 
       ctx.fillStyle = g
       ctx.beginPath()
@@ -148,11 +160,16 @@ export function InkRevealCanvas({
     const loop = () => {
       const now = performance.now()
 
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = `rgb(${MASK})`
-      ctx.fillRect(0, 0, w, h)
+      if (isDark) {
+        ctx.clearRect(0, 0, w, h)
+        ctx.globalCompositeOperation = 'source-over'
+      } else {
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.fillStyle = `rgb(${MASK})`
+        ctx.fillRect(0, 0, w, h)
+        ctx.globalCompositeOperation = 'destination-out'
+      }
 
-      ctx.globalCompositeOperation = 'destination-out'
       for (let i = stamps.length - 1; i >= 0; i--) {
         const t = (now - stamps[i].born) / LIFETIME
         if (t >= 1) {
@@ -226,7 +243,7 @@ export function InkRevealCanvas({
       style={{ zIndex: 0 }}
     >
       <div
-        className="absolute inset-0 w-full h-full transition-opacity duration-300"
+        className="absolute inset-0 w-full h-full opacity-40 pointer-events-none"
         style={{
           backgroundImage: `url("${imageSrc}")`,
           backgroundSize: '1440px 100%',
@@ -234,7 +251,6 @@ export function InkRevealCanvas({
           backgroundRepeat: 'no-repeat',
           filter: isDark ? 'invert(1) grayscale(1) contrast(1.8) brightness(1.9)' : undefined,
           mixBlendMode: isDark ? 'screen' : undefined,
-          opacity: 1,
         }}
       />
 

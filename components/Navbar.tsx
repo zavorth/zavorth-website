@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Menu, X, Terminal } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { BrandMark } from './BrandMark'
 import { NAV_LINKS } from '../lib/constants'
 
 export function Navbar() {
   const [visible, setVisible] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState<string>('')
 
   useEffect(() => {
     const show = () => setVisible(true)
@@ -35,15 +36,59 @@ export function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileOpen])
 
+  // Scroll spy to highlight active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 140
+
+      for (let i = NAV_LINKS.length - 1; i >= 0; i--) {
+        const link = NAV_LINKS[i]
+        const el = document.getElementById(link.id)
+        if (el) {
+          const top = el.offsetTop
+          if (scrollPosition >= top) {
+            setActiveSection(link.id)
+            return
+          }
+        }
+      }
+
+      if (window.scrollY < 200) {
+        setActiveSection('')
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const scrollTo = (id: string) => {
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    document.getElementById(id)?.scrollIntoView({
-      behavior: prefersReduced ? 'auto' : 'smooth',
-      block: 'start',
-    })
+    if (typeof window === 'undefined') return
+
+    if (window.location.pathname !== '/') {
+      window.location.href = `/#${id}`
+      return
+    }
+
+    const el = document.getElementById(id)
+    if (el) {
+      const prefersReduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      const navOffset = 60
+      const bodyRect = document.body.getBoundingClientRect().top
+      const elementRect = el.getBoundingClientRect().top
+      const elementPosition = elementRect - bodyRect
+      const offsetPosition = elementPosition - navOffset
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: prefersReduced ? 'auto' : 'smooth',
+      })
+    }
     setMobileOpen(false)
   }
 
@@ -75,6 +120,8 @@ export function Navbar() {
         <nav className="hidden items-center gap-1 sm:flex">
           {NAV_LINKS.map((link) => {
             const isInstall = link.id === 'install'
+            const isActive = activeSection === link.id
+
             return (
               <a
                 key={link.id}
@@ -83,9 +130,11 @@ export function Navbar() {
                   event.preventDefault()
                   scrollTo(link.id)
                 }}
-                className={`px-3 py-1 rounded-full text-xs font-mono transition-all duration-200 ${
+                className={`px-3 py-1 rounded-full text-xs font-mono transition-all duration-200 cursor-pointer ${
                   isInstall
                     ? 'bg-[#00e88f] text-black font-semibold hover:bg-[#00e88f]/90 hover:shadow-[0_0_15px_rgba(0,232,143,0.3)] ml-2'
+                    : isActive
+                    ? 'text-white bg-white/[0.12] font-semibold'
                     : 'text-neutral-400 hover:text-white hover:bg-white/[0.06]'
                 }`}
               >
@@ -123,6 +172,8 @@ export function Navbar() {
                 className={`w-full py-3 text-center text-sm font-mono rounded-2xl transition-all ${
                   link.id === 'install'
                     ? 'bg-[#00e88f] text-black font-bold'
+                    : activeSection === link.id
+                    ? 'text-white bg-white/[0.12] font-semibold'
                     : 'text-neutral-300 hover:text-white bg-white/[0.04]'
                 }`}
               >

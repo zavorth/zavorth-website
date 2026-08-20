@@ -2,30 +2,22 @@
 
 import React, { useEffect, useRef } from 'react'
 
-interface TrailPoint {
+interface InkStamp {
   x: number
   y: number
-  time: number
-}
-
-interface SmokeWisp {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  size: number
   born: number
-  life: number
+  seed: number
+  rmax: number
 }
 
 export interface InkRevealCanvasProps {
   /** Source URL of the background artwork image to reveal */
   imageSrc?: string
-  /** Mask background color in hex/rgb format */
+  /** Mask background color in RGB or hex format */
   maskColor?: string
-  /** Brush thickness for the continuous path */
-  brushSize?: number
-  /** Lifetime in ms before the smoke trail fades */
+  /** Maximum radius of each ink dot */
+  maxRadius?: number
+  /** Lifetime in ms before an ink dot fades back to solid */
   lifetime?: number
   /** CSS class names for the container */
   className?: string
@@ -33,9 +25,9 @@ export interface InkRevealCanvasProps {
 
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
-  maskColor = '#000000',
-  brushSize = 50,
-  lifetime = 1400,
+  maskColor = '0, 0, 0',
+  maxRadius = 128,
+  lifetime = 520,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -47,26 +39,40 @@ export function InkRevealCanvas({
     if (!container || !canvas) return
 
     const parent = (container.closest('section') || container.parentElement || container) as HTMLElement
+    const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+    if (!canHover) return
+
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return
 
+    const MASK = maskColor.startsWith('#')
+      ? maskColor === '#000000'
+        ? '0, 0, 0'
+        : '0, 0, 0'
+      : maskColor
+
+    const R_START = 8
+    const R_END = maxRadius
+    const R_VARY = 0.45
+    const LIFETIME = lifetime
+    const STAMP_STEP = 12
+    const MAX_STAMPS = 160
     const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
+
     let w = 0
     let h = 0
 
     const fillSolidMask = () => {
-      ctx.save()
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
       ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = maskColor
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.restore()
+      ctx.fillStyle = `rgb(${MASK})`
+      ctx.fillRect(0, 0, w, h)
     }
 
     const resize = () => {
       const rect = container.getBoundingClientRect()
-      w = Math.max(1, Math.ceil(rect.width))
-      h = Math.max(1, Math.ceil(rect.height))
+      w = Math.max(1, Math.round(rect.width))
+      h = Math.max(1, Math.round(rect.height))
       canvas.width = Math.round(w * DPR)
       canvas.height = Math.round(h * DPR)
       canvas.style.width = `${w}px`
@@ -85,196 +91,141 @@ export function InkRevealCanvas({
 
     window.addEventListener('resize', resize)
 
-    const points: TrailPoint[] = []
-    const wisps: SmokeWisp[] = []
-    let animId = 0
+    const stamps: InkStamp[] = []
+    let lastX: number | null = null
+    let lastY: number | null = null
     let running = false
+    let animId = 0
 
-    const addPoint = (x: number, y: number) => {
-      const now = performance.now()
-      points.push({ x, y, time: now })
-
-      // Spawn subtle smoke wisps along the path
-      if (Math.random() < 0.6) {
-        wisps.push({
-          x: x + (Math.random() * 14 - 7),
-          y: y + (Math.random() * 14 - 7),
-          vx: (Math.random() * 0.4 - 0.2),
-          vy: -0.2 - Math.random() * 0.3, // gently rise
-          size: 14 + Math.random() * 18,
-          born: now,
-          life: 900 + Math.random() * 500,
-        })
-      }
+    const addStamp = (x: number, y: number) => {
+      if (stamps.length >= MAX_STAMPS) stamps.shift()
+      stamps.push({
+        x,
+        y,
+        born: performance.now(),
+        seed: Math.random() * Math.PI * 2,
+        rmax: R_END * (1 - R_VARY + Math.random() * R_VARY),
+      })
     }
 
-    const render = () => {
+    const stampAlong = (x: number, y: number) => {
+      if (lastX === null || lastY === null) {
+        addStamp(x, y)
+      } else {
+        const dx = x - lastX
+        const dy = y - lastY
+        const dist = Math.hypot(dx, dy)
+        const steps = Math.max(1, Math.ceil(dist / STAMP_STEP))
+        for (let i = 1; i <= steps; i++) {
+          addStamp(lastX + (dx * i) / steps, lastY + (dy * i) / steps)
+        }
+      }
+      lastX = x
+      lastY = y
+    }
+
+    // Exact MiMo Code procedural organic ink carving algorithm
+    const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
+      const g = ctx.createRadialGradient(x, y, r * 0.25, x, y, r)
+      g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
+      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.88 * alpha})`)
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+      ctx.fillStyle = g
+      ctx.beginPath()
+      const segs = 32
+      for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2
+        const wob =
+          0.78 +
+          0.14 * Math.sin(a * 3 + seed) +
+          0.08 * Math.sin(a * 7 + seed * 2.1) +
+          0.05 * Math.sin(a * 13 + seed * 0.7)
+        const rr = r * wob
+        const px = x + Math.cos(a) * rr
+        const py = y + Math.sin(a) * rr
+        if (i === 0) ctx.moveTo(px, py)
+        else ctx.lineTo(px, py)
+      }
+      ctx.closePath()
+      ctx.fill()
+    }
+
+    const loop = () => {
       const now = performance.now()
 
-      // Repaint solid black mask
+      // Repaint solid mask
       fillSolidMask()
 
-      // Filter out expired points
-      while (points.length > 0 && now - points[0].time > lifetime) {
-        points.shift()
-      }
-
-      // Filter out expired wisps
-      for (let i = wisps.length - 1; i >= 0; i--) {
-        if (now - wisps[i].born > wisps[i].life) {
-          wisps.splice(i, 1)
-        }
-      }
-
-      ctx.save()
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
       ctx.globalCompositeOperation = 'destination-out'
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-
-      // 1. Draw smooth continuous smoke ribbon trail along mouse path
-      if (points.length > 1) {
-        for (let i = 1; i < points.length; i++) {
-          const p0 = points[i - 1]
-          const p1 = points[i]
-          const age = now - p1.time
-          const progress = age / lifetime
-          if (progress >= 1) continue
-
-          const alpha = 1 - progress
-          const currentWidth = brushSize * (0.6 + 0.4 * alpha)
-
-          // Outer feathered smoke aura
-          ctx.save()
-          ctx.strokeStyle = `rgba(0, 0, 0, ${0.45 * alpha})`
-          ctx.lineWidth = currentWidth * 1.6
-          ctx.shadowBlur = 24
-          ctx.shadowColor = 'rgba(0, 0, 0, 1)'
-          ctx.beginPath()
-          ctx.moveTo(p0.x, p0.y)
-          ctx.lineTo(p1.x, p1.y)
-          ctx.stroke()
-          ctx.restore()
-
-          // Inner solid path core
-          ctx.save()
-          ctx.strokeStyle = `rgba(0, 0, 0, ${0.9 * alpha})`
-          ctx.lineWidth = currentWidth
-          ctx.shadowBlur = 12
-          ctx.shadowColor = 'rgba(0, 0, 0, 1)'
-          ctx.beginPath()
-          ctx.moveTo(p0.x, p0.y)
-          ctx.lineTo(p1.x, p1.y)
-          ctx.stroke()
-          ctx.restore()
+      for (let i = stamps.length - 1; i >= 0; i--) {
+        const t = (now - stamps[i].born) / LIFETIME
+        if (t >= 1) {
+          stamps.splice(i, 1)
+          continue
         }
-      } else if (points.length === 1) {
-        // Single tap/point
-        const p = points[0]
-        const alpha = 1 - (now - p.time) / lifetime
-        if (alpha > 0) {
-          const rad = (brushSize / 2) * alpha
-          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad)
-          g.addColorStop(0, `rgba(0, 0, 0, ${0.9 * alpha})`)
-          g.addColorStop(1, 'rgba(0, 0, 0, 0)')
-          ctx.fillStyle = g
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2)
-          ctx.fill()
-        }
+        const ease = 1 - Math.pow(1 - t, 3) // easeOutCubic expansion
+        const r = R_START + (stamps[i].rmax - R_START) * ease
+        const alpha = 1 - t * t // fade the hole closed as it ages
+        carveInk(stamps[i].x, stamps[i].y, r, alpha, stamps[i].seed)
       }
 
-      // 2. Draw drifting smoke wisps along the trail
-      for (let i = 0; i < wisps.length; i++) {
-        const wisp = wisps[i]
-        const wElapsed = now - wisp.born
-        const wT = wElapsed / wisp.life
-        if (wT >= 1) continue
-
-        wisp.x += wisp.vx
-        wisp.y += wisp.vy
-
-        const wAlpha = (1 - wT) * 0.4
-        const wRadius = wisp.size * (1 + wT * 0.5)
-
-        const g = ctx.createRadialGradient(wisp.x, wisp.y, 0, wisp.x, wisp.y, wRadius)
-        g.addColorStop(0, `rgba(0, 0, 0, ${wAlpha})`)
-        g.addColorStop(1, 'rgba(0, 0, 0, 0)')
-
-        ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.arc(wisp.x, wisp.y, wRadius, 0, Math.PI * 2)
-        ctx.fill()
-      }
-
-      ctx.restore()
-
-      if (points.length > 0 || wisps.length > 0) {
-        animId = requestAnimationFrame(render)
+      if (stamps.length > 0) {
+        animId = requestAnimationFrame(loop)
       } else {
         running = false
-        fillSolidMask()
       }
     }
 
     const start = () => {
       if (!running) {
         running = true
-        animId = requestAnimationFrame(render)
+        animId = requestAnimationFrame(loop)
       }
     }
 
-    let lastX = 0
-    let lastY = 0
-
-    const onPointerMove = (e: MouseEvent | PointerEvent | TouchEvent) => {
+    const onMouseEnter = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect()
-      let clientX = 0
-      let clientY = 0
+      lastX = e.clientX - rect.left
+      lastY = e.clientY - rect.top
+      stampAlong(lastX, lastY)
+      start()
+    }
 
-      if ('touches' in e && e.touches.length > 0) {
-        clientX = e.touches[0].clientX
-        clientY = e.touches[0].clientY
-      } else if ('clientX' in e) {
-        clientX = e.clientX
-        clientY = e.clientY
-      }
-
-      const x = clientX - rect.left
-      const y = clientY - rect.top
-
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
       if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        const dist = Math.hypot(x - lastX, y - lastY)
-        if (dist > 4) {
-          addPoint(x, y)
-          lastX = x
-          lastY = y
-          start()
-        }
+        stampAlong(x, y)
+        start()
       }
     }
 
-    parent.addEventListener('mousemove', onPointerMove, { passive: true })
-    parent.addEventListener('pointermove', onPointerMove, { passive: true })
-    parent.addEventListener('touchmove', onPointerMove, { passive: true })
+    const onMouseLeave = () => {
+      lastX = null
+      lastY = null
+    }
+
+    parent.addEventListener('mouseenter', onMouseEnter, { passive: true })
+    parent.addEventListener('mousemove', onMouseMove, { passive: true })
+    parent.addEventListener('mouseleave', onMouseLeave)
 
     return () => {
       window.removeEventListener('resize', resize)
       if (resizeObserver) resizeObserver.disconnect()
-      parent.removeEventListener('mousemove', onPointerMove)
-      parent.removeEventListener('pointermove', onPointerMove)
-      parent.removeEventListener('touchmove', onPointerMove)
+      parent.removeEventListener('mouseenter', onMouseEnter)
+      parent.removeEventListener('mousemove', onMouseMove)
+      parent.removeEventListener('mouseleave', onMouseLeave)
       if (animId) cancelAnimationFrame(animId)
     }
-  }, [maskColor, brushSize, lifetime])
+  }, [maskColor, maxRadius, lifetime])
 
   return (
     <div
       ref={containerRef}
       className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-black ${className}`}
-      style={{
-        zIndex: 0,
-      }}
+      style={{ zIndex: 0 }}
     >
       {/* Background artwork image */}
       <div

@@ -90,12 +90,12 @@ export function InstallSection() {
       ref={sectionRef}
       className="landing-final-surface relative scroll-mt-20 overflow-hidden py-32 sm:py-48 bg-black text-white"
     >
-      {/* Procedural Smoke Path Reveal Artwork Background */}
+      {/* Procedural MiMo Code Living Ink Reveal Canvas Mask */}
       <InkRevealCanvas
         imageSrc="/artwork/hero-bg.png"
-        maskColor="#000000"
-        brushSize={48}
-        lifetime={1400}
+        maskColor="0, 0, 0"
+        maxRadius={128}
+        lifetime={520}
       />
 
       {/* Subtle Grid Accent */}

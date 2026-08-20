@@ -24,7 +24,7 @@ export interface InkRevealCanvasProps {
 
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
-  maskColor = '0, 0, 0',
+  maskColor = '252, 250, 248',
   startRadius = 8,
   maxRadius = 128,
   radiusVariation = 0.45,
@@ -48,8 +48,7 @@ export function InkRevealCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const isDark = maskColor.includes('0, 0, 0') || maskColor.includes('0,0,0')
-    const MASK = maskColor.replace('#fcfaf8', '252, 250, 248').replace('#000000', '0, 0, 0')
+    const MASK = maskColor.replace('#fcfaf8', '252, 250, 248')
     const R_START = startRadius
     const R_END = maxRadius
     const R_VARY = radiusVariation
@@ -63,20 +62,16 @@ export function InkRevealCanvas({
 
     const resize = () => {
       const rect = parent.getBoundingClientRect()
-      w = Math.max(1, Math.round(rect.width))
-      h = Math.max(1, Math.round(rect.height))
+      w = rect.width
+      h = rect.height
       canvas.width = Math.round(w * DPR)
       canvas.height = Math.round(h * DPR)
-      canvas.style.width = `${w}px`
-      canvas.style.height = `${h}px`
+      canvas.style.width = w + 'px'
+      canvas.style.height = h + 'px'
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-      if (isDark) {
-        ctx.clearRect(0, 0, w, h)
-      } else {
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.fillStyle = `rgb(${MASK})`
-        ctx.fillRect(0, 0, w, h)
-      }
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = 'rgb(' + MASK + ')'
+      ctx.fillRect(0, 0, w, h)
     }
 
     resize()
@@ -123,20 +118,10 @@ export function InkRevealCanvas({
     }
 
     const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
-      if (r <= 0 || alpha <= 0.001) return
-
-      const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r)
-      if (isDark) {
-        g.addColorStop(0, `rgba(255, 255, 255, ${1.0 * alpha})`)
-        g.addColorStop(0.35, `rgba(255, 255, 255, ${0.95 * alpha})`)
-        g.addColorStop(0.7, `rgba(255, 255, 255, ${0.6 * alpha})`)
-        g.addColorStop(0.9, `rgba(255, 255, 255, ${0.25 * alpha})`)
-        g.addColorStop(1, 'rgba(255, 255, 255, 0)')
-      } else {
-        g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
-        g.addColorStop(0.55, `rgba(0, 0, 0, ${0.88 * alpha})`)
-        g.addColorStop(1, 'rgba(0, 0, 0, 0)')
-      }
+      const g = ctx.createRadialGradient(x, y, r * 0.25, x, y, r)
+      g.addColorStop(0, 'rgba(0, 0, 0, ' + 0.95 * alpha + ')')
+      g.addColorStop(0.55, 'rgba(0, 0, 0, ' + 0.88 * alpha + ')')
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.fillStyle = g
       ctx.beginPath()
@@ -161,18 +146,11 @@ export function InkRevealCanvas({
     const loop = () => {
       const now = performance.now()
 
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = 'rgb(' + MASK + ')'
+      ctx.fillRect(0, 0, w, h)
 
-      if (isDark) {
-        ctx.clearRect(0, 0, w, h)
-        ctx.globalCompositeOperation = 'source-over'
-      } else {
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.fillStyle = `rgb(${MASK})`
-        ctx.fillRect(0, 0, w, h)
-        ctx.globalCompositeOperation = 'destination-out'
-      }
-
+      ctx.globalCompositeOperation = 'destination-out'
       for (let i = stamps.length - 1; i >= 0; i--) {
         const t = (now - stamps[i].born) / LIFETIME
         if (t >= 1) {
@@ -210,12 +188,8 @@ export function InkRevealCanvas({
 
     const onMouseMove = (e: MouseEvent) => {
       const rect = parent.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        stampAlong(x, y)
-        start()
-      }
+      stampAlong(e.clientX - rect.left, e.clientY - rect.top)
+      start()
     }
 
     const onMouseLeave = () => {
@@ -223,8 +197,8 @@ export function InkRevealCanvas({
       lastY = null
     }
 
-    parent.addEventListener('mouseenter', onMouseEnter, { passive: true })
-    parent.addEventListener('mousemove', onMouseMove, { passive: true })
+    parent.addEventListener('mouseenter', onMouseEnter)
+    parent.addEventListener('mousemove', onMouseMove)
     parent.addEventListener('mouseleave', onMouseLeave)
 
     return () => {
@@ -237,29 +211,27 @@ export function InkRevealCanvas({
     }
   }, [maskColor, startRadius, maxRadius, radiusVariation, lifetime, stampStep, maxStamps])
 
-  const isDark = maskColor.includes('0, 0, 0') || maskColor.includes('0,0,0')
-
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none ${isDark ? 'bg-black' : 'bg-[#fcfaf8]'} ${className}`}
+      className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-[#fcfaf8] ${className}`}
       style={{ zIndex: 0 }}
     >
-      {!isDark && (
-        <div
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{
-            backgroundImage: `url("${imageSrc}")`,
-            backgroundSize: '1440px 100%',
-            backgroundPosition: 'bottom center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        />
-      )}
+      <div
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{
+          backgroundImage: `url("${imageSrc}")`,
+          backgroundSize: '1440px 592px',
+          backgroundPosition: 'bottom center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+      />
 
       <canvas
         ref={canvasRef}
         className="absolute inset-0 block w-full h-full pointer-events-none"
+        style={{ zIndex: 1 }}
         aria-hidden="true"
       />
     </div>

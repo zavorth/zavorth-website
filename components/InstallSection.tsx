@@ -88,12 +88,12 @@ export function InstallSection() {
     <section
       id="install"
       ref={sectionRef}
-      className="landing-final-surface relative scroll-mt-20 overflow-hidden py-32 sm:py-48 bg-black text-white"
+      className="landing-final-surface relative scroll-mt-20 overflow-hidden py-32 sm:py-48 bg-[#fcfaf8] text-[#26251e]"
     >
       {/* Organic Living Ink Reveal Mask */}
       <InkRevealCanvas
         imageSrc="/artwork/hero-bg.png"
-        maskColor="0, 0, 0"
+        maskColor="252, 250, 248"
         startRadius={8}
         maxRadius={128}
         radiusVariation={0.45}
@@ -104,9 +104,9 @@ export function InstallSection() {
 
       {/* Subtle Grid Accent */}
       <div 
-        className="absolute inset-0 pointer-events-none select-none opacity-[0.025]"
+        className="absolute inset-0 pointer-events-none select-none opacity-[0.035]"
         style={{
-          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #26251e 1px, transparent 1px)',
           backgroundSize: '24px 24px',
           zIndex: 1,
         }}
@@ -121,7 +121,7 @@ export function InstallSection() {
           aria-hidden="true"
         >
           <div className="install-agent-stage">
-            <p className="install-agent-text install-agent-back">ZAVORTH</p>
+            <p className="install-agent-text install-agent-back text-[#26251e]/20">ZAVORTH</p>
             <div className="install-agent-mascot">
               <span className="install-agent-glow" />
               <Image
@@ -134,14 +134,14 @@ export function InstallSection() {
                 priority
               />
             </div>
-            <p className="install-agent-text install-agent-front">AGENT</p>
+            <p className="install-agent-text install-agent-front text-[#26251e]">AGENT</p>
           </div>
         </div>
 
-        <h3 className="relative text-3xl font-normal tracking-tight text-white sm:text-5xl">
+        <h3 className="relative text-3xl font-normal tracking-tight text-[#26251e] sm:text-5xl">
           Instale o runtime local
         </h3>
-        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-neutral-400 font-light">
+        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#504f49] font-light">
           Um comando simples. Zero configurações pesadas. O agente fica disponível instantaneamente no seu terminal.
         </p>
 

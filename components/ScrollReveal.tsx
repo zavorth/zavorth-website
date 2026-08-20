@@ -9,30 +9,22 @@ gsap.registerPlugin(ScrollTrigger, useGSAP)
 
 type ScrollRevealProps = {
   children: ReactNode
-  /** Elemento HTML renderizado (padrão: section) */
+  /** Rendered HTML container element (default: 'section') */
   as?: ElementType
   className?: string
-  /** Deslocamento vertical inicial em px (padrão: 48) */
+  /** Initial vertical offset in pixels (default: 48) */
   y?: number
-  /** Atraso em cascata entre filhos com [data-reveal] (padrão: 0.12s) */
+  /** Stagger delay between child elements with [data-reveal] in seconds (default: 0.12) */
   stagger?: number
-  /** Duração da animação (padrão: 1s) */
+  /** Animation duration in seconds (default: 1) */
   duration?: number
 }
 
 /**
- * ScrollReveal — animação de entrada premium ao rolar (fade + movimento suave).
+ * ScrollReveal — viewport entrance animation with fade and smooth upward translation.
  *
- * Todos os elementos filhos marcados com `data-reveal` animam em cascata
- * quando a seção entra na viewport. Se nenhum filho tiver `data-reveal`,
- * a seção inteira anima como um bloco único.
- *
- * Exemplo:
- *   <ScrollReveal className="py-32">
- *     <h2 data-reveal>Título</h2>
- *     <p data-reveal>Descrição</p>
- *     <div data-reveal>Conteúdo</div>
- *   </ScrollReveal>
+ * Child elements annotated with `data-reveal` are animated sequentially with stagger.
+ * If no child element has `data-reveal`, the entire container animates as a single block.
  */
 export function ScrollReveal({
   children,

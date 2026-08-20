@@ -16,22 +16,22 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       
-      {/* 1. O Que É o Zavorth (Kinetic Core Stage) */}
+      {/* Product Introduction (Kinetic Core Stage) */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <ProductIntroSection />
       </ScrollReveal>
       
-      {/* 2. Sistema Swarm (Orquestração Concorrente de Subagentes) */}
+      {/* Swarm System & Agent Orchestration */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <WhatItDoesSection />
       </ScrollReveal>
       
-      {/* 3. Auto-Evolução, Agnosticismo & Escalabilidade */}
+      {/* Architecture & Capabilities Grid */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <FeaturesGridSection />
       </ScrollReveal>
       
-      {/* 4. Instalação Local (com Ink Reveal Artwork) */}
+      {/* Local Runtime Installation */}
       <ScrollReveal className="relative z-10" y={20} duration={0.6}>
         <InstallSection />
       </ScrollReveal>

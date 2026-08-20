@@ -6,8 +6,9 @@ interface InkStamp {
   x: number
   y: number
   born: number
-  seed: number
+  phase: number
   rmax: number
+  weight: number
 }
 
 export interface InkRevealCanvasProps {
@@ -26,8 +27,8 @@ export interface InkRevealCanvasProps {
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
   maskColor = '0, 0, 0',
-  maxRadius = 88,
-  lifetime = 480,
+  maxRadius = 128,
+  lifetime = 580,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -45,14 +46,12 @@ export function InkRevealCanvas({
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return
 
-    // Exact MiMo Code configuration & organic brush constants
     const MASK = maskColor.replace('#000000', '0, 0, 0')
-    const R_START = 8
+    const R_START = 12
     const R_END = maxRadius
-    const R_VARY = 0.4
     const LIFETIME = lifetime
-    const STAMP_STEP = 10
-    const MAX_STAMPS = 200
+    const STAMP_STEP = 8
+    const MAX_STAMPS = 240
     const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
 
     let w = 0
@@ -91,51 +90,66 @@ export function InkRevealCanvas({
     let lastY: number | null = null
     let running = false
     let animId = 0
+    let cumulativeDist = 0
 
-    const addStamp = (x: number, y: number) => {
+    const addStamp = (x: number, y: number, weight = 1) => {
       if (stamps.length >= MAX_STAMPS) stamps.shift()
       stamps.push({
         x,
         y,
         born: performance.now(),
-        seed: Math.random() * Math.PI * 2,
-        rmax: R_END * (1 - R_VARY + Math.random() * R_VARY),
+        phase: cumulativeDist * 0.04,
+        rmax: R_END * (0.8 + 0.2 * Math.sin(cumulativeDist * 0.02)) * weight,
+        weight,
       })
     }
 
     const stampAlong = (x: number, y: number) => {
       if (lastX === null || lastY === null) {
-        addStamp(x, y)
+        addStamp(x, y, 1)
       } else {
         const dx = x - lastX
         const dy = y - lastY
         const dist = Math.hypot(dx, dy)
+        cumulativeDist += dist
         const steps = Math.max(1, Math.ceil(dist / STAMP_STEP))
+        
+        // Velocity-adaptive stroke weight for fluid calligraphy
+        const speed = dist / Math.max(1, steps)
+        const weight = Math.min(1.15, Math.max(0.7, 1 - speed * 0.015))
+
         for (let i = 1; i <= steps; i++) {
-          addStamp(lastX + (dx * i) / steps, lastY + (dy * i) / steps)
+          const px = lastX + (dx * i) / steps
+          const py = lastY + (dy * i) / steps
+          addStamp(px, py, weight)
         }
       }
       lastX = x
       lastY = y
     }
 
-    // Exact MiMo Code organic harmonic ink carving algorithm
-    const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
-      const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r)
-      g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
-      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.85 * alpha})`)
+    // Silky organic harmonic contour with multi-stop feathered gradient
+    const carveInk = (x: number, y: number, r: number, alpha: number, phase: number) => {
+      if (r <= 0 || alpha <= 0.001) return
+
+      const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r)
+      g.addColorStop(0, `rgba(0, 0, 0, ${0.98 * alpha})`)
+      g.addColorStop(0.3, `rgba(0, 0, 0, ${0.85 * alpha})`)
+      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.58 * alpha})`)
+      g.addColorStop(0.8, `rgba(0, 0, 0, ${0.25 * alpha})`)
       g.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.fillStyle = g
       ctx.beginPath()
-      const segs = 32
+      const segs = 36
       for (let i = 0; i <= segs; i++) {
         const a = (i / segs) * Math.PI * 2
+        // Continuous harmonic undulating contour (ultra-smooth fluid silhouette)
         const wob =
-          0.78 +
-          0.14 * Math.sin(a * 3 + seed) +
-          0.08 * Math.sin(a * 7 + seed * 2.1) +
-          0.05 * Math.sin(a * 13 + seed * 0.7)
+          0.84 +
+          0.10 * Math.sin(a * 3 + phase) +
+          0.05 * Math.sin(a * 6 + phase * 1.6) +
+          0.03 * Math.sin(a * 9 + phase * 0.8)
         const rr = r * wob
         const px = x + Math.cos(a) * rr
         const py = y + Math.sin(a) * rr
@@ -155,7 +169,7 @@ export function InkRevealCanvas({
       ctx.fillStyle = `rgb(${MASK})`
       ctx.fillRect(0, 0, w, h)
 
-      // Carve out living ink dots
+      // Carve out living ink dots with destination-out
       ctx.globalCompositeOperation = 'destination-out'
       for (let i = stamps.length - 1; i >= 0; i--) {
         const t = (now - stamps[i].born) / LIFETIME
@@ -163,10 +177,13 @@ export function InkRevealCanvas({
           stamps.splice(i, 1)
           continue
         }
-        const ease = 1 - Math.pow(1 - t, 3) // easeOutCubic expansion
-        const r = R_START + (stamps[i].rmax - R_START) * ease
-        const alpha = 1 - t * t // fade the hole closed as it ages
-        carveInk(stamps[i].x, stamps[i].y, r, alpha, stamps[i].seed)
+
+        // Smooth cubic Hermite ease for opening & silky sine fade for closing
+        const easeOut = 1 - Math.pow(1 - t, 2.6)
+        const r = R_START + (stamps[i].rmax - R_START) * easeOut
+        const alpha = Math.sin((1 - t) * Math.PI * 0.5)
+
+        carveInk(stamps[i].x, stamps[i].y, r, alpha, stamps[i].phase)
       }
 
       if (stamps.length > 0) {
@@ -234,7 +251,7 @@ export function InkRevealCanvas({
           backgroundSize: '1440px auto',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-          opacity: 0.9,
+          opacity: 0.92,
         }}
       />
 

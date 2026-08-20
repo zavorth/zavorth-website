@@ -2,14 +2,13 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { Copy, Check, ArrowRight } from 'lucide-react'
+import { ArrowRight, Terminal } from 'lucide-react'
 import { BlackHoleCanvas } from './BlackHoleCanvas'
 import { HeroSupportMarquee } from './HeroSupportMarquee'
 import { Magnet } from './reactbits/Magnet'
 
 const lineOne = 'A IA que opera no seu computador.'
 const lineTwo = 'Com você no controle das decisões.'
-const INSTALL_CMD = 'npm install -g zavorth@latest'
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -18,22 +17,6 @@ export function Hero() {
   const titleContainerRef = useRef<HTMLDivElement>(null)
   const [canvasReady, setCanvasReady] = useState(false)
   const [typed, setTyped] = useState(false)
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(INSTALL_CMD)
-    } catch {
-      const textarea = document.createElement('textarea')
-      textarea.value = INSTALL_CMD
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   // Client-only mount flag for the black hole canvas; honor reduced motion.
   useEffect(() => {
@@ -55,6 +38,7 @@ export function Hero() {
 
     const handleScroll = () => {
       const rect = section.getBoundingClientRect()
+      // Use whole hero section height for scroll progress (landing composition contract).
       const scrollableHeight = Math.max(1, rect.height)
       targetProgress = rect.top < 0 ? Math.min(1, -rect.top / scrollableHeight) : 0
     }
@@ -70,6 +54,7 @@ export function Hero() {
       }
 
       if (canvasWrap) {
+        // Smooth, gradual fade starting at 30% scroll progress
         const canvasOpacity = Math.max(0, 1 - currentProgress * 1.2)
         canvasWrap.style.opacity = `${canvasOpacity}`
         canvasWrap.style.transform = `scale(${1 - currentProgress * 0.15})`
@@ -212,42 +197,27 @@ export function Hero() {
               Runtime local com habilidades, memória e aprovação obrigatória em ações sensíveis.
             </p>
 
-            {/* Modern Terminal-Style Quick Install & Demo with React Bits Magnet */}
+            {/* Modern Clean CTA Buttons with React Bits Magnet */}
             <div className="flex flex-wrap items-center justify-center gap-3.5">
               
-              {/* Magnetic Terminal Quick Copy Capsule */}
+              {/* Primary Install Trigger */}
               <Magnet magnetStrength={0.25} padding={30}>
-                <div 
-                  onClick={handleCopy}
-                  className="group flex items-center gap-3 px-4 py-2 rounded-full border border-white/[0.12] bg-black/60 backdrop-blur-2xl hover:border-[#00e88f]/50 hover:shadow-[0_0_25px_rgba(0,232,143,0.15)] transition-all duration-300 cursor-pointer select-none"
+                <a
+                  href="#install"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#00e88f] text-black text-xs font-mono font-bold hover:bg-[#00e88f]/90 hover:shadow-[0_0_25px_rgba(0,232,143,0.35)] transition-all duration-200"
                 >
-                  <div className="flex items-center gap-2 font-mono text-xs text-neutral-300">
-                    <span className="text-[#00e88f] font-bold">$</span>
-                    <span className="text-white font-normal">{INSTALL_CMD}</span>
-                  </div>
-                  
-                  <button
-                    type="button"
-                    className="p-1 rounded-full text-neutral-400 group-hover:text-[#00e88f] transition-colors"
-                    aria-label="Copiar comando de instalação"
-                  >
-                    {copied ? (
-                      <Check className="w-3.5 h-3.5 text-[#00e88f]" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
+                  <span>Instalar runtime</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </Magnet>
 
-              {/* Magnetic Demo CTA */}
+              {/* Secondary Demo Button */}
               <Magnet magnetStrength={0.25} padding={30}>
                 <a
                   href="/demo"
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-white/[0.1] bg-white/[0.04] text-xs font-mono text-neutral-300 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.2] transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/[0.12] bg-white/[0.04] text-xs font-mono text-neutral-200 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.2] transition-all duration-200"
                 >
                   <span>Ver demonstração</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
                 </a>
               </Magnet>
 

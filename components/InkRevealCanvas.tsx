@@ -2,32 +2,24 @@
 
 import React, { useEffect, useRef } from 'react'
 
-interface InkStamp {
+interface GlowPoint {
   x: number
   y: number
   born: number
-  seed: number
-  rmax: number
+  maxRadius: number
 }
 
 export interface InkRevealCanvasProps {
-  /** Source URL of the background artwork image to reveal */
   imageSrc?: string
-  /** Mask background color in hex/rgb format */
   maskColor?: string
-  /** Maximum radius of the ink reveal holes */
   maxRadius?: number
-  /** Lifetime in ms before an ink hole fades back to solid */
   lifetime?: number
-  /** CSS class names for the container */
   className?: string
 }
 
 export function InkRevealCanvas({
-  imageSrc = '/artwork/hero-bg.png',
-  maskColor = '#000000',
-  maxRadius = 175,
-  lifetime = 2000,
+  maxRadius = 180,
+  lifetime = 1600,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -39,27 +31,12 @@ export function InkRevealCanvas({
     if (!container || !canvas) return
 
     const parent = (container.closest('section') || container.parentElement || container) as HTMLElement
-    const ctx = canvas.getContext('2d', { willReadFrequently: false })
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
-    const R_START = 32
-    const R_END = maxRadius
-    const R_VARY = 0.35
-    const MAX_STAMPS = 140
-    const STAMP_STEP = 12
-
     let w = 0
     let h = 0
-
-    const fillSolidMask = () => {
-      ctx.save()
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = maskColor
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.restore()
-    }
 
     const resize = () => {
       const rect = container.getBoundingClientRect()
@@ -69,118 +46,84 @@ export function InkRevealCanvas({
       canvas.height = Math.round(h * DPR)
       canvas.style.width = `${w}px`
       canvas.style.height = `${h}px`
-      fillSolidMask()
     }
 
     resize()
 
     let resizeObserver: ResizeObserver | null = null
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        resize()
-      })
+      resizeObserver = new ResizeObserver(() => resize())
       resizeObserver.observe(parent)
       resizeObserver.observe(container)
     }
 
     window.addEventListener('resize', resize)
 
-    const stamps: InkStamp[] = []
-    let lastX: number | null = null
-    let lastY: number | null = null
-    let running = false
+    const points: GlowPoint[] = []
     let animId = 0
+    let running = false
 
-    const addStamp = (x: number, y: number) => {
-      if (stamps.length >= MAX_STAMPS) stamps.shift()
-      stamps.push({
+    const addPoint = (x: number, y: number) => {
+      if (points.length > 50) points.shift()
+      points.push({
         x,
         y,
         born: performance.now(),
-        seed: Math.random() * Math.PI * 2,
-        rmax: R_END * (1 - R_VARY + Math.random() * R_VARY),
+        maxRadius: maxRadius + (Math.random() * 40 - 20),
       })
     }
 
-    const stampAlong = (x: number, y: number) => {
-      if (lastX === null || lastY === null) {
-        addStamp(x, y)
-      } else {
-        const dx = x - lastX
-        const dy = y - lastY
-        const dist = Math.hypot(dx, dy)
-        const steps = Math.max(1, Math.ceil(dist / STAMP_STEP))
-        for (let i = 1; i <= steps; i++) {
-          addStamp(lastX + (dx * i) / steps, lastY + (dy * i) / steps)
-        }
-      }
-      lastX = x
-      lastY = y
-    }
-
-    const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
-      const g = ctx.createRadialGradient(x, y, r * 0.16, x, y, r)
-      g.addColorStop(0, `rgba(0, 0, 0, ${0.98 * alpha})`)
-      g.addColorStop(0.6, `rgba(0, 0, 0, ${0.86 * alpha})`)
-      g.addColorStop(1, 'rgba(0, 0, 0, 0)')
-
-      ctx.fillStyle = g
-      ctx.beginPath()
-      const segs = 32
-      for (let i = 0; i <= segs; i++) {
-        const a = (i / segs) * Math.PI * 2
-        const wob =
-          0.82 +
-          0.12 * Math.sin(a * 3 + seed) +
-          0.07 * Math.sin(a * 7 + seed * 2.1) +
-          0.04 * Math.sin(a * 13 + seed * 0.7)
-        const rr = r * wob
-        const px = x + Math.cos(a) * rr
-        const py = y + Math.sin(a) * rr
-        if (i === 0) ctx.moveTo(px, py)
-        else ctx.lineTo(px, py)
-      }
-      ctx.closePath()
-      ctx.fill()
-    }
-
-    const loop = () => {
+    const render = () => {
       const now = performance.now()
-
-      // Full canvas solid black repaint
-      fillSolidMask()
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       ctx.save()
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-      ctx.globalCompositeOperation = 'destination-out'
 
-      for (let i = stamps.length - 1; i >= 0; i--) {
-        const t = (now - stamps[i].born) / lifetime
+      for (let i = points.length - 1; i >= 0; i--) {
+        const p = points[i]
+        const elapsed = now - p.born
+        const t = elapsed / lifetime
+
         if (t >= 1) {
-          stamps.splice(i, 1)
+          points.splice(i, 1)
           continue
         }
-        const ease = 1 - Math.pow(1 - t, 3)
-        const r = R_START + (stamps[i].rmax - R_START) * ease
-        const alpha = 1 - t * t
-        carveInk(stamps[i].x, stamps[i].y, r, alpha, stamps[i].seed)
+
+        // Smooth cubic ease-out
+        const ease = 1 - Math.pow(1 - t, 2.5)
+        const radius = 40 + (p.maxRadius - 40) * ease
+        const alpha = (1 - t) * 0.18 // Soft, non-intrusive emerald glow
+
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius)
+        grad.addColorStop(0, `rgba(0, 232, 143, ${alpha})`)
+        grad.addColorStop(0.4, `rgba(0, 232, 143, ${alpha * 0.5})`)
+        grad.addColorStop(1, 'rgba(0, 232, 143, 0)')
+
+        ctx.fillStyle = grad
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+        ctx.fill()
       }
+
       ctx.restore()
 
-      if (stamps.length > 0) {
-        animId = requestAnimationFrame(loop)
+      if (points.length > 0) {
+        animId = requestAnimationFrame(render)
       } else {
         running = false
-        fillSolidMask()
       }
     }
 
     const start = () => {
       if (!running) {
         running = true
-        animId = requestAnimationFrame(loop)
+        animId = requestAnimationFrame(render)
       }
     }
+
+    let lastX = 0
+    let lastY = 0
 
     const onPointerMove = (e: MouseEvent | PointerEvent | TouchEvent) => {
       const rect = container.getBoundingClientRect()
@@ -199,24 +142,19 @@ export function InkRevealCanvas({
       const y = clientY - rect.top
 
       if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        stampAlong(x, y)
-        start()
-      } else {
-        lastX = null
-        lastY = null
+        const dist = Math.hypot(x - lastX, y - lastY)
+        if (dist > 12) {
+          addPoint(x, y)
+          lastX = x
+          lastY = y
+          start()
+        }
       }
-    }
-
-    const onPointerLeave = () => {
-      lastX = null
-      lastY = null
     }
 
     parent.addEventListener('mousemove', onPointerMove, { passive: true })
     parent.addEventListener('pointermove', onPointerMove, { passive: true })
     parent.addEventListener('touchmove', onPointerMove, { passive: true })
-    parent.addEventListener('mouseleave', onPointerLeave)
-    parent.addEventListener('pointerleave', onPointerLeave)
 
     return () => {
       window.removeEventListener('resize', resize)
@@ -224,30 +162,16 @@ export function InkRevealCanvas({
       parent.removeEventListener('mousemove', onPointerMove)
       parent.removeEventListener('pointermove', onPointerMove)
       parent.removeEventListener('touchmove', onPointerMove)
-      parent.removeEventListener('mouseleave', onPointerLeave)
-      parent.removeEventListener('pointerleave', onPointerLeave)
       if (animId) cancelAnimationFrame(animId)
     }
-  }, [maskColor, maxRadius, lifetime])
+  }, [maxRadius, lifetime])
 
   return (
     <div
       ref={containerRef}
       className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none bg-black ${className}`}
-      style={{
-        zIndex: 0,
-      }}
+      style={{ zIndex: 0 }}
     >
-      {/* Background artwork image */}
-      <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out"
-        style={{
-          backgroundImage: `url("${imageSrc}")`,
-          opacity: 0.95,
-        }}
-      />
-
-      {/* Full-bleed solid procedural canvas mask */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 block w-full h-full pointer-events-none"

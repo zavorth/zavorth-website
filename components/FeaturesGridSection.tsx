@@ -3,6 +3,8 @@
 import React, { useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { DecryptedText } from './reactbits/DecryptedText'
+import { BlurText } from './reactbits/BlurText'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -62,20 +64,24 @@ export function FeaturesGridSection() {
     >
       <div className="mx-auto max-w-5xl px-6">
         
-        {/* Google Style Minimalist Header */}
+        {/* Google Style Minimalist Header with React Bits */}
         <div className="max-w-3xl mb-16 sm:mb-24">
           <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase block mb-4">
-            Liberdade &middot; Evolução
+            <DecryptedText text="Liberdade · Evolução" speed={30} maxIterations={8} />
           </span>
-          <h2 className="google-feat-item text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight">
-            Uma inteligência que se adapta ao seu ritmo.
-          </h2>
+          
+          <BlurText
+            text="Uma inteligência que se adapta ao seu ritmo."
+            className="text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight"
+            delay={40}
+          />
+          
           <p className="google-feat-item mt-5 text-base sm:text-lg text-neutral-400 font-normal leading-relaxed">
             Sem restrições de provedor e sem barreiras de complexidade. O agente expande as próprias capacidades conforme seus projetos crescem.
           </p>
         </div>
 
-        {/* 3 Open Columns (Google Minimalist Style - Zero Cards & Zero Divider Lines) */}
+        {/* 3 Open Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 pt-2">
           {capabilities.map((item) => (
             <div key={item.number} className="google-feat-item space-y-3">

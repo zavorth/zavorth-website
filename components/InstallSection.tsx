@@ -3,8 +3,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import gsap from 'gsap'
-import { Check, Copy, Sparkles, Terminal } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { InkRevealCanvas } from './InkRevealCanvas'
+import { Magnet } from './reactbits/Magnet'
+import { DecryptedText } from './reactbits/DecryptedText'
 
 const INSTALL_CMD = 'npm install -g zavorth@latest'
 
@@ -44,7 +46,7 @@ export function InstallSection() {
       const x = e.clientX - rect.left - rect.width / 2
       const y = e.clientY - rect.top - rect.height / 2
       
-      const rotY = (x / (rect.width / 2)) * 10 // max 10deg tilt
+      const rotY = (x / (rect.width / 2)) * 10
       const rotX = -(y / (rect.height / 2)) * 10
 
       xTo(rotY)
@@ -161,7 +163,9 @@ export function InstallSection() {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]/90" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]/90" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]/90" />
-                <span className="ml-2 text-[10px] font-mono text-neutral-500">~/zavorth</span>
+                <span className="ml-2 text-[10px] font-mono text-neutral-400">
+                  <DecryptedText text="~/zavorth" speed={40} animateOn="hover" />
+                </span>
               </div>
               <span className="text-[10px] font-mono text-[#00e88f] px-2 py-0.5 rounded-md bg-[#00e88f]/10">
                 NPM GLOBAL
@@ -176,19 +180,21 @@ export function InstallSection() {
                 <span className="w-1.5 h-3.5 bg-[#00e88f] animate-pulse inline-block select-none" />
               </div>
 
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="shrink-0 p-2 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-[#00e88f]/10 hover:border-[#00e88f]/30 text-neutral-400 hover:text-[#00e88f] transition-all duration-200 cursor-pointer"
-                title="Copiar comando"
-                aria-label="Copiar comando"
-              >
-                {copied ? (
-                  <Check className="w-3.5 h-3.5 text-[#00e88f]" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
+              <Magnet magnetStrength={0.3} padding={20}>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="shrink-0 p-2 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:bg-[#00e88f]/10 hover:border-[#00e88f]/30 text-neutral-400 hover:text-[#00e88f] transition-all duration-200 cursor-pointer"
+                  title="Copiar comando"
+                  aria-label="Copiar comando"
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-[#00e88f]" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </Magnet>
             </div>
 
             {/* Terminal Footer Info */}

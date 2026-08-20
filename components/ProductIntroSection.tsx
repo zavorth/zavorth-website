@@ -3,6 +3,8 @@
 import React, { useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { DecryptedText } from './reactbits/DecryptedText'
+import { BlurText } from './reactbits/BlurText'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -63,20 +65,24 @@ export function ProductIntroSection() {
     >
       <div className="mx-auto max-w-5xl px-6">
         
-        {/* Google Style Minimalist Header */}
+        {/* Google Style Minimalist Header with React Bits */}
         <div className="max-w-3xl mb-16 sm:mb-24">
           <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase block mb-4">
-            Visão Geral
+            <DecryptedText text="Visão Geral" speed={30} maxIterations={8} />
           </span>
-          <h2 className="google-fade-in text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight">
-            Um assistente de IA que trabalha no seu computador.
-          </h2>
+          
+          <BlurText
+            text="Um assistente de IA que trabalha no seu computador."
+            className="text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight"
+            delay={40}
+          />
+          
           <p className="google-fade-in mt-5 text-base sm:text-lg text-neutral-400 font-normal leading-relaxed">
             Em vez de apenas sugerir respostas em uma janela de chat, o Zavorth executa tarefas reais no seu sistema: cria arquivos, escreve código, organiza pastas e testa tudo localmente.
           </p>
         </div>
 
-        {/* 3 Open Columns (Google Minimalist Style - Zero Cards & Zero Divider Lines) */}
+        {/* 3 Open Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 pt-2">
           {items.map((item) => (
             <div key={item.number} className="google-fade-in space-y-3">

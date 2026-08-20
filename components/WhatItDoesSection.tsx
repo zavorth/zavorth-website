@@ -3,6 +3,8 @@
 import React, { useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { DecryptedText } from './reactbits/DecryptedText'
+import { BlurText } from './reactbits/BlurText'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -72,20 +74,24 @@ export function WhatItDoesSection() {
     >
       <div className="mx-auto max-w-5xl px-6">
         
-        {/* Google Style Minimalist Header */}
+        {/* Google Style Minimalist Header with React Bits */}
         <div className="max-w-3xl mb-16 sm:mb-24">
           <span className="section-kicker text-xs font-mono tracking-widest text-[#00e88f] uppercase block mb-4">
-            Sistema Swarm
+            <DecryptedText text="Sistema Swarm" speed={30} maxIterations={8} />
           </span>
-          <h2 className="google-swarm-item text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight">
-            Como o Zavorth resolve tarefas complexas.
-          </h2>
+          
+          <BlurText
+            text="Como o Zavorth resolve tarefas complexas."
+            className="text-3xl sm:text-5xl font-normal tracking-tight text-white leading-tight"
+            delay={40}
+          />
+          
           <p className="google-swarm-item mt-5 text-base sm:text-lg text-neutral-400 font-normal leading-relaxed">
             Em vez de uma única IA fazendo tudo em fila lenta, o trabalho é distribuído entre especialistas que colaboram em paralelo em segundo plano.
           </p>
         </div>
 
-        {/* 4 Open Columns (Google Minimalist Style - Zero Cards & Zero Divider Lines) */}
+        {/* 4 Open Columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 pt-2">
           {steps.map((step) => (
             <div key={step.number} className="google-swarm-item space-y-3">

@@ -2,11 +2,13 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
+import { Copy, Check, Terminal, ArrowRight } from 'lucide-react'
 import { BlackHoleCanvas } from './BlackHoleCanvas'
 import { HeroSupportMarquee } from './HeroSupportMarquee'
 
 const lineOne = 'A IA que opera no seu computador.'
 const lineTwo = 'Com você no controle das decisões.'
+const INSTALL_CMD = 'npm install -g zavorth@latest'
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -15,6 +17,22 @@ export function Hero() {
   const titleContainerRef = useRef<HTMLDivElement>(null)
   const [canvasReady, setCanvasReady] = useState(false)
   const [typed, setTyped] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(INSTALL_CMD)
+    } catch {
+      const textarea = document.createElement('textarea')
+      textarea.value = INSTALL_CMD
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   // Client-only mount flag for the black hole canvas; honor reduced motion.
   useEffect(() => {
@@ -98,55 +116,34 @@ export function Hero() {
 
     // Wait for layout to stabilize before positioning cursor
     const startTyping = () => {
-      if (cancelled) return
+      if (cancelled || !cursorContainer) return
 
-      // Show cursor at start position
       cursorContainer.style.opacity = '1'
-      updateTypingCursor(chars[0], 'before')
+      const firstChar = chars[0]
+      if (firstChar) {
+        updateTypingCursor(firstChar, 'before')
+      }
 
-      let elapsed = 80 // ms — quick start
+      const charDuration = 22
+      let elapsed = 100
 
-      chars.forEach((char) => {
-        const value = char.textContent || ''
-        // ~2.5–3× faster than the original typing cadence
-        let delay = 30
-        if (/[.,?!;:]/.test(value)) delay = 90
-        if (value === ' ') delay = 18
-        delay = Math.round(delay * (0.92 + Math.random() * 0.12))
-
+      chars.forEach((char, index) => {
         const timeout = setTimeout(() => {
           if (cancelled) return
           char.style.opacity = '1'
           updateTypingCursor(char, 'after')
-
-          // Pulse cursor with GSAP (snappier)
-          gsap.fromTo(
-            bar,
-            {
-              scaleY: 1.12,
-              boxShadow:
-                '0 0 22px rgba(245,158,11,0.95), 0 0 38px rgba(255,255,255,0.52), 0 0 52px rgba(236,72,153,0.28)',
-            },
-            {
-              scaleY: 1,
-              boxShadow:
-                '0 0 14px rgba(245,158,11,0.72), 0 0 28px rgba(236,72,153,0.28), 0 0 36px rgba(59,130,246,0.22)',
-              duration: 0.12,
-              ease: 'power2.out',
-            }
-          )
         }, elapsed)
-        timeouts.push(timeout)
 
-        elapsed += delay
+        timeouts.push(timeout)
+        elapsed += charDuration
       })
 
-      // Hide cursor after typing completes
       const completeTimeout = setTimeout(() => {
         if (cancelled) return
-        cursorContainer.style.opacity = '0'
         setTyped(true)
-        window.dispatchEvent(new CustomEvent('hero-title-typed'))
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('hero-title-typed'))
+        }
       }, elapsed + 80)
       timeouts.push(completeTimeout)
     }
@@ -210,21 +207,51 @@ export function Hero() {
           </h1>
 
           <div
-            className={`mt-8 flex w-full flex-col items-center gap-7 pointer-events-auto transition-opacity duration-1000 ${
+            className={`mt-8 flex w-full flex-col items-center gap-6 pointer-events-auto transition-opacity duration-1000 ${
               typed ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
           >
             <p className="mx-auto max-w-lg text-sm leading-relaxed text-neutral-400 sm:text-[15px]">
               Runtime local com habilidades, memória e aprovação obrigatória em ações sensíveis.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-3.5">
-              <a href="/demo" className="hero-btn hero-btn-primary">
-                Ver demonstração
+
+            {/* Modern Terminal-Style Quick Install & Demo Capsule */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              
+              {/* Terminal Quick Copy Capsule */}
+              <div 
+                onClick={handleCopy}
+                className="group flex items-center gap-3 px-4 py-2 rounded-full border border-white/[0.12] bg-black/60 backdrop-blur-2xl hover:border-[#00e88f]/50 hover:shadow-[0_0_25px_rgba(0,232,143,0.15)] transition-all duration-300 cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-2 font-mono text-xs text-neutral-300">
+                  <span className="text-[#00e88f] font-bold">$</span>
+                  <span className="text-white font-normal">{INSTALL_CMD}</span>
+                </div>
+                
+                <button
+                  type="button"
+                  className="p-1 rounded-full text-neutral-400 group-hover:text-[#00e88f] transition-colors"
+                  aria-label="Copiar comando de instalação"
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-[#00e88f]" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+
+              {/* Demo CTA */}
+              <a
+                href="/demo"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-white/[0.1] bg-white/[0.04] text-xs font-mono text-neutral-300 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.2] transition-all duration-200"
+              >
+                <span>Ver demonstração</span>
+                <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
               </a>
-              <a href="#install" className="hero-btn hero-btn-ghost">
-                Instalar
-              </a>
+
             </div>
+
             <HeroSupportMarquee />
           </div>
         </div>

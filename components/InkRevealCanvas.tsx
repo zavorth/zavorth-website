@@ -125,11 +125,12 @@ export function InkRevealCanvas({
     const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
       if (r <= 0 || alpha <= 0.001) return
 
-      const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r)
+      const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r)
       if (isDark) {
-        g.addColorStop(0, `rgba(255, 255, 255, ${0.98 * alpha})`)
-        g.addColorStop(0.4, `rgba(255, 255, 255, ${0.85 * alpha})`)
-        g.addColorStop(0.7, `rgba(255, 255, 255, ${0.45 * alpha})`)
+        g.addColorStop(0, `rgba(255, 255, 255, ${1.0 * alpha})`)
+        g.addColorStop(0.35, `rgba(255, 255, 255, ${0.95 * alpha})`)
+        g.addColorStop(0.7, `rgba(255, 255, 255, ${0.6 * alpha})`)
+        g.addColorStop(0.9, `rgba(255, 255, 255, ${0.25 * alpha})`)
         g.addColorStop(1, 'rgba(255, 255, 255, 0)')
       } else {
         g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
@@ -159,6 +160,8 @@ export function InkRevealCanvas({
 
     const loop = () => {
       const now = performance.now()
+
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
 
       if (isDark) {
         ctx.clearRect(0, 0, w, h)
@@ -242,17 +245,17 @@ export function InkRevealCanvas({
       className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none ${isDark ? 'bg-black' : 'bg-[#fcfaf8]'} ${className}`}
       style={{ zIndex: 0 }}
     >
-      <div
-        className="absolute inset-0 w-full h-full opacity-40 pointer-events-none"
-        style={{
-          backgroundImage: `url("${imageSrc}")`,
-          backgroundSize: '1440px 100%',
-          backgroundPosition: 'bottom center',
-          backgroundRepeat: 'no-repeat',
-          filter: isDark ? 'invert(1) grayscale(1) contrast(1.8) brightness(1.9)' : undefined,
-          mixBlendMode: isDark ? 'screen' : undefined,
-        }}
-      />
+      {!isDark && (
+        <div
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{
+            backgroundImage: `url("${imageSrc}")`,
+            backgroundSize: '1440px 100%',
+            backgroundPosition: 'bottom center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+      )}
 
       <canvas
         ref={canvasRef}

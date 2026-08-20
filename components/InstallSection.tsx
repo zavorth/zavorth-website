@@ -90,12 +90,16 @@ export function InstallSection() {
       ref={sectionRef}
       className="landing-final-surface relative scroll-mt-20 overflow-hidden py-32 sm:py-48 bg-black text-white"
     >
-      {/* Procedural MiMo Code Living Ink Reveal Canvas Mask */}
+      {/* Exact MiMo Code Living Ink Reveal Canvas Mask */}
       <InkRevealCanvas
         imageSrc="/artwork/hero-bg.png"
         maskColor="0, 0, 0"
+        startRadius={8}
         maxRadius={128}
-        lifetime={580}
+        radiusVariation={0.45}
+        lifetime={520}
+        stampStep={12}
+        maxStamps={160}
       />
 
       {/* Subtle Grid Accent */}

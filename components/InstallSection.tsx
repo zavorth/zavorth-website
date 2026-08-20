@@ -94,8 +94,8 @@ export function InstallSection() {
       <InkRevealCanvas
         imageSrc="/artwork/hero-bg.png"
         maskColor="0, 0, 0"
-        maxRadius={128}
-        lifetime={520}
+        maxRadius={88}
+        lifetime={480}
       />
 
       {/* Subtle Grid Accent */}

@@ -26,8 +26,8 @@ export interface InkRevealCanvasProps {
 export function InkRevealCanvas({
   imageSrc = '/artwork/hero-bg.png',
   maskColor = '0, 0, 0',
-  maxRadius = 128,
-  lifetime = 520,
+  maxRadius = 88,
+  lifetime = 480,
   className = '',
 }: InkRevealCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -45,14 +45,14 @@ export function InkRevealCanvas({
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return
 
-    // Exact MiMo Code constants (https://mimo.xiaomi.com/coder)
+    // Exact MiMo Code configuration & organic brush constants
     const MASK = maskColor.replace('#000000', '0, 0, 0')
     const R_START = 8
     const R_END = maxRadius
-    const R_VARY = 0.45
+    const R_VARY = 0.4
     const LIFETIME = lifetime
-    const STAMP_STEP = 12
-    const MAX_STAMPS = 160
+    const STAMP_STEP = 10
+    const MAX_STAMPS = 200
     const DPR = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
 
     let w = 0
@@ -67,8 +67,8 @@ export function InkRevealCanvas({
 
     const resize = () => {
       const rect = parent.getBoundingClientRect()
-      w = rect.width
-      h = rect.height
+      w = Math.max(1, Math.round(rect.width))
+      h = Math.max(1, Math.round(rect.height))
       canvas.width = Math.round(w * DPR)
       canvas.height = Math.round(h * DPR)
       canvas.style.width = `${w}px`
@@ -119,11 +119,11 @@ export function InkRevealCanvas({
       lastY = y
     }
 
-    // Exact MiMo Code procedural organic ink carving algorithm
+    // Exact MiMo Code organic harmonic ink carving algorithm
     const carveInk = (x: number, y: number, r: number, alpha: number, seed: number) => {
-      const g = ctx.createRadialGradient(x, y, r * 0.25, x, y, r)
+      const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r)
       g.addColorStop(0, `rgba(0, 0, 0, ${0.95 * alpha})`)
-      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.88 * alpha})`)
+      g.addColorStop(0.55, `rgba(0, 0, 0, ${0.85 * alpha})`)
       g.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.fillStyle = g
@@ -155,6 +155,7 @@ export function InkRevealCanvas({
       ctx.fillStyle = `rgb(${MASK})`
       ctx.fillRect(0, 0, w, h)
 
+      // Carve out living ink dots
       ctx.globalCompositeOperation = 'destination-out'
       for (let i = stamps.length - 1; i >= 0; i--) {
         const t = (now - stamps[i].born) / LIFETIME
@@ -194,8 +195,10 @@ export function InkRevealCanvas({
       const rect = parent.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      stampAlong(x, y)
-      start()
+      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+        stampAlong(x, y)
+        start()
+      }
     }
 
     const onMouseLeave = () => {
@@ -225,10 +228,13 @@ export function InkRevealCanvas({
     >
       {/* Background artwork image */}
       <div
-        className="absolute inset-0 w-full h-full bg-cover bg-bottom bg-no-repeat transition-transform duration-700 ease-out"
+        className="absolute inset-0 w-full h-full transition-transform duration-700 ease-out"
         style={{
           backgroundImage: `url("${imageSrc}")`,
-          opacity: 0.95,
+          backgroundSize: '1440px auto',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.9,
         }}
       />
 

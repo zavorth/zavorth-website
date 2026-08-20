@@ -13,7 +13,7 @@ interface InkStamp {
 export interface InkRevealCanvasProps {
   /** Source URL of the background artwork image to reveal */
   imageSrc?: string
-  /** Mask background color in RGB or hex format */
+  /** Mask background color in RGB format e.g. "0, 0, 0" */
   maskColor?: string
   /** Maximum radius of each ink dot */
   maxRadius?: number
@@ -45,12 +45,8 @@ export function InkRevealCanvas({
     const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return
 
-    const MASK = maskColor.startsWith('#')
-      ? maskColor === '#000000'
-        ? '0, 0, 0'
-        : '0, 0, 0'
-      : maskColor
-
+    // Exact MiMo Code constants (https://mimo.xiaomi.com/coder)
+    const MASK = maskColor.replace('#000000', '0, 0, 0')
     const R_START = 8
     const R_END = maxRadius
     const R_VARY = 0.45
@@ -70,7 +66,7 @@ export function InkRevealCanvas({
     }
 
     const resize = () => {
-      const rect = container.getBoundingClientRect()
+      const rect = parent.getBoundingClientRect()
       w = Math.max(1, Math.round(rect.width))
       h = Math.max(1, Math.round(rect.height))
       canvas.width = Math.round(w * DPR)
@@ -86,7 +82,6 @@ export function InkRevealCanvas({
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => resize())
       resizeObserver.observe(parent)
-      resizeObserver.observe(container)
     }
 
     window.addEventListener('resize', resize)
@@ -185,7 +180,7 @@ export function InkRevealCanvas({
     }
 
     const onMouseEnter = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect()
+      const rect = parent.getBoundingClientRect()
       lastX = e.clientX - rect.left
       lastY = e.clientY - rect.top
       stampAlong(lastX, lastY)
@@ -193,13 +188,11 @@ export function InkRevealCanvas({
     }
 
     const onMouseMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect()
+      const rect = parent.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
-      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-        stampAlong(x, y)
-        start()
-      }
+      stampAlong(x, y)
+      start()
     }
 
     const onMouseLeave = () => {
@@ -229,7 +222,7 @@ export function InkRevealCanvas({
     >
       {/* Background artwork image */}
       <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out"
+        className="absolute inset-0 w-full h-full bg-cover bg-bottom bg-no-repeat transition-transform duration-700 ease-out"
         style={{
           backgroundImage: `url("${imageSrc}")`,
           opacity: 0.95,
